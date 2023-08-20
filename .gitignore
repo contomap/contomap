@@ -1,0 +1,28 @@
+# MacOS DS_Store files
+.DS_Store
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+
+# Visual Studio Code files
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Local History for Visual Studio Code
+.history/
+
+# env files that usually contain secrets or local config
+.env
+.envrc
+
+# build directories
+cmake-build-*/
