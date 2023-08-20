@@ -32,17 +32,15 @@ private:
    bool shouldClose = false;
 };
 
-int screenWidth = 800;
-int screenHeight = 450;
-
 int main()
 {
    DesktopEnvironment environment;
    MainWindow mainWindow(environment);
 
-   InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
+   auto initialSize = MainWindow::DEFAULT_SIZE;
+   InitWindow(static_cast<int>(initialSize.getWidth()), static_cast<int>(initialSize.getHeight()), MainWindow::DEFAULT_TITLE);
    SetTargetFPS(60);
-   SetExitKey(KEY_NULL);
+   SetExitKey(KEY_NULL); // Disable default behavior that requests to close window on Escape key.
 
    while (!environment.shouldCloseWindow())
    {

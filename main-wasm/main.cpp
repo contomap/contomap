@@ -34,10 +34,12 @@ public:
    {
       emscripten_cancel_main_loop();
    }
+
    bool isFullscreen() override
    {
       return false;
    }
+   
    void toggleFullscreen() override
    {
    }
@@ -57,14 +59,11 @@ int main()
 {
    WasmDisplayEnvironment environment;
 
-   int screenWidth = 800;
-   int screenHeight = 450;
+   auto initialSize = MainWindow::DEFAULT_SIZE;
+   InitWindow(static_cast<int>(initialSize.getWidth()), static_cast<int>(initialSize.getHeight()), MainWindow::DEFAULT_TITLE);
 
-   InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
-
-   int desiredFps = 0; // Recommended to let the browser determine rate
-   int simulateEndlessLoop = EM_TRUE; // don't return from set_main_loop until
-                                      // emscripten_cancel_main_loop() is called
+   int desiredFps = 0; // Recommended to let the browser determine rate.
+   int simulateEndlessLoop = EM_TRUE; // Don't return from set_main_loop until emscripten_cancel_main_loop() is called.
    emscripten_set_main_loop(drawFrame, desiredFps, simulateEndlessLoop);
 
    CloseWindow();
