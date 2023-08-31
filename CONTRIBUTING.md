@@ -9,17 +9,38 @@ first via an issue before making a change.
 
 ### Dependencies
 
-* CMake - install as per https://cmake.org/ 
-* MinGW
+* CMake - install as per https://cmake.org/ (See `CMakeLists.txt` for minimum required version)
+* MinGW - capable of C++20
 * For web (WASM)
-  * emscripten - install as per https://emscripten.org/ (Which requires Python, indirectly)
+    * emscripten - install as per https://emscripten.org/ (Which requires Python, indirectly)
 
 ### On command-line
 
-TODO
+#### On Linux
+
+##### For MS Windows
+
+```
+mkdir cmake-build-debug-mingw-cross
+cd cmake-build-debug-mingw-cross
+cmake -DCMAKE_TOOLCHAIN_FILE=../toolchain-mingw.cmake ..
+make -j 6
+```
+
+##### For WASM
+
+```
+mkdir cmake-build-debug-emscripten-cross
+cd cmake-build-debug-emscripten-cross
+cmake -DPLATFORM=Web -DCMAKE_TOOLCHAIN_FILE=<path-to-emsdk>/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake ..
+make -j 6
+```
+
+Note: Run a web server with `python3 -m http.server 8080`, then open `http://localhost:8080/contomap-wasm.html` with the
+browser.
 
 ### Further resources
 
 * Raylib
-  * https://github.com/raysan5/raylib/wiki/Working-for-Web-(HTML5)
-  * https://stackoverflow.com/questions/51868832/integrate-emscripten-in-clion
+    * https://github.com/raysan5/raylib/wiki/Working-for-Web-(HTML5)
+    * https://stackoverflow.com/questions/51868832/integrate-emscripten-in-clion
