@@ -38,7 +38,7 @@ int main()
    MainWindow mainWindow(environment);
 
    auto initialSize = MainWindow::DEFAULT_SIZE;
-   InitWindow(static_cast<int>(initialSize.getWidth()), static_cast<int>(initialSize.getHeight()), MainWindow::DEFAULT_TITLE);
+   InitWindow(initialSize.getWidth().raw<int>(), initialSize.getHeight().raw<int>(), MainWindow::DEFAULT_TITLE);
    SetTargetFPS(60);
    SetExitKey(KEY_NULL); // Disable default behavior that requests to close window on Escape key.
 

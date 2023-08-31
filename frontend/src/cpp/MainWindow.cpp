@@ -7,23 +7,38 @@
 
 using contomap::frontend::MainWindow;
 
-MainWindow::Size::Size(uint32_t width, uint32_t height)
+MainWindow::LengthInPixel::LengthInPixel(MainWindow::LengthInPixel::ValueType value)
+   : value(value)
+{
+}
+
+MainWindow::LengthInPixel MainWindow::LengthInPixel::of(LengthInPixel::ValueType value)
+{
+   return LengthInPixel(value);
+}
+
+MainWindow::Size MainWindow::Size::ofPixel(LengthInPixel::ValueType width, LengthInPixel::ValueType height)
+{
+   return { LengthInPixel::of(width), LengthInPixel::of(height) };
+}
+
+MainWindow::Size::Size(MainWindow::LengthInPixel width, MainWindow::LengthInPixel height)
    : width(width)
    , height(height)
 {
 }
 
-uint32_t MainWindow::Size::getWidth() const
+MainWindow::LengthInPixel MainWindow::Size::getWidth() const
 {
    return width;
 }
 
-uint32_t MainWindow::Size::getHeight() const
+MainWindow::LengthInPixel MainWindow::Size::getHeight() const
 {
    return height;
 }
 
-MainWindow::Size const MainWindow::DEFAULT_SIZE(1600, 900);
+MainWindow::Size const MainWindow::DEFAULT_SIZE = MainWindow::Size::ofPixel(1600, 900);
 char const MainWindow::DEFAULT_TITLE[] = "contomap";
 
 MainWindow::MainWindow(DisplayEnvironment &environment)
