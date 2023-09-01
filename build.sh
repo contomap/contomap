@@ -125,38 +125,38 @@ function main {
     help
     exit
   fi
-  for arg in "$@"; do
-      case "$arg" in
-        "--help" | "-h" | "/?" | "help")
-          help
-          exit
-        ;;
-        "--build-type")
-          shift
-          setBuildType "$1"
-        ;;
-        "--emscripten-tc")
-          shift
-          emscriptenToolchainFile="$1"
-        ;;
-        "clean")
-          clean
-        ;;
-        "generate")
-          generateBuildFiles
-        ;;
-        "compile")
-          compile
-        ;;
-        "test")
-          testDefault
-        ;;
-        *)
-          log "Unknown argument '$1'. Run script with '--help' for available arguments."
-          exit $exitCodeWrongArguments
-        ;;
-      esac
-      shift
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      "--help" | "-h" | "/?" | "help")
+        help
+        exit
+      ;;
+      "--build-type")
+        shift
+        setBuildType "$1"
+      ;;
+      "--emscripten-tc")
+        shift
+        emscriptenToolchainFile="$1"
+      ;;
+      "clean")
+        clean
+      ;;
+      "generate")
+        generateBuildFiles
+      ;;
+      "compile")
+        compile
+      ;;
+      "test")
+        testDefault
+      ;;
+      *)
+        log "Unknown argument '$1'. Run script with '--help' for available arguments."
+        exit $exitCodeWrongArguments
+      ;;
+    esac
+    shift
   done
 }
 
