@@ -8,6 +8,7 @@ emscriptenToolchainFile="${HOME}/emsdk/upstream/emscripten/cmake/Modules/Platfor
 
 exitCodeFail=1
 exitCodeWrongArguments=1
+exitCodeBuildFailure=1
 
 function log() {
   echo "$1" >> /dev/stderr
@@ -80,12 +81,20 @@ function generateBuildFiles() {
 
 function compile() {
   log "Compiling..."
+  local failed=0
   for dir in "${buildBaseDir}"/*/; do
     log "Compiling in '${dir}'..."
     pushDir "${dir}"
-      make -j 6
+    if ! make -j 6;
+    then
+      failed=$(( failed + 1 ))
+    fi
     popDir
   done
+  if [ $failed != 0 ]; then
+    log "${failed} build(s) failed, aborting"
+    exit $exitCodeBuildFailure
+  fi
 }
 
 function main {
@@ -119,7 +128,7 @@ function main {
         *)
           log "Unknown argument '$1'. Run script with '--help' for available arguments."
           exit $exitCodeWrongArguments
-          ;;
+        ;;
       esac
       shift
   done
