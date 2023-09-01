@@ -27,13 +27,16 @@ function help() {
   echo ""
   echo "Commands:"
   echo ""
+  echo "help         Prints this information. Exits script afterwards."
   echo "clean        Clean the build directories. Useful to start from scratch."
-  echo "generate     Generate all the build files. Required at least once befor a 'compile'."
+  echo "generate     Generate all the build files. Required at least once before a 'compile'."
   echo "compile      Builds the binaries."
   echo "test         Executes all tests (of default compilation)."
   echo ""
   echo ""
   echo "Options:"
+  echo ""
+  echo "Options will affect only the arguments following them."
   echo ""
   echo "--build-type <type>      Which build to create. Default: '${buildType}'"
   echo "--emscripten-tc <file>   Specify the CMake toolchain file for emscripten build. Default: '${emscriptenToolchainFile}'"
@@ -83,17 +86,25 @@ function generateBuildFiles() {
 
 function compile() {
   log "Compiling..."
+  local total=0
   local failed=0
-  for dir in "${buildBaseDir}"/*/; do
-    log "Compiling in '${dir}'..."
-    pushDir "${dir}"
-    if ! make -j 6; then
-      failed=$(( failed + 1 ))
+  for dir in "${buildBaseDir}"/*-"${buildTypeSuffix}"/; do
+    if [ -d "${dir}" ]; then
+      log "Compiling in '${dir}'..."
+      total=$(( total + 1 ))
+      pushDir "${dir}"
+      if ! make -j 6; then
+        failed=$(( failed + 1 ))
+      fi
+      popDir
     fi
-    popDir
   done
   if [ $failed != 0 ]; then
     log "${failed} build(s) failed, aborting"
+    exit $exitCodeBuildFailure
+  fi
+  if [ $total == 0 ]; then
+    log "Nothing found to compile, aborting"
     exit $exitCodeBuildFailure
   fi
 }
@@ -108,14 +119,22 @@ function execTest() {
 }
 
 function testDefault() {
+  local total=0
   local failed=0
   for testFile in "${buildBaseDir}"/default-"${buildTypeSuffix}"/*-test* ; do
-    if ! execTest "${testFile}"; then
-      failed=$(( failed + 1 ))
+    if [ -f "${testFile}" ]; then
+      total=$(( total + 1 ))
+      if ! execTest "${testFile}"; then
+        failed=$(( failed + 1 ))
+      fi
     fi
   done
   if [ $failed != 0 ]; then
     log "${failed} test(s) failed, aborting"
+    exit $exitCodeTestFailure
+  fi
+  if [ $total == 0 ]; then
+    log "No tests found, aborting"
     exit $exitCodeTestFailure
   fi
 }
