@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.25..3.27.4)
 project(contomap)
 
 # Generate compile_commands.json
