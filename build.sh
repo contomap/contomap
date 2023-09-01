@@ -9,6 +9,7 @@ emscriptenToolchainFile="${HOME}/emsdk/upstream/emscripten/cmake/Modules/Platfor
 exitCodeFail=1
 exitCodeWrongArguments=1
 exitCodeBuildFailure=1
+exitCodeTestFailure=1
 
 function log() {
   echo "$1" >> /dev/stderr
@@ -29,6 +30,7 @@ function help() {
   echo "clean        Clean the build directories. Useful to start from scratch."
   echo "generate     Generate all the build files. Required at least once befor a 'compile'."
   echo "compile      Builds the binaries."
+  echo "test         Executes all tests (of default compilation)."
   echo ""
   echo ""
   echo "Options:"
@@ -85,8 +87,7 @@ function compile() {
   for dir in "${buildBaseDir}"/*/; do
     log "Compiling in '${dir}'..."
     pushDir "${dir}"
-    if ! make -j 6;
-    then
+    if ! make -j 6; then
       failed=$(( failed + 1 ))
     fi
     popDir
@@ -94,6 +95,28 @@ function compile() {
   if [ $failed != 0 ]; then
     log "${failed} build(s) failed, aborting"
     exit $exitCodeBuildFailure
+  fi
+}
+
+function execTest() {
+  log "Running test '$1'"
+  if ! $1 --gtest_shuffle;
+  then
+    return 1
+  fi
+  return 0
+}
+
+function testDefault() {
+  local failed=0
+  for testFile in "${buildBaseDir}"/default-"${buildTypeSuffix}"/*-test* ; do
+    if ! execTest "${testFile}"; then
+      failed=$(( failed + 1 ))
+    fi
+  done
+  if [ $failed != 0 ]; then
+    log "${failed} test(s) failed, aborting"
+    exit $exitCodeTestFailure
   fi
 }
 
@@ -124,6 +147,9 @@ function main {
         ;;
         "compile")
           compile
+        ;;
+        "test")
+          testDefault
         ;;
         *)
           log "Unknown argument '$1'. Run script with '--help' for available arguments."
