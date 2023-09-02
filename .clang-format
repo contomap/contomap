@@ -55,7 +55,6 @@ ConstructorInitializerAllOnOneLineOrOnePerLine: false
 ConstructorInitializerIndentWidth: 3
 ContinuationIndentWidth: 3
 Cpp11BracedListStyle: false
-LineEnding: LF
 DerivePointerAlignment: false
 DisableFormat: false
 ExperimentalAutoDetectBinPacking: false
