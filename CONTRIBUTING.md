@@ -16,6 +16,11 @@ first via an issue before making a change.
 
 ### On command-line
 
+The full build is automated with the `build.sh` script.
+Run it on a Linux shell without arguments to see all the possibilities.
+
+Manual steps described below (although, barely maintained).
+
 #### On Linux
 
 ##### For MS Windows
