@@ -10,6 +10,7 @@ exitCodeFail=1
 exitCodeWrongArguments=1
 exitCodeBuildFailure=1
 exitCodeTestFailure=1
+exitCodeLintError=1
 
 function log() {
   echo "$1" >> /dev/stderr
@@ -32,6 +33,7 @@ function help() {
   echo "generate     Generate all the build files. Required at least once before a 'compile'."
   echo "compile      Builds the binaries."
   echo "test         Executes all tests (of default compilation)."
+  echo "lint         Check the source for any errors. Recommended to be done in clean state."
   echo ""
   echo ""
   echo "Options:"
@@ -141,6 +143,26 @@ function testDefault() {
   fi
 }
 
+function lintFormat() {
+  local failed=0
+  shopt -s globstar
+  shopt -s nullglob
+  for sourceFile in "${projectBaseDir}"/**/*.cpp "${projectBaseDir}"/**/*.h; do
+    log "Checking '${sourceFile}'"
+    if ! clang-format --dry-run --Werror "${sourceFile}"; then
+      failed=$(( failed + 1 ))
+    fi
+  done
+  if [ $failed != 0 ]; then
+    log "Formatting errors, aborting. Please run clang-format on the affected files."
+    exit $exitCodeLintError
+  fi
+}
+
+function lint() {
+  lintFormat
+}
+
 function main {
   if [ $# -eq 0 ]; then
     help
@@ -171,6 +193,9 @@ function main {
       ;;
       "test")
         testDefault
+      ;;
+      "lint")
+        lint
       ;;
       *)
         log "Unknown argument '$1'. Run script with '--help' for available arguments."
