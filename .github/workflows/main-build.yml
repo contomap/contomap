@@ -10,8 +10,11 @@ permissions:
   contents: read
 jobs:
   build:
-    name: Build
+    name: ${{matrix.build}}
     runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        build: [ Debug, RelWithDebInfo ]
     steps:
       - uses: actions/checkout@v3
       - name: Install libraries
@@ -30,10 +33,10 @@ jobs:
           popd > /dev/null || exit 1
       - name: Generate build files
         run: |
-          ./build.sh generate
+          ./build.sh --build-type ${{matrix.build}} generate
       - name: Compile and link
         run: |
-          ./build.sh compile
+          ./build.sh --build-type ${{matrix.build}} compile
       - name: Run tests
         run: |
-          ./build.sh test
+          ./build.sh --build-type ${{matrix.build}} test
