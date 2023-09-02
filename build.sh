@@ -49,7 +49,7 @@ function clean() {
 }
 
 function ensureBuildDir() {
-  log "Creating '${buildBaseDir}'"
+  log "Creating '${buildBaseDir}/$1'"
   mkdir --parents "${buildBaseDir}/$1"
 }
 
@@ -65,23 +65,25 @@ function popDir() {
   popd > /dev/null || exit $exitCodeFail
 }
 
+function execCMake() {
+  local buildDir=$1
+  shift
+  ensureBuildDir "${buildDir}"
+  pushBuildDir "${buildDir}"
+  if ! cmake "-DCMAKE_BUILD_TYPE=${buildType}" "$@"; then
+    popDir
+    log "CMake failed, aborting"
+    exit $exitCodeFail
+  fi
+  popDir
+}
+
 function generateBuildFiles() {
   log "Creating build files for build type '${buildType}'"
 
-  ensureBuildDir "default-${buildTypeSuffix}"
-  pushBuildDir "default-${buildTypeSuffix}"
-  cmake "-DCMAKE_BUILD_TYPE=${buildType}" "${projectBaseDir}"
-  popDir
-
-  ensureBuildDir "win64-${buildTypeSuffix}"
-  pushBuildDir "win64-${buildTypeSuffix}"
-  cmake "-DCMAKE_BUILD_TYPE=${buildType}" "-DCMAKE_TOOLCHAIN_FILE=${projectBaseDir}/toolchain-mingw.cmake" "${projectBaseDir}"
-  popDir
-
-  ensureBuildDir "web-${buildTypeSuffix}"
-  pushBuildDir "web-${buildTypeSuffix}"
-  cmake "-DCMAKE_BUILD_TYPE=${buildType}" "-DCMAKE_TOOLCHAIN_FILE=${emscriptenToolchainFile}" "-DPLATFORM=Web" "${projectBaseDir}"
-  popDir
+  execCMake "default-${buildTypeSuffix}" "${projectBaseDir}"
+  execCMake "win64-${buildTypeSuffix}" "-DCMAKE_TOOLCHAIN_FILE=${projectBaseDir}/toolchain-mingw.cmake" "${projectBaseDir}"
+  execCMake "web-${buildTypeSuffix}" "-DCMAKE_TOOLCHAIN_FILE=${emscriptenToolchainFile}" "-DPLATFORM=Web" "${projectBaseDir}"
 }
 
 function compile() {
