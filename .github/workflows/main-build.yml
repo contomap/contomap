@@ -1,0 +1,42 @@
+name: Main Build
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - main
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  build:
+    name: ${{matrix.build}}
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        build: [ Debug, RelWithDebInfo ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mesa-utils mesa-common-dev xorg-dev libxrandr-dev
+      - name: Install compilers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake gcc g++ gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64
+          pushd "${HOME}" > /dev/null || exit 1
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          ./emsdk install latest
+          ./emsdk activate latest
+          popd > /dev/null || exit 1
+      - name: Generate build files
+        run: |
+          ./build.sh --build-type ${{matrix.build}} generate
+      - name: Compile and link
+        run: |
+          ./build.sh --build-type ${{matrix.build}} compile
+      - name: Run tests
+        run: |
+          ./build.sh --build-type ${{matrix.build}} test
