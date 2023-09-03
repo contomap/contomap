@@ -45,11 +45,25 @@ target_include_directories(raygui INTERFACE "${PROJECT_SOURCE_DIR}/vendor/raygui
 
 # This project
 
+file(GLOB_RECURSE LIB_EDITOR_SOURCES "${PROJECT_SOURCE_DIR}/editor/src/cpp/*.cpp")
+add_library(contomap-editor STATIC ${LIB_EDITOR_SOURCES})
+target_include_directories(contomap-editor PUBLIC "${PROJECT_SOURCE_DIR}/editor/src/h")
+
+file(GLOB_RECURSE LIB_EDITOR_TEST_SOURCES "${PROJECT_SOURCE_DIR}/editor/test/*.cpp")
+add_executable(contomap-editor-test ${LIB_EDITOR_TEST_SOURCES})
+target_link_libraries(contomap-editor-test
+        PUBLIC
+        contomap-editor
+        GTest::gmock_main
+)
+
+
 file(GLOB_RECURSE LIB_FRONTEND_SOURCES "${PROJECT_SOURCE_DIR}/frontend/src/cpp/*.cpp")
 add_library(contomap-frontend STATIC ${LIB_FRONTEND_SOURCES})
 target_include_directories(contomap-frontend PUBLIC "${PROJECT_SOURCE_DIR}/frontend/src/h")
 target_link_libraries(contomap-frontend
         PUBLIC
+        contomap-editor
         raygui
         raylib
 )
@@ -62,6 +76,14 @@ target_link_libraries(contomap-frontend-test
         GTest::gmock_main
 )
 
+file(GLOB_RECURSE LIB_APPLICATION_SOURCES "${PROJECT_SOURCE_DIR}/application/src/cpp/*.cpp")
+add_library(contomap-application STATIC ${LIB_APPLICATION_SOURCES})
+target_include_directories(contomap-application PUBLIC "${PROJECT_SOURCE_DIR}/application/src/h")
+target_link_libraries(contomap-application
+        PUBLIC
+        contomap-editor
+        contomap-frontend
+)
 
 # TODO: options for all contomap targets
 target_compile_options(contomap-frontend PRIVATE
@@ -72,7 +94,7 @@ target_compile_options(contomap-frontend PRIVATE
 if (${PLATFORM} STREQUAL "Desktop")
     add_executable(contomap "${PROJECT_SOURCE_DIR}/main-desktop/main.cpp")
     target_link_libraries(contomap
-            contomap-frontend
+            contomap-application
             raylib
     )
     if (APPLE)
@@ -88,7 +110,7 @@ if (${PLATFORM} STREQUAL "Desktop")
 elseif (${PLATFORM} STREQUAL "Web")
     add_executable(contomap-wasm "${PROJECT_SOURCE_DIR}/main-wasm/main.cpp")
     target_link_libraries(contomap-wasm
-            contomap-frontend
+            contomap-application
             raylib
     )
     # Tell Emscripten to build an example.html file.

@@ -43,9 +43,21 @@ MainWindow::LengthInPixel MainWindow::Size::getHeight() const
 MainWindow::Size const MainWindow::DEFAULT_SIZE = MainWindow::Size::ofPixel(800, 450);
 char const MainWindow::DEFAULT_TITLE[] = "contomap";
 
-MainWindow::MainWindow(DisplayEnvironment &environment)
+MainWindow::MainWindow(DisplayEnvironment &environment, contomap::editor::InputRequestHandler &inputRequestHandler)
    : environment(environment)
+   , inputRequestHandler(inputRequestHandler)
 {
+}
+
+void MainWindow::init()
+{
+   auto initialSize = MainWindow::DEFAULT_SIZE;
+   InitWindow(initialSize.getWidth().raw<int>(), initialSize.getHeight().raw<int>(), MainWindow::DEFAULT_TITLE);
+}
+
+void MainWindow::close()
+{
+   CloseWindow();
 }
 
 void MainWindow::closeRequested()
@@ -79,9 +91,12 @@ void MainWindow::drawUserInterface()
 
    auto dpiScale = GetWindowScaleDPI();
    Vector2 contentSize { static_cast<float>(GetRenderWidth()) / dpiScale.x, static_cast<float>(GetRenderHeight()) / dpiScale.y };
-   auto buttonHeight = 24.0f; // * dpiScale.y;
-   auto padding = 2.0f; // * dpiScale.y;
+   auto buttonHeight = 24.0f;
+   auto padding = 2.0f;
    GuiPanel(Rectangle { 0, 0, contentSize.x, buttonHeight + (padding * 2.0f) }, nullptr);
    GuiSetTooltip("Show help window");
-   GuiButton(Rectangle { contentSize.x - (padding + buttonHeight) * 1, padding, buttonHeight, buttonHeight }, GuiIconText(ICON_HELP, nullptr));
+   if (GuiButton(Rectangle { contentSize.x - (padding + buttonHeight) * 1, padding, buttonHeight, buttonHeight }, GuiIconText(ICON_HELP, nullptr)))
+   {
+      inputRequestHandler.helpWindowRequested();
+   }
 }

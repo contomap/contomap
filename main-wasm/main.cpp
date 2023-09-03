@@ -3,22 +3,27 @@
 #include <emscripten/emscripten.h>
 #include <raylib.h>
 
-#include "contomap/frontend/MainWindow.h"
+#include "contomap/application/Application.h"
 
+using contomap::application::Application;
 using contomap::frontend::DisplayEnvironment;
-using contomap::frontend::MainWindow;
 
-class WasmDisplayEnvironment : public DisplayEnvironment
+class WasmContext : public DisplayEnvironment
 {
 public:
-   WasmDisplayEnvironment()
-      : mainWindow(std::make_unique<MainWindow>(*this))
+   WasmContext()
+      : app(std::make_unique<Application>(*this))
    {
-      instance = mainWindow.get();
+      instance = app.get();
    }
-   ~WasmDisplayEnvironment() override
+   ~WasmContext() override
    {
       instance = nullptr;
+   }
+
+   void initWindow()
+   {
+      app->initWindow();
    }
 
    static void drawFrame()
@@ -34,28 +39,37 @@ public:
       emscripten_cancel_main_loop();
    }
 
+   void close()
+   {
+      app->close();
+   }
+
 private:
-   static MainWindow *instance;
-   std::unique_ptr<MainWindow> mainWindow;
+   static Application *instance;
+   std::unique_ptr<Application> app;
 };
-MainWindow *WasmDisplayEnvironment::instance = nullptr;
+Application *WasmContext::instance = nullptr;
 
 void static drawFrame()
 {
-   WasmDisplayEnvironment::drawFrame();
+   WasmContext::drawFrame();
+}
+
+static void runDrawFrameLoop()
+{
+   int desiredFps = 0; // Recommended to let the browser determine rate.
+   int simulateEndlessLoop = EM_TRUE; // Don't return from set_main_loop until emscripten_cancel_main_loop() is called.
+   emscripten_set_main_loop(drawFrame, desiredFps, simulateEndlessLoop);
 }
 
 int main()
 {
-   WasmDisplayEnvironment environment;
+   WasmContext context;
 
-   auto initialSize = MainWindow::DEFAULT_SIZE;
-   InitWindow(initialSize.getWidth().raw<int>(), initialSize.getHeight().raw<int>(), MainWindow::DEFAULT_TITLE);
+   SetConfigFlags(FLAG_WINDOW_HIGHDPI);
 
-   int desiredFps = 0; // Recommended to let the browser determine rate.
-   int simulateEndlessLoop = EM_TRUE; // Don't return from set_main_loop until emscripten_cancel_main_loop() is called.
-   emscripten_set_main_loop(drawFrame, desiredFps, simulateEndlessLoop);
-
-   CloseWindow();
+   context.initWindow();
+   runDrawFrameLoop();
+   context.close();
    return 0;
 }
