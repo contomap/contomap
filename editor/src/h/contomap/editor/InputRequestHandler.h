@@ -8,7 +8,8 @@ class InputRequestHandler
 public:
    virtual ~InputRequestHandler() = default;
 
-   virtual void helpWindowRequested() = 0;
+   virtual void helpWindowShowRequested() = 0;
+   virtual void helpWindowHideRequested() = 0;
 };
 
 } // namespace contomap::editor

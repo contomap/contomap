@@ -4,6 +4,7 @@
 
 #include "contomap/editor/InputRequestHandler.h"
 #include "contomap/frontend/DisplayEnvironment.h"
+#include "contomap/frontend/ViewModelState.h"
 
 namespace contomap::frontend
 {
@@ -49,6 +50,8 @@ public:
 
    MainWindow(DisplayEnvironment &environment, contomap::editor::InputRequestHandler &inputRequestHandler);
 
+   contomap::editor::ViewModel &viewModel();
+
    void init();
    void closeRequested();
    void drawFrame();
@@ -58,6 +61,8 @@ private:
    void drawBackground();
    void drawMap();
    void drawUserInterface();
+
+   contomap::frontend::ViewModelState viewModelState;
 
    contomap::frontend::DisplayEnvironment &environment;
    contomap::editor::InputRequestHandler &inputRequestHandler;

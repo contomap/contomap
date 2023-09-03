@@ -1,6 +1,4 @@
 
-#include <sstream>
-
 #define RAYGUI_IMPLEMENTATION
 #include <raygui/raygui.h>
 #include <raylib.h>
@@ -49,6 +47,11 @@ MainWindow::MainWindow(DisplayEnvironment &environment, contomap::editor::InputR
 {
 }
 
+contomap::editor::ViewModel &MainWindow::viewModel()
+{
+   return viewModelState;
+}
+
 void MainWindow::init()
 {
    auto initialSize = MainWindow::DEFAULT_SIZE;
@@ -87,7 +90,16 @@ void MainWindow::drawMap()
 
 void MainWindow::drawUserInterface()
 {
-   GuiEnableTooltip();
+   if (viewModelState.anyWindowShown())
+   {
+      GuiLock();
+      GuiDisableTooltip();
+   }
+   else
+   {
+      GuiUnlock();
+      GuiEnableTooltip();
+   }
 
    auto dpiScale = GetWindowScaleDPI();
    Vector2 contentSize { static_cast<float>(GetRenderWidth()) / dpiScale.x, static_cast<float>(GetRenderHeight()) / dpiScale.y };
@@ -97,6 +109,29 @@ void MainWindow::drawUserInterface()
    GuiSetTooltip("Show help window");
    if (GuiButton(Rectangle { contentSize.x - (padding + buttonHeight) * 1, padding, buttonHeight, buttonHeight }, GuiIconText(ICON_HELP, nullptr)))
    {
-      inputRequestHandler.helpWindowRequested();
+      inputRequestHandler.helpWindowShowRequested();
+   }
+
+   if (viewModelState.anyWindowShown())
+   {
+      DrawRectangle(0, 0, static_cast<int>(contentSize.x), static_cast<int>(contentSize.y), Fade(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)), 0.8f));
+      GuiUnlock();
+   }
+
+   if (viewModelState.helpWindowShown)
+   {
+      Vector2 windowSize { 320, 200 };
+      auto windowCloseRequested
+         = GuiWindowBox(Rectangle { contentSize.x / 2 - windowSize.x / 2, contentSize.y / 2 - windowSize.y / 2, windowSize.x, windowSize.y }, "#193#Help");
+
+      if (IsKeyPressed(KEY_ESCAPE))
+      {
+         windowCloseRequested = true;
+      }
+
+      if (windowCloseRequested)
+      {
+         inputRequestHandler.helpWindowHideRequested();
+      }
    }
 }
