@@ -39,6 +39,10 @@ if (NOT raylib_FOUND)
 endif ()
 #set(raylib_VERBOSE 1)
 
+add_library(raygui INTERFACE)
+target_include_directories(raygui INTERFACE "${PROJECT_SOURCE_DIR}/vendor/raygui/include")
+
+
 # This project
 
 file(GLOB_RECURSE LIB_FRONTEND_SOURCES "${PROJECT_SOURCE_DIR}/frontend/src/cpp/*.cpp")
@@ -46,6 +50,7 @@ add_library(contomap-frontend STATIC ${LIB_FRONTEND_SOURCES})
 target_include_directories(contomap-frontend PUBLIC "${PROJECT_SOURCE_DIR}/frontend/src/h")
 target_link_libraries(contomap-frontend
         PUBLIC
+        raygui
         raylib
 )
 
