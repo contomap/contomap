@@ -1,6 +1,8 @@
 
 #include <sstream>
 
+#define RAYGUI_IMPLEMENTATION
+#include <raygui/raygui.h>
 #include <raylib.h>
 
 #include "contomap/frontend/MainWindow.h"
@@ -38,7 +40,7 @@ MainWindow::LengthInPixel MainWindow::Size::getHeight() const
    return height;
 }
 
-MainWindow::Size const MainWindow::DEFAULT_SIZE = MainWindow::Size::ofPixel(1600, 900);
+MainWindow::Size const MainWindow::DEFAULT_SIZE = MainWindow::Size::ofPixel(800, 450);
 char const MainWindow::DEFAULT_TITLE[] = "contomap";
 
 MainWindow::MainWindow(DisplayEnvironment &environment)
@@ -54,10 +56,32 @@ void MainWindow::closeRequested()
 void MainWindow::drawFrame()
 {
    BeginDrawing();
-   ClearBackground(RAYWHITE);
 
-   std::ostringstream text;
-   text << "Window is rendered";
-   DrawText(text.str().c_str(), 190, 200, 20, LIGHTGRAY);
+   drawBackground();
+   drawMap();
+   drawUserInterface();
+
    EndDrawing();
+}
+
+void MainWindow::drawBackground()
+{
+   ClearBackground(WHITE);
+}
+
+void MainWindow::drawMap()
+{
+}
+
+void MainWindow::drawUserInterface()
+{
+   GuiEnableTooltip();
+
+   auto dpiScale = GetWindowScaleDPI();
+   Vector2 contentSize { static_cast<float>(GetRenderWidth()) / dpiScale.x, static_cast<float>(GetRenderHeight()) / dpiScale.y };
+   auto buttonHeight = 24.0f; // * dpiScale.y;
+   auto padding = 2.0f; // * dpiScale.y;
+   GuiPanel(Rectangle { 0, 0, contentSize.x, buttonHeight + (padding * 2.0f) }, nullptr);
+   GuiSetTooltip("Show help window");
+   GuiButton(Rectangle { contentSize.x - (padding + buttonHeight) * 1, padding, buttonHeight, buttonHeight }, GuiIconText(ICON_HELP, nullptr));
 }

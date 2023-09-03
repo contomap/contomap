@@ -13,16 +13,6 @@ public:
       shouldClose = true;
    }
 
-   bool isFullscreen() override
-   {
-      return IsWindowFullscreen();
-   }
-
-   void toggleFullscreen() override
-   {
-      ToggleFullscreen();
-   }
-
    [[nodiscard]] bool shouldCloseWindow() const
    {
       return shouldClose;
@@ -36,6 +26,8 @@ int main()
 {
    DesktopEnvironment environment;
    MainWindow mainWindow(environment);
+
+   SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_HIGHDPI);
 
    auto initialSize = MainWindow::DEFAULT_SIZE;
    InitWindow(initialSize.getWidth().raw<int>(), initialSize.getHeight().raw<int>(), MainWindow::DEFAULT_TITLE);

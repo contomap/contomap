@@ -12,14 +12,13 @@ class WasmDisplayEnvironment : public DisplayEnvironment
 {
 public:
    WasmDisplayEnvironment()
+      : mainWindow(std::make_unique<MainWindow>(*this))
    {
-      mainWindow = std::make_unique<MainWindow>(*this);
       instance = mainWindow.get();
    }
    ~WasmDisplayEnvironment() override
    {
       instance = nullptr;
-      mainWindow.reset();
    }
 
    static void drawFrame()
@@ -33,15 +32,6 @@ public:
    void closeWindow() override
    {
       emscripten_cancel_main_loop();
-   }
-
-   bool isFullscreen() override
-   {
-      return false;
-   }
-
-   void toggleFullscreen() override
-   {
    }
 
 private:

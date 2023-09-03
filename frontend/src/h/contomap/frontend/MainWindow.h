@@ -52,6 +52,10 @@ public:
    void drawFrame();
 
 private:
+   void drawBackground();
+   void drawMap();
+   void drawUserInterface();
+
    DisplayEnvironment &environment;
 };
 
