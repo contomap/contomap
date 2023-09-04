@@ -8,9 +8,15 @@
 using contomap::application::Application;
 using contomap::frontend::DisplayEnvironment;
 
+/**
+ * WasmContext represents the display environment for a browser-embedded WASM application.
+ */
 class WasmContext : public DisplayEnvironment
 {
 public:
+   /**
+    * Constructor.
+    */
    WasmContext()
       : app(std::make_unique<Application>(*this))
    {
@@ -21,11 +27,17 @@ public:
       instance = nullptr;
    }
 
+   /**
+    * Initialize and open the window.
+    */
    void initWindow()
    {
       app->initWindow();
    }
 
+   /**
+    * Request to draw a new frame.
+    */
    static void drawFrame()
    {
       if (instance != nullptr)
@@ -39,6 +51,9 @@ public:
       emscripten_cancel_main_loop();
    }
 
+   /**
+    * Informs the application to close down.
+    */
    void close()
    {
       app->close();

@@ -34,6 +34,7 @@ function help() {
   echo "compile      Builds the binaries."
   echo "test         Executes all tests (of default compilation)."
   echo "lint         Check the source for any errors. Recommended to be done in clean state."
+  echo "doc          Creates documentation."
   echo ""
   echo ""
   echo "Options:"
@@ -143,6 +144,15 @@ function testDefault() {
   fi
 }
 
+function document() {
+  ensureBuildDir "doc"
+  if ! doxygen Doxyfile; then
+    log "Doxygen failed with warnings, aborting:"
+    cat "${projectBaseDir}/cmake-build-all/doxygen-warnings.txt" >> /dev/stderr
+    exit $exitCodeLintError
+  fi
+}
+
 function lintFormat() {
   local failed=0
   shopt -s globstar
@@ -165,6 +175,7 @@ function lintFormat() {
 
 function lint() {
   lintFormat
+  document
 }
 
 function main {
@@ -200,6 +211,9 @@ function main {
       ;;
       "lint")
         lint
+      ;;
+      "doc")
+        document
       ;;
       *)
         log "Unknown argument '$1'. Run script with '--help' for available arguments."
