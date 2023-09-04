@@ -39,8 +39,15 @@ if (NOT raylib_FOUND)
 endif ()
 #set(raylib_VERBOSE 1)
 
-add_library(raygui INTERFACE)
-target_include_directories(raygui INTERFACE "${PROJECT_SOURCE_DIR}/vendor/raygui/include")
+add_library(raygui STATIC "${PROJECT_SOURCE_DIR}/vendor/raygui/src/raygui.c")
+target_include_directories(raygui
+        PRIVATE
+        "${PROJECT_SOURCE_DIR}/vendor/raygui/include/raygui"
+        PUBLIC
+        "${PROJECT_SOURCE_DIR}/vendor/raygui/include"
+)
+target_link_libraries(raygui PUBLIC raylib)
+target_compile_definitions(raygui PRIVATE RAYGUI_IMPLEMENTATION)
 
 
 # This project
