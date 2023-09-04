@@ -13,6 +13,11 @@ first via an issue before making a change.
 * MinGW - capable of C++20
 * For web (WASM)
     * emscripten - install as per https://emscripten.org/ (Which requires Python, indirectly)
+* For documentation
+    * doxygen
+    * graphviz
+* For source formatting
+    * clang-format
 
 ### On command-line
 
