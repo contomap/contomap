@@ -145,6 +145,7 @@ function testDefault() {
 }
 
 function document() {
+  ensureBuildDir "doc"
   if ! doxygen Doxyfile; then
     log "Doxygen failed with warnings, aborting:"
     cat "${projectBaseDir}/cmake-build-all/doxygen-warnings.txt" >> /dev/stderr
