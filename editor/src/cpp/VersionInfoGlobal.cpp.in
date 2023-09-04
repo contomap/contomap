@@ -1,0 +1,5 @@
+#include "contomap/editor/VersionInfo.h"
+
+using contomap::editor::VersionInfo;
+
+VersionInfo const VersionInfo::GLOBAL("@GIT_BRANCH@", "@GIT_REVISION@", "@GIT_TAG@"); // initialized via CMakeLists.txt
