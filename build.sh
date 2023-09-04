@@ -148,6 +148,10 @@ function lintFormat() {
   shopt -s globstar
   shopt -s nullglob
   for sourceFile in "${projectBaseDir}"/**/*.cpp "${projectBaseDir}"/**/*.h; do
+    if [[ "${sourceFile}" =~ ^"${projectBaseDir}/vendor/" || "${sourceFile}" =~ ^"${projectBaseDir}/cmake-build-" ]]; then
+      continue
+    fi
+
     log "Checking '${sourceFile}'"
     if ! clang-format --dry-run --Werror "${sourceFile}"; then
       failed=$(( failed + 1 ))

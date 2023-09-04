@@ -2,7 +2,9 @@
 
 #include <cstdint>
 
+#include "contomap/editor/InputRequestHandler.h"
 #include "contomap/frontend/DisplayEnvironment.h"
+#include "contomap/frontend/ViewModelState.h"
 
 namespace contomap::frontend
 {
@@ -46,13 +48,24 @@ public:
    static Size const DEFAULT_SIZE;
    static char const DEFAULT_TITLE[];
 
-   explicit MainWindow(DisplayEnvironment &environment);
+   MainWindow(DisplayEnvironment &environment, contomap::editor::InputRequestHandler &inputRequestHandler);
 
+   contomap::editor::ViewModel &viewModel();
+
+   void init();
    void closeRequested();
    void drawFrame();
+   void close();
 
 private:
-   DisplayEnvironment &environment;
+   void drawBackground();
+   void drawMap();
+   void drawUserInterface();
+
+   contomap::frontend::ViewModelState viewModelState;
+
+   contomap::frontend::DisplayEnvironment &environment;
+   contomap::editor::InputRequestHandler &inputRequestHandler;
 };
 
 } // namespace contomap::frontend

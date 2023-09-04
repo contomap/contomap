@@ -39,13 +39,57 @@ if (NOT raylib_FOUND)
 endif ()
 #set(raylib_VERBOSE 1)
 
+add_library(raygui STATIC "${PROJECT_SOURCE_DIR}/vendor/raygui/src/raygui.c")
+target_include_directories(raygui
+        PRIVATE
+        "${PROJECT_SOURCE_DIR}/vendor/raygui/include/raygui"
+        PUBLIC
+        "${PROJECT_SOURCE_DIR}/vendor/raygui/include"
+)
+target_link_libraries(raygui PUBLIC raylib)
+target_compile_definitions(raygui PRIVATE RAYGUI_IMPLEMENTATION)
+
+
+find_package(Git)
+execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD OUTPUT_VARIABLE GIT_REVISION ERROR_QUIET)
+
+if ("${GIT_REVISION}" STREQUAL "")
+    # Set information to be not available, in case the source was taken from an exported archive.
+    set(GIT_BRANCH "n/a")
+    set(GIT_REVISION "n/a")
+    set(GIT_TAG "n/a")
+else ()
+    execute_process(COMMAND ${GIT_EXECUTABLE} describe --exact-match --tags OUTPUT_VARIABLE GIT_TAG ERROR_QUIET)
+    execute_process(COMMAND ${GIT_EXECUTABLE} symbolic-ref --short -q HEAD OUTPUT_VARIABLE GIT_BRANCH)
+
+    string(STRIP "${GIT_BRANCH}" GIT_BRANCH)
+    string(STRIP "${GIT_REVISION}" GIT_REVISION)
+    string(STRIP "${GIT_TAG}" GIT_TAG)
+endif ()
+
 # This project
+
+configure_file("${PROJECT_SOURCE_DIR}/editor/src/cpp/VersionInfoGlobal.cpp.in" "VersionInfoGlobal.cpp" USE_SOURCE_PERMISSIONS @ONLY)
+file(GLOB_RECURSE LIB_EDITOR_SOURCES "${PROJECT_SOURCE_DIR}/editor/src/cpp/*.cpp")
+add_library(contomap-editor STATIC ${LIB_EDITOR_SOURCES} "${CMAKE_CURRENT_BINARY_DIR}/VersionInfoGlobal.cpp")
+target_include_directories(contomap-editor PUBLIC "${PROJECT_SOURCE_DIR}/editor/src/h")
+
+file(GLOB_RECURSE LIB_EDITOR_TEST_SOURCES "${PROJECT_SOURCE_DIR}/editor/test/*.cpp")
+add_executable(contomap-editor-test ${LIB_EDITOR_TEST_SOURCES})
+target_link_libraries(contomap-editor-test
+        PUBLIC
+        contomap-editor
+        GTest::gmock_main
+)
+
 
 file(GLOB_RECURSE LIB_FRONTEND_SOURCES "${PROJECT_SOURCE_DIR}/frontend/src/cpp/*.cpp")
 add_library(contomap-frontend STATIC ${LIB_FRONTEND_SOURCES})
 target_include_directories(contomap-frontend PUBLIC "${PROJECT_SOURCE_DIR}/frontend/src/h")
 target_link_libraries(contomap-frontend
         PUBLIC
+        contomap-editor
+        raygui
         raylib
 )
 
@@ -57,6 +101,14 @@ target_link_libraries(contomap-frontend-test
         GTest::gmock_main
 )
 
+file(GLOB_RECURSE LIB_APPLICATION_SOURCES "${PROJECT_SOURCE_DIR}/application/src/cpp/*.cpp")
+add_library(contomap-application STATIC ${LIB_APPLICATION_SOURCES})
+target_include_directories(contomap-application PUBLIC "${PROJECT_SOURCE_DIR}/application/src/h")
+target_link_libraries(contomap-application
+        PUBLIC
+        contomap-editor
+        contomap-frontend
+)
 
 # TODO: options for all contomap targets
 target_compile_options(contomap-frontend PRIVATE
@@ -67,7 +119,7 @@ target_compile_options(contomap-frontend PRIVATE
 if (${PLATFORM} STREQUAL "Desktop")
     add_executable(contomap "${PROJECT_SOURCE_DIR}/main-desktop/main.cpp")
     target_link_libraries(contomap
-            contomap-frontend
+            contomap-application
             raylib
     )
     if (APPLE)
@@ -83,7 +135,7 @@ if (${PLATFORM} STREQUAL "Desktop")
 elseif (${PLATFORM} STREQUAL "Web")
     add_executable(contomap-wasm "${PROJECT_SOURCE_DIR}/main-wasm/main.cpp")
     target_link_libraries(contomap-wasm
-            contomap-frontend
+            contomap-application
             raylib
     )
     # Tell Emscripten to build an example.html file.
