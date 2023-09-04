@@ -5,6 +5,9 @@
 using contomap::application::Application;
 using contomap::frontend::DisplayEnvironment;
 
+/**
+ * DesktopEnvironment represents the display environment for a standalone application.
+ */
 class DesktopEnvironment : public DisplayEnvironment
 {
 public:
@@ -13,6 +16,9 @@ public:
       shouldClose = true;
    }
 
+   /**
+    * @return true in case the window should be closed.
+    */
    [[nodiscard]] bool shouldCloseWindow() const
    {
       return shouldClose;
