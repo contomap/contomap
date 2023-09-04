@@ -67,16 +67,29 @@ else ()
     string(STRIP "${GIT_TAG}" GIT_TAG)
 endif ()
 
+add_library(all_warnings INTERFACE)
+target_compile_options(all_warnings INTERFACE
+        $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-Wall>
+        $<$<CXX_COMPILER_ID:MSVC>:-W4>
+)
+
+
 # This project
 
 configure_file("${PROJECT_SOURCE_DIR}/editor/src/cpp/VersionInfoGlobal.cpp.in" "VersionInfoGlobal.cpp" USE_SOURCE_PERMISSIONS @ONLY)
 file(GLOB_RECURSE LIB_EDITOR_SOURCES "${PROJECT_SOURCE_DIR}/editor/src/cpp/*.cpp")
 add_library(contomap-editor STATIC ${LIB_EDITOR_SOURCES} "${CMAKE_CURRENT_BINARY_DIR}/VersionInfoGlobal.cpp")
 target_include_directories(contomap-editor PUBLIC "${PROJECT_SOURCE_DIR}/editor/src/h")
+target_link_libraries(contomap-editor
+        PRIVATE
+        all_warnings
+)
 
 file(GLOB_RECURSE LIB_EDITOR_TEST_SOURCES "${PROJECT_SOURCE_DIR}/editor/test/*.cpp")
 add_executable(contomap-editor-test ${LIB_EDITOR_TEST_SOURCES})
 target_link_libraries(contomap-editor-test
+        PRIVATE
+        all_warnings
         PUBLIC
         contomap-editor
         GTest::gmock_main
@@ -87,6 +100,8 @@ file(GLOB_RECURSE LIB_FRONTEND_SOURCES "${PROJECT_SOURCE_DIR}/frontend/src/cpp/*
 add_library(contomap-frontend STATIC ${LIB_FRONTEND_SOURCES})
 target_include_directories(contomap-frontend PUBLIC "${PROJECT_SOURCE_DIR}/frontend/src/h")
 target_link_libraries(contomap-frontend
+        PRIVATE
+        all_warnings
         PUBLIC
         contomap-editor
         raygui
@@ -96,6 +111,8 @@ target_link_libraries(contomap-frontend
 file(GLOB_RECURSE LIB_FRONTEND_TEST_SOURCES "${PROJECT_SOURCE_DIR}/frontend/test/*.cpp")
 add_executable(contomap-frontend-test ${LIB_FRONTEND_TEST_SOURCES})
 target_link_libraries(contomap-frontend-test
+        PRIVATE
+        all_warnings
         PUBLIC
         contomap-frontend
         GTest::gmock_main
@@ -105,20 +122,18 @@ file(GLOB_RECURSE LIB_APPLICATION_SOURCES "${PROJECT_SOURCE_DIR}/application/src
 add_library(contomap-application STATIC ${LIB_APPLICATION_SOURCES})
 target_include_directories(contomap-application PUBLIC "${PROJECT_SOURCE_DIR}/application/src/h")
 target_link_libraries(contomap-application
+        PRIVATE
+        all_warnings
         PUBLIC
         contomap-editor
         contomap-frontend
 )
 
-# TODO: options for all contomap targets
-target_compile_options(contomap-frontend PRIVATE
-        $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-Wall>
-        $<$<CXX_COMPILER_ID:MSVC>:-W4>
-)
-
 if (${PLATFORM} STREQUAL "Desktop")
     add_executable(contomap "${PROJECT_SOURCE_DIR}/main-desktop/main.cpp")
     target_link_libraries(contomap
+            PRIVATE
+            all_warnings
             contomap-application
             raylib
     )
@@ -135,6 +150,8 @@ if (${PLATFORM} STREQUAL "Desktop")
 elseif (${PLATFORM} STREQUAL "Web")
     add_executable(contomap-wasm "${PROJECT_SOURCE_DIR}/main-wasm/main.cpp")
     target_link_libraries(contomap-wasm
+            PRIVATE
+            all_warnings
             contomap-application
             raylib
     )
