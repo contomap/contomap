@@ -76,6 +76,25 @@ target_compile_options(all_warnings INTERFACE
 
 # This project
 
+file(GLOB_RECURSE LIB_MODEL_SOURCES "${PROJECT_SOURCE_DIR}/model/src/cpp/*.cpp")
+add_library(contomap-model STATIC ${LIB_MODEL_SOURCES})
+target_include_directories(contomap-model PUBLIC "${PROJECT_SOURCE_DIR}/model/src/h")
+target_link_libraries(contomap-model
+        PRIVATE
+        all_warnings
+)
+
+file(GLOB_RECURSE LIB_MODEL_TEST_SOURCES "${PROJECT_SOURCE_DIR}/model/test/*.cpp")
+add_executable(contomap-model-test ${LIB_MODEL_TEST_SOURCES})
+target_link_libraries(contomap-model-test
+        PRIVATE
+        all_warnings
+        PUBLIC
+        contomap-model
+        GTest::gmock_main
+)
+
+
 configure_file("${PROJECT_SOURCE_DIR}/editor/src/cpp/VersionInfoGlobal.cpp.in" "VersionInfoGlobal.cpp" USE_SOURCE_PERMISSIONS @ONLY)
 file(GLOB_RECURSE LIB_EDITOR_SOURCES "${PROJECT_SOURCE_DIR}/editor/src/cpp/*.cpp")
 add_library(contomap-editor STATIC ${LIB_EDITOR_SOURCES} "${CMAKE_CURRENT_BINARY_DIR}/VersionInfoGlobal.cpp")
@@ -83,6 +102,8 @@ target_include_directories(contomap-editor PUBLIC "${PROJECT_SOURCE_DIR}/editor/
 target_link_libraries(contomap-editor
         PRIVATE
         all_warnings
+        PUBLIC
+        contomap-model
 )
 
 file(GLOB_RECURSE LIB_EDITOR_TEST_SOURCES "${PROJECT_SOURCE_DIR}/editor/test/*.cpp")

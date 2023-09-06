@@ -1,5 +1,7 @@
 #pragma once
 
+#include "contomap/model/TopicName.h"
+
 namespace contomap::editor
 {
 
@@ -20,6 +22,23 @@ public:
     * Called when the help window shall be hidden.
     */
    virtual void helpWindowHideRequested() = 0;
+
+   /**
+    * Called when a new topic is requested.
+    */
+   virtual void newTopicRequested() = 0;
+
+   /**
+    * Called when the recent request to create a new topic was aborted.
+    */
+   virtual void newTopicRequestAborted() = 0;
+
+   /**
+    * Called when a new topic shall be created.
+    *
+    * @param name how the new topic shall be named
+    */
+   virtual void newTopicRequested(contomap::model::TopicName name) = 0;
 };
 
 } // namespace contomap::editor

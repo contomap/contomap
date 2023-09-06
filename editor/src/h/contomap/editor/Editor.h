@@ -23,6 +23,10 @@ public:
    void helpWindowShowRequested() override;
    void helpWindowHideRequested() override;
 
+   void newTopicRequested() override;
+   void newTopicRequestAborted() override;
+   void newTopicRequested(contomap::model::TopicName name) override;
+
 private:
    contomap::editor::ViewModel &viewModel();
 

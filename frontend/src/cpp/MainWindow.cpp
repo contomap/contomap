@@ -7,6 +7,7 @@
 #include "contomap/frontend/MainWindow.h"
 
 using contomap::frontend::MainWindow;
+using contomap::model::TopicName;
 
 MainWindow::LengthInPixel::LengthInPixel(MainWindow::LengthInPixel::ValueType value)
    : value(value)
@@ -87,6 +88,30 @@ void MainWindow::drawBackground()
 
 void MainWindow::drawMap()
 {
+   Camera2D cam;
+
+   auto dpiScale = GetWindowScaleDPI();
+   Vector2 contentSize { static_cast<float>(GetRenderWidth()) / dpiScale.x, static_cast<float>(GetRenderHeight()) / dpiScale.y };
+
+   cam.offset = Vector2 { contentSize.x / 2.0f, contentSize.y / 2.0f };
+   cam.target = Vector2 { 0.0f, 0.0f };
+   cam.rotation = 0.0f;
+   cam.zoom = 10.0f;
+   BeginMode2D(cam);
+
+   /*
+      DrawCircleSector(Vector2 { -15.0f, 0.0f }, 20.0f, 180.0f, 360.0f, 20, Color { 0xFF, 0x00, 0x00, 0x80 });
+      DrawRectangle(-15, -20, 30, 40, Color { 0x00, 0xFF, 0x00, 0x80 });
+      DrawCircleSector(Vector2 { 15.0f, 0.0f }, 20.0f, 0.0f, 180.0f, 20, Color { 0x00, 0x00, 0xFF, 0x80 });
+
+      Font font = GetFontDefault();
+      std::string text("test");
+      float fontSize = 30.0f;
+      float spacing = 0.0f;
+      auto textSize = MeasureTextEx(font, text.c_str(), fontSize, spacing);
+      DrawTextEx(font, text.c_str(), Vector2 { -textSize.x / 2.0f, -textSize.y / 2.0f }, fontSize, spacing, Color { 0x00, 0x00, 0x00, 0xFF });
+   */
+   EndMode2D();
 }
 
 void MainWindow::drawUserInterface()
@@ -100,6 +125,11 @@ void MainWindow::drawUserInterface()
    {
       GuiUnlock();
       GuiEnableTooltip();
+
+      if (IsKeyPressed(KEY_INSERT))
+      {
+         inputRequestHandler.newTopicRequested();
+      }
    }
 
    auto dpiScale = GetWindowScaleDPI();
@@ -156,6 +186,34 @@ void MainWindow::drawUserInterface()
       if (windowCloseRequested)
       {
          inputRequestHandler.helpWindowHideRequested();
+      }
+   }
+
+   if (viewModelState.newTopicWindowShown)
+   {
+      Vector2 windowSize { 320, 200 };
+      Vector2 windowPos { contentSize.x / 2 - windowSize.x / 2, contentSize.y / 2 - windowSize.y / 2 };
+
+      auto requestAborted = GuiWindowBox(Rectangle { windowPos.x, windowPos.y, windowSize.x, windowSize.y }, "New Topic");
+
+      if (IsKeyPressed(KEY_ESCAPE))
+      {
+         requestAborted = true;
+      }
+
+      auto height = 20.0f;
+
+      auto accepted = GuiTextBox(Rectangle { .x = windowPos.x + padding, .y = windowPos.y + 40.0f, .width = windowSize.x - padding * 2, .height = height },
+         viewModelState.newTopicName.data(), static_cast<int>(viewModelState.newTopicName.size()), true);
+
+      auto potentialTopicName = TopicName::from(viewModelState.newTopicName.data());
+      if (accepted && std::holds_alternative<TopicName>(potentialTopicName))
+      {
+         inputRequestHandler.newTopicRequested(std::get<TopicName>(potentialTopicName));
+      }
+      else if (requestAborted)
+      {
+         inputRequestHandler.newTopicRequestAborted();
       }
    }
 }
