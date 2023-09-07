@@ -23,6 +23,11 @@ std::variant<std::monostate, Identifier> Identifier::from(ValueType value)
 
 Identifier Identifier::random()
 {
+   // This algorithm creates a random identifier using the set of allowed characters, with the
+   // extra requirement that no more than two letters are allowed in sequence. This is done
+   // in order to avoid the accidental creation of words. There is still the potential that
+   // words are created in "leet speak" by interpreting digits as letters, or that valid two-letter
+   // words come out, yet this is negligible.
    static thread_local std::mt19937 gen([]() {
       std::random_device rd;
       return rd();
