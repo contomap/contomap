@@ -7,7 +7,7 @@
 #include "contomap/frontend/MainWindow.h"
 
 using contomap::frontend::MainWindow;
-using contomap::model::TopicName;
+using contomap::model::TopicNameValue;
 
 MainWindow::LengthInPixel::LengthInPixel(MainWindow::LengthInPixel::ValueType value)
    : value(value)
@@ -206,10 +206,10 @@ void MainWindow::drawUserInterface()
       auto accepted = GuiTextBox(Rectangle { .x = windowPos.x + padding, .y = windowPos.y + 40.0f, .width = windowSize.x - padding * 2, .height = height },
          viewModelState.newTopicName.data(), static_cast<int>(viewModelState.newTopicName.size()), true);
 
-      auto potentialTopicName = TopicName::from(viewModelState.newTopicName.data());
-      if (accepted && std::holds_alternative<TopicName>(potentialTopicName))
+      auto potentialTopicName = TopicNameValue::from(viewModelState.newTopicName.data());
+      if (accepted && std::holds_alternative<TopicNameValue>(potentialTopicName))
       {
-         inputRequestHandler.newTopicRequested(std::get<TopicName>(potentialTopicName));
+         inputRequestHandler.newTopicRequested(std::get<TopicNameValue>(potentialTopicName));
       }
       else if (requestAborted)
       {

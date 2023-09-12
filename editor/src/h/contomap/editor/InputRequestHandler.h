@@ -1,6 +1,6 @@
 #pragma once
 
-#include "contomap/model/TopicName.h"
+#include "contomap/model/TopicNameValue.h"
 
 namespace contomap::editor
 {
@@ -38,7 +38,7 @@ public:
     *
     * @param name how the new topic shall be named
     */
-   virtual void newTopicRequested(contomap::model::TopicName name) = 0;
+   virtual void newTopicRequested(contomap::model::TopicNameValue name) = 0;
 };
 
 } // namespace contomap::editor

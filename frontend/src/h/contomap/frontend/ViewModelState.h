@@ -3,7 +3,7 @@
 #include <array>
 
 #include "contomap/editor/ViewModel.h"
-#include "contomap/model/TopicName.h"
+#include "contomap/model/TopicNameValue.h"
 
 namespace contomap::frontend
 {
@@ -58,7 +58,7 @@ public:
    /**
     * The current name of the topic to be created.
     */
-   std::array<char, contomap::model::TopicName::maxUtf8Bytes() + 1> newTopicName {};
+   std::array<char, contomap::model::TopicNameValue::maxUtf8Bytes() + 1> newTopicName {};
 
 private:
    void clearNewTopicName()

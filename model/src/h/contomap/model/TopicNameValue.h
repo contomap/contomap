@@ -9,7 +9,7 @@ namespace contomap::model
 /**
  * TopicName is the primary, human readable identifier of a topic.
  */
-class TopicName
+class TopicNameValue
 {
 public:
    /**
@@ -29,12 +29,12 @@ public:
     * @param value the raw string value to take over
     * @return either the right type of the created name, or an error instead.
     */
-   [[nodiscard]] static std::variant<std::monostate, TopicName> from(std::string value);
+   [[nodiscard]] static std::variant<std::monostate, TopicNameValue> from(std::string value);
 
-   constexpr std::strong_ordering operator<=>(TopicName const &b) const noexcept = default;
+   constexpr std::strong_ordering operator<=>(TopicNameValue const &b) const noexcept = default;
 
 private:
-   explicit TopicName(std::string value);
+   explicit TopicNameValue(std::string value);
 
    std::string value;
 };

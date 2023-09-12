@@ -25,7 +25,7 @@ public:
 
    void newTopicRequested() override;
    void newTopicRequestAborted() override;
-   void newTopicRequested(contomap::model::TopicName name) override;
+   void newTopicRequested(contomap::model::TopicNameValue name) override;
 
 private:
    contomap::editor::ViewModel &viewModel();

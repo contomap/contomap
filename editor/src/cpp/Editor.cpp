@@ -3,7 +3,7 @@
 #include "contomap/editor/Editor.h"
 
 using contomap::editor::Editor;
-using contomap::model::TopicName;
+using contomap::model::TopicNameValue;
 
 void Editor::use(contomap::editor::ViewModel &viewModel)
 {
@@ -31,7 +31,7 @@ void Editor::newTopicRequestAborted()
    viewModel().hideNewTopicWindow();
 }
 
-void Editor::newTopicRequested(TopicName name)
+void Editor::newTopicRequested(TopicNameValue name)
 {
    viewModel().hideNewTopicWindow();
 }
