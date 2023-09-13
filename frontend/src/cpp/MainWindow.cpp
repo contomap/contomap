@@ -7,6 +7,7 @@
 #include "contomap/frontend/MainWindow.h"
 
 using contomap::frontend::MainWindow;
+using contomap::frontend::RenderContext;
 using contomap::model::TopicNameValue;
 
 MainWindow::LengthInPixel::LengthInPixel(MainWindow::LengthInPixel::ValueType value)
@@ -74,9 +75,11 @@ void MainWindow::drawFrame()
 {
    BeginDrawing();
 
+   auto renderContext = RenderContext::fromCurrentState();
+
    drawBackground();
    drawMap();
-   drawUserInterface();
+   drawUserInterface(renderContext);
 
    EndDrawing();
 }
@@ -114,7 +117,7 @@ void MainWindow::drawMap()
    EndMode2D();
 }
 
-void MainWindow::drawUserInterface()
+void MainWindow::drawUserInterface(RenderContext const &context)
 {
    if (viewModelState.anyWindowShown())
    {
@@ -132,8 +135,7 @@ void MainWindow::drawUserInterface()
       }
    }
 
-   auto dpiScale = GetWindowScaleDPI();
-   Vector2 contentSize { static_cast<float>(GetRenderWidth()) / dpiScale.x, static_cast<float>(GetRenderHeight()) / dpiScale.y };
+   auto contentSize = context.getContentSize();
    auto buttonHeight = 24.0f;
    auto padding = 2.0f;
    GuiPanel(Rectangle { 0, 0, contentSize.x, buttonHeight + (padding * 2.0f) }, nullptr);
