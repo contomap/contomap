@@ -3,6 +3,7 @@
 
 #include "contomap/frontend/HelpDialog.h"
 #include "contomap/frontend/MainWindow.h"
+#include "contomap/frontend/NewTopicDialog.h"
 
 using contomap::frontend::MainWindow;
 using contomap::frontend::RenderContext;
@@ -46,11 +47,6 @@ MainWindow::MainWindow(DisplayEnvironment &environment, contomap::editor::InputR
    : environment(environment)
    , inputRequestHandler(inputRequestHandler)
 {
-}
-
-contomap::editor::ViewModel &MainWindow::viewModel()
-{
-   return viewModelState;
 }
 
 void MainWindow::init()
@@ -121,7 +117,7 @@ void MainWindow::drawUserInterface(RenderContext const &context)
    {
       currentDialog = std::move(pendingDialog);
    }
-   if (viewModelState.anyWindowShown() || (currentDialog != nullptr))
+   if (currentDialog != nullptr)
    {
       GuiLock();
       GuiDisableTooltip();
@@ -133,7 +129,7 @@ void MainWindow::drawUserInterface(RenderContext const &context)
 
       if (IsKeyPressed(KEY_INSERT))
       {
-         inputRequestHandler.newTopicRequested();
+         openNewTopicDialog();
       }
    }
 
@@ -147,50 +143,29 @@ void MainWindow::drawUserInterface(RenderContext const &context)
       openHelpDialog();
    }
 
-   if (viewModelState.anyWindowShown() || (currentDialog != nullptr))
+   if (currentDialog != nullptr)
    {
       DrawRectangle(0, 0, static_cast<int>(contentSize.x), static_cast<int>(contentSize.y), Fade(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)), 0.8f));
       GuiUnlock();
-   }
 
-   if (currentDialog != nullptr)
-   {
       if (currentDialog->draw(context))
       {
-         currentDialog.reset();
+         closeDialog();
       }
    }
+}
 
-   if (viewModelState.newTopicWindowShown)
-   {
-      Vector2 windowSize { 320, 200 };
-      Vector2 windowPos { contentSize.x / 2 - windowSize.x / 2, contentSize.y / 2 - windowSize.y / 2 };
-
-      auto requestAborted = GuiWindowBox(Rectangle { windowPos.x, windowPos.y, windowSize.x, windowSize.y }, "New Topic");
-
-      if (IsKeyPressed(KEY_ESCAPE))
-      {
-         requestAborted = true;
-      }
-
-      auto height = 20.0f;
-
-      auto accepted = GuiTextBox(Rectangle { .x = windowPos.x + padding, .y = windowPos.y + 40.0f, .width = windowSize.x - padding * 2, .height = height },
-         viewModelState.newTopicName.data(), static_cast<int>(viewModelState.newTopicName.size()), true);
-
-      auto potentialTopicName = TopicNameValue::from(viewModelState.newTopicName.data());
-      if (accepted && std::holds_alternative<TopicNameValue>(potentialTopicName))
-      {
-         inputRequestHandler.newTopicRequested(std::get<TopicNameValue>(potentialTopicName));
-      }
-      else if (requestAborted)
-      {
-         inputRequestHandler.newTopicRequestAborted();
-      }
-   }
+void MainWindow::closeDialog()
+{
+   currentDialog.reset();
 }
 
 void MainWindow::openHelpDialog()
 {
    pendingDialog = std::make_unique<contomap::frontend::HelpDialog>();
+}
+
+void MainWindow::openNewTopicDialog()
+{
+   pendingDialog = std::make_unique<contomap::frontend::NewTopicDialog>(inputRequestHandler);
 }

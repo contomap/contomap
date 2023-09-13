@@ -14,16 +14,6 @@ public:
    virtual ~InputRequestHandler() = default;
 
    /**
-    * Called when a new topic is requested.
-    */
-   virtual void newTopicRequested() = 0;
-
-   /**
-    * Called when the recent request to create a new topic was aborted.
-    */
-   virtual void newTopicRequestAborted() = 0;
-
-   /**
     * Called when a new topic shall be created.
     *
     * @param name how the new topic shall be named

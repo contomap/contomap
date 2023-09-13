@@ -5,7 +5,6 @@ using contomap::application::Application;
 Application::Application(contomap::frontend::DisplayEnvironment &displayEnvironment)
    : mainWindow(displayEnvironment, editor)
 {
-   editor.use(mainWindow.viewModel());
 }
 
 void Application::initWindow()

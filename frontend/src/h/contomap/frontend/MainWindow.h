@@ -92,11 +92,6 @@ public:
    MainWindow(DisplayEnvironment &environment, contomap::editor::InputRequestHandler &inputRequestHandler);
 
    /**
-    * @return the ViewModel instance that is used to represent the editor state
-    */
-   contomap::editor::ViewModel &viewModel();
-
-   /**
     * Initializes and opens the window in the display environment.
     */
    void init();
@@ -124,7 +119,9 @@ private:
    void drawMap();
    void drawUserInterface(contomap::frontend::RenderContext const &context);
 
+   void closeDialog();
    void openHelpDialog();
+   void openNewTopicDialog();
 
    contomap::frontend::ViewModelState viewModelState;
 
