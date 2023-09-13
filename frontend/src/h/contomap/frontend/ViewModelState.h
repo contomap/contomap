@@ -19,15 +19,6 @@ public:
       clearNewTopicName();
    }
 
-   void showHelpWindow() override
-   {
-      helpWindowShown = true;
-   }
-   void hideHelpWindow() override
-   {
-      helpWindowShown = false;
-   }
-
    void showNewTopicWindow() override
    {
       newTopicWindowShown = true;
@@ -43,13 +34,8 @@ public:
     */
    [[nodiscard]] bool anyWindowShown() const
    {
-      return helpWindowShown || newTopicWindowShown;
+      return newTopicWindowShown;
    }
-
-   /**
-    * This field is true in case the help window shall be visible.
-    */
-   bool helpWindowShown = false;
 
    /**
     * This field is true in case a new topic shall be created.

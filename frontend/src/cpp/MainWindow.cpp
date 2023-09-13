@@ -1,9 +1,7 @@
-#include <string>
-
 #include <raygui/raygui.h>
 #include <raylib.h>
 
-#include "contomap/editor/VersionInfo.h"
+#include "contomap/frontend/HelpDialog.h"
 #include "contomap/frontend/MainWindow.h"
 
 using contomap::frontend::MainWindow;
@@ -119,7 +117,11 @@ void MainWindow::drawMap()
 
 void MainWindow::drawUserInterface(RenderContext const &context)
 {
-   if (viewModelState.anyWindowShown())
+   if (pendingDialog != nullptr)
+   {
+      currentDialog = std::move(pendingDialog);
+   }
+   if (viewModelState.anyWindowShown() || (currentDialog != nullptr))
    {
       GuiLock();
       GuiDisableTooltip();
@@ -142,52 +144,20 @@ void MainWindow::drawUserInterface(RenderContext const &context)
    GuiSetTooltip("Show help window");
    if (GuiButton(Rectangle { contentSize.x - (padding + buttonHeight) * 1, padding, buttonHeight, buttonHeight }, GuiIconText(ICON_HELP, nullptr)))
    {
-      inputRequestHandler.helpWindowShowRequested();
+      openHelpDialog();
    }
 
-   if (viewModelState.anyWindowShown())
+   if (viewModelState.anyWindowShown() || (currentDialog != nullptr))
    {
       DrawRectangle(0, 0, static_cast<int>(contentSize.x), static_cast<int>(contentSize.y), Fade(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)), 0.8f));
       GuiUnlock();
    }
 
-   if (viewModelState.helpWindowShown)
+   if (currentDialog != nullptr)
    {
-      Vector2 windowSize { 320, 200 };
-      Vector2 windowPos { contentSize.x / 2 - windowSize.x / 2, contentSize.y / 2 - windowSize.y / 2 };
-      auto windowCloseRequested = GuiWindowBox(Rectangle { windowPos.x, windowPos.y, windowSize.x, windowSize.y }, "#193#Help");
-
-      if (IsKeyPressed(KEY_ESCAPE))
+      if (currentDialog->draw(context))
       {
-         windowCloseRequested = true;
-      }
-
-      auto propertiesTitleStart = windowPos.x + padding;
-      auto propertiesValueStart = windowPos.x + 50.0f;
-      auto propertiesY = windowPos.y + 40.0f;
-      auto propertiesHeight = 20.0f;
-
-      auto addLine = [windowPos, windowSize, propertiesTitleStart, propertiesValueStart, padding, &propertiesY, propertiesHeight](
-                        std::string const &title, std::string const &value) {
-         GuiLabel(Rectangle { propertiesTitleStart, propertiesY, propertiesValueStart - propertiesTitleStart - padding, propertiesHeight }, title.c_str());
-         GuiLabel(
-            Rectangle { propertiesValueStart, propertiesY, windowPos.x + windowSize.x - propertiesValueStart - padding, propertiesHeight }, value.c_str());
-         propertiesY += propertiesHeight + padding;
-      };
-
-      addLine("Version:", contomap::editor::VersionInfo::GLOBAL.humanReadable());
-
-      auto const codeUrl = "https://github.com/contomap/contomap";
-      GuiLabel(Rectangle { propertiesTitleStart, propertiesY, propertiesValueStart - propertiesTitleStart - padding, propertiesHeight }, "Code:");
-      if (GuiLabelButton(
-             Rectangle { propertiesValueStart, propertiesY, windowPos.x + windowSize.x - propertiesValueStart - padding, propertiesHeight }, codeUrl))
-      {
-         OpenURL(codeUrl);
-      }
-
-      if (windowCloseRequested)
-      {
-         inputRequestHandler.helpWindowHideRequested();
+         currentDialog.reset();
       }
    }
 
@@ -218,4 +188,9 @@ void MainWindow::drawUserInterface(RenderContext const &context)
          inputRequestHandler.newTopicRequestAborted();
       }
    }
+}
+
+void MainWindow::openHelpDialog()
+{
+   pendingDialog = std::make_unique<contomap::frontend::HelpDialog>();
 }

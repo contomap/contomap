@@ -1,8 +1,10 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 #include "contomap/editor/InputRequestHandler.h"
+#include "contomap/frontend/Dialog.h"
 #include "contomap/frontend/DisplayEnvironment.h"
 #include "contomap/frontend/RenderContext.h"
 #include "contomap/frontend/ViewModelState.h"
@@ -122,10 +124,15 @@ private:
    void drawMap();
    void drawUserInterface(contomap::frontend::RenderContext const &context);
 
+   void openHelpDialog();
+
    contomap::frontend::ViewModelState viewModelState;
 
    contomap::frontend::DisplayEnvironment &environment;
    contomap::editor::InputRequestHandler &inputRequestHandler;
+
+   std::unique_ptr<contomap::frontend::Dialog> currentDialog;
+   std::unique_ptr<contomap::frontend::Dialog> pendingDialog;
 };
 
 } // namespace contomap::frontend

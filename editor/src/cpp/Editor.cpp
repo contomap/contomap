@@ -10,16 +10,6 @@ void Editor::use(contomap::editor::ViewModel &viewModel)
    currentViewModel = &viewModel;
 }
 
-void Editor::helpWindowShowRequested()
-{
-   viewModel().showHelpWindow();
-}
-
-void Editor::helpWindowHideRequested()
-{
-   viewModel().hideHelpWindow();
-}
-
 void Editor::newTopicRequested()
 {
    // TODO: should all previous windows be closed, or should rather be a state-machine be kept, that considers/ignores requests?
