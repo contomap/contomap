@@ -8,10 +8,15 @@
 using contomap::frontend::HelpDialog;
 using contomap::frontend::RenderContext;
 
+HelpDialog::HelpDialog(contomap::frontend::Layout const &layout)
+   : layout(layout)
+{
+}
+
 bool HelpDialog::draw(RenderContext const &context)
 {
    auto contentSize = context.getContentSize();
-   auto padding = 2.0f; // TODO retrieve this from ui metrics type
+   auto padding = layout.padding();
    Vector2 windowSize { 320, 200 };
    Vector2 windowPos { contentSize.x / 2 - windowSize.x / 2, contentSize.y / 2 - windowSize.y / 2 };
    auto windowCloseRequested = GuiWindowBox(Rectangle { windowPos.x, windowPos.y, windowSize.x, windowSize.y }, "#193#Help");
@@ -23,8 +28,8 @@ bool HelpDialog::draw(RenderContext const &context)
 
    auto propertiesTitleStart = windowPos.x + padding;
    auto propertiesValueStart = windowPos.x + 50.0f;
-   auto propertiesY = windowPos.y + 40.0f;
-   auto propertiesHeight = 20.0f;
+   auto propertiesY = windowPos.y + layout.windowTitleHeight() + padding;
+   auto propertiesHeight = layout.lineHeight();
 
    auto addLine = [windowPos, windowSize, propertiesTitleStart, propertiesValueStart, padding, &propertiesY, propertiesHeight](
                      std::string const &title, std::string const &value) {

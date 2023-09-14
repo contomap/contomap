@@ -6,15 +6,16 @@ using contomap::frontend::NewTopicDialog;
 using contomap::frontend::RenderContext;
 using contomap::model::TopicNameValue;
 
-NewTopicDialog::NewTopicDialog(contomap::editor::InputRequestHandler &inputRequestHandler)
+NewTopicDialog::NewTopicDialog(contomap::editor::InputRequestHandler &inputRequestHandler, contomap::frontend::Layout const &layout)
    : inputRequestHandler(inputRequestHandler)
+   , layout(layout)
 {
 }
 
 bool NewTopicDialog::draw(RenderContext const &context)
 {
    auto contentSize = context.getContentSize();
-   auto padding = 2.0f; // TODO retrieve this from ui metrics type
+   auto padding = layout.padding();
    Vector2 windowSize { 320, 200 };
    Vector2 windowPos { contentSize.x / 2 - windowSize.x / 2, contentSize.y / 2 - windowSize.y / 2 };
 
@@ -25,9 +26,10 @@ bool NewTopicDialog::draw(RenderContext const &context)
       closeDialog = true;
    }
 
-   auto height = 20.0f;
+   auto height = layout.lineHeight();
 
-   auto accepted = GuiTextBox(Rectangle { .x = windowPos.x + padding, .y = windowPos.y + 40.0f, .width = windowSize.x - padding * 2, .height = height },
+   auto accepted = GuiTextBox(
+      Rectangle { .x = windowPos.x + padding, .y = windowPos.y + layout.windowTitleHeight() + padding, .width = windowSize.x - padding * 2, .height = height },
       newTopicName.data(), static_cast<int>(newTopicName.size()), true);
 
    auto potentialTopicName = TopicNameValue::from(newTopicName.data());

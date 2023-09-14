@@ -40,7 +40,7 @@ MainWindow::LengthInPixel MainWindow::Size::getHeight() const
    return height;
 }
 
-MainWindow::Size const MainWindow::DEFAULT_SIZE = MainWindow::Size::ofPixel(800, 450);
+MainWindow::Size const MainWindow::DEFAULT_SIZE = MainWindow::Size::ofPixel(1280, 720);
 char const MainWindow::DEFAULT_TITLE[] = "contomap";
 
 MainWindow::MainWindow(DisplayEnvironment &environment, contomap::editor::InputRequestHandler &inputRequestHandler)
@@ -72,7 +72,7 @@ void MainWindow::drawFrame()
    auto renderContext = RenderContext::fromCurrentState();
 
    drawBackground();
-   drawMap();
+   drawMap(renderContext);
    drawUserInterface(renderContext);
 
    EndDrawing();
@@ -83,12 +83,11 @@ void MainWindow::drawBackground()
    ClearBackground(WHITE);
 }
 
-void MainWindow::drawMap()
+void MainWindow::drawMap(RenderContext const &context)
 {
    Camera2D cam;
 
-   auto dpiScale = GetWindowScaleDPI();
-   Vector2 contentSize { static_cast<float>(GetRenderWidth()) / dpiScale.x, static_cast<float>(GetRenderHeight()) / dpiScale.y };
+   auto contentSize = context.getContentSize();
 
    cam.offset = Vector2 { contentSize.x / 2.0f, contentSize.y / 2.0f };
    cam.target = Vector2 { 0.0f, 0.0f };
@@ -134,11 +133,14 @@ void MainWindow::drawUserInterface(RenderContext const &context)
    }
 
    auto contentSize = context.getContentSize();
-   auto buttonHeight = 24.0f;
-   auto padding = 2.0f;
-   GuiPanel(Rectangle { 0, 0, contentSize.x, buttonHeight + (padding * 2.0f) }, nullptr);
+   auto iconSize = layout.buttonHeight();
+   auto padding = layout.padding();
+   Vector2 toolbarPosition { .x = 0, .y = 0 };
+   Vector2 toolbarSize { .x = contentSize.x, .y = iconSize + (padding * 2.0f) };
+   GuiPanel(Rectangle { toolbarPosition.x, toolbarPosition.y, toolbarSize.x, toolbarSize.y }, nullptr);
    GuiSetTooltip("Show help window");
-   if (GuiButton(Rectangle { contentSize.x - (padding + buttonHeight) * 1, padding, buttonHeight, buttonHeight }, GuiIconText(ICON_HELP, nullptr)))
+   if (GuiButton(Rectangle { toolbarPosition.x + toolbarSize.x - (padding + iconSize), toolbarPosition.y + padding, iconSize, iconSize },
+          GuiIconText(ICON_HELP, nullptr)))
    {
       openHelpDialog();
    }
@@ -162,10 +164,10 @@ void MainWindow::closeDialog()
 
 void MainWindow::openHelpDialog()
 {
-   pendingDialog = std::make_unique<contomap::frontend::HelpDialog>();
+   pendingDialog = std::make_unique<contomap::frontend::HelpDialog>(layout);
 }
 
 void MainWindow::openNewTopicDialog()
 {
-   pendingDialog = std::make_unique<contomap::frontend::NewTopicDialog>(inputRequestHandler);
+   pendingDialog = std::make_unique<contomap::frontend::NewTopicDialog>(inputRequestHandler, layout);
 }

@@ -6,6 +6,7 @@
 #include "contomap/editor/InputRequestHandler.h"
 #include "contomap/frontend/Dialog.h"
 #include "contomap/frontend/DisplayEnvironment.h"
+#include "contomap/frontend/Layout.h"
 #include "contomap/frontend/RenderContext.h"
 #include "contomap/frontend/ViewModelState.h"
 
@@ -116,13 +117,14 @@ private:
    static char const DEFAULT_TITLE[];
 
    void drawBackground();
-   void drawMap();
+   void drawMap(RenderContext const &context);
    void drawUserInterface(contomap::frontend::RenderContext const &context);
 
    void closeDialog();
    void openHelpDialog();
    void openNewTopicDialog();
 
+   contomap::frontend::Layout layout;
    contomap::frontend::ViewModelState viewModelState;
 
    contomap::frontend::DisplayEnvironment &environment;
