@@ -20,3 +20,9 @@ TEST(TopicNameValueTest, comparison)
    EXPECT_LT(std::get<TopicNameValue>(TopicNameValue::from("a")), std::get<TopicNameValue>(TopicNameValue::from("b")));
    EXPECT_GT(std::get<TopicNameValue>(TopicNameValue::from("b")), std::get<TopicNameValue>(TopicNameValue::from("a")));
 }
+
+TEST(TopicNameValueTest, raw)
+{
+   EXPECT_EQ("a", std::get<TopicNameValue>(TopicNameValue::from("a")).raw());
+   EXPECT_EQ("b", std::get<TopicNameValue>(TopicNameValue::from("b")).raw());
+}

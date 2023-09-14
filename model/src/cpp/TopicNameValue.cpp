@@ -15,3 +15,8 @@ std::variant<std::monostate, TopicNameValue> TopicNameValue::from(std::string va
    }
    return TopicNameValue(std::move(value));
 }
+
+std::string TopicNameValue::raw() const
+{
+   return value;
+}

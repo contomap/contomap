@@ -22,6 +22,11 @@ public:
     */
    TopicName(contomap::model::Identifier id, contomap::model::TopicNameValue value);
 
+   /**
+    * @return the current value of this name.
+    */
+   [[nodiscard]] contomap::model::TopicNameValue getValue() const;
+
 private:
    contomap::model::Identifier id;
    contomap::model::Identifiers scope;

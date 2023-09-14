@@ -24,14 +24,22 @@ public:
     */
    explicit Topic(contomap::model::Identifier id);
 
+   /**
+    * Adds a new name to the topic.
+    *
+    * @param value the value of the name to add.
+    * @return the created instance.
+    */
+   contomap::model::TopicName &newName(contomap::model::TopicNameValue value);
+
 private:
    contomap::model::Identifier id;
 
    contomap::model::OptionalIdentifier reified;
 
-   std::map<contomap::model::Identifier, TopicName> names;
-   std::map<contomap::model::Identifier, Occurrence> occurrences;
-   std::map<contomap::model::Identifier, Role> roles;
+   std::map<contomap::model::Identifier, contomap::model::TopicName> names;
+   std::map<contomap::model::Identifier, contomap::model::Occurrence> occurrences;
+   std::map<contomap::model::Identifier, contomap::model::Role> roles;
 };
 
 }

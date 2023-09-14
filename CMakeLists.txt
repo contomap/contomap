@@ -84,13 +84,23 @@ target_link_libraries(contomap-model
         all_warnings
 )
 
+file(GLOB_RECURSE LIB_MODEL_TEST_SUPPORT_SOURCES "${PROJECT_SOURCE_DIR}/model/test-support/cpp/*.cpp")
+add_library(contomap-model-test-support STATIC ${LIB_MODEL_TEST_SUPPORT_SOURCES})
+target_include_directories(contomap-model-test-support PUBLIC "${PROJECT_SOURCE_DIR}/model/test-support/h")
+target_link_libraries(contomap-model-test-support
+        PRIVATE
+        all_warnings
+        PUBLIC
+        contomap-model
+)
+
 file(GLOB_RECURSE LIB_MODEL_TEST_SOURCES "${PROJECT_SOURCE_DIR}/model/test/*.cpp")
 add_executable(contomap-model-test ${LIB_MODEL_TEST_SOURCES})
 target_link_libraries(contomap-model-test
         PRIVATE
         all_warnings
         PUBLIC
-        contomap-model
+        contomap-model-test-support
         GTest::gmock_main
 )
 

@@ -33,6 +33,11 @@ public:
 
    constexpr std::strong_ordering operator<=>(TopicNameValue const &b) const noexcept = default;
 
+   /**
+    * @return the raw text from this value.
+    */
+   [[nodiscard]] std::string raw() const;
+
 private:
    explicit TopicNameValue(std::string value);
 
