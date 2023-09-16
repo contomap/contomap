@@ -15,7 +15,14 @@ SpacialCoordinate::AbsolutePoint::AbsolutePoint(CoordinateType x, CoordinateType
 
 SpacialCoordinate::AbsolutePoint SpacialCoordinate::AbsolutePoint::at(CoordinateType x, CoordinateType y)
 {
-   return AbsolutePoint(x, y);
+   return { x, y };
+}
+
+SpacialCoordinate SpacialCoordinate::absoluteAt(CoordinateType x, CoordinateType y)
+{
+   SpacialCoordinate coordinate;
+   coordinate.setAbsoluteReference(AbsolutePoint::at(x, y));
+   return coordinate;
 }
 
 void SpacialCoordinate::setAbsoluteReference(AbsolutePoint point)

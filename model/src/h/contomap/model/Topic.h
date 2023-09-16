@@ -32,6 +32,15 @@ public:
     */
    contomap::model::TopicName &newName(contomap::model::TopicNameValue value);
 
+   /**
+    * Adds a new occurrence to the topic.
+    *
+    * @param scope the scope within which the occurrence is valid.
+    * @param location the location in the graphical map.
+    * @return the created instance.
+    */
+   contomap::model::Occurrence &newOccurrence(contomap::model::Identifiers scope, contomap::model::SpacialCoordinate location);
+
 private:
    contomap::model::Identifier id;
 

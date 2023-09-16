@@ -55,6 +55,15 @@ public:
    };
 
    /**
+    * Factory method creating a new instance with the given values.
+    *
+    * @param x the X coordinate.
+    * @param y the Y coordinate.
+    * @return the resulting instance.
+    */
+   [[nodiscard]] static SpacialCoordinate absoluteAt(CoordinateType x, CoordinateType y);
+
+   /**
     * @param point the new absolute reference point.
     */
    void setAbsoluteReference(AbsolutePoint point);

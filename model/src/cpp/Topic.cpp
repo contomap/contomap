@@ -1,6 +1,9 @@
 #include "contomap/model/Topic.h"
 
 using contomap::model::Identifier;
+using contomap::model::Identifiers;
+using contomap::model::Occurrence;
+using contomap::model::SpacialCoordinate;
 using contomap::model::Topic;
 using contomap::model::TopicName;
 
@@ -13,5 +16,12 @@ TopicName &Topic::newName(contomap::model::TopicNameValue value)
 {
    auto nameId = Identifier::random();
    auto it = names.emplace(nameId, TopicName(nameId, std::move(value)));
+   return it.first->second;
+}
+
+Occurrence &Topic::newOccurrence(Identifiers scope, SpacialCoordinate location)
+{
+   auto occurrenceId = Identifier::random();
+   auto it = occurrences.emplace(occurrenceId, Occurrence(id, std::move(scope), location));
    return it.first->second;
 }

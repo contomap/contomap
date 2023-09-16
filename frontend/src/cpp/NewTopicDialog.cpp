@@ -35,7 +35,9 @@ bool NewTopicDialog::draw(RenderContext const &context)
    auto potentialTopicName = TopicNameValue::from(newTopicName.data());
    if (accepted && std::holds_alternative<TopicNameValue>(potentialTopicName))
    {
-      inputRequestHandler.newTopicRequested(std::get<TopicNameValue>(potentialTopicName));
+
+      auto location = contomap::model::SpacialCoordinate::absoluteAt(0.0f, 0.0f); // TODO take from insertion point
+      inputRequestHandler.newTopicRequested(std::get<TopicNameValue>(potentialTopicName), location);
       closeDialog = true;
    }
 

@@ -16,6 +16,13 @@ namespace contomap::model
 class Contomap
 {
 public:
+   /**
+    * Creates a new topic and adds it to the map.
+    *
+    * @return the reference to the created instance.
+    */
+   [[nodiscard]] contomap::model::Topic &newTopic();
+
 private:
    std::map<contomap::model::Identifier, contomap::model::Topic> topics;
    std::map<contomap::model::Identifier, contomap::model::Association> associations;

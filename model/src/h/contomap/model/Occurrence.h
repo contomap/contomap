@@ -18,8 +18,10 @@ public:
     * Constructor.
     *
     * @param id the primary identifier of this occurrence.
+    * @param scope the scope within which this occurrence is valid.
+    * @param spacial the known, initial point where the occurrence is happening.
     */
-   explicit Occurrence(contomap::model::Identifier id);
+   explicit Occurrence(Identifier id, Identifiers scope, SpacialCoordinate spacial);
 
 private:
    contomap::model::Identifier id;
