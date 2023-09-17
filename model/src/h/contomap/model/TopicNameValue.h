@@ -31,7 +31,7 @@ public:
     */
    [[nodiscard]] static std::variant<std::monostate, TopicNameValue> from(std::string value);
 
-   constexpr std::strong_ordering operator<=>(TopicNameValue const &b) const noexcept = default;
+   std::strong_ordering operator<=>(TopicNameValue const &b) const noexcept = default;
 
    /**
     * @return the raw text from this value.

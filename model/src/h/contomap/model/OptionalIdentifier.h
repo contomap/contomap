@@ -58,7 +58,7 @@ public:
       return stream;
    }
 
-   constexpr std::strong_ordering operator<=>(OptionalIdentifier const &other) const noexcept = default;
+   std::strong_ordering operator<=>(OptionalIdentifier const &other) const noexcept = default;
 
    /**
     * Assigns given identifier to this container.

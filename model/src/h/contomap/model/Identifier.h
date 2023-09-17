@@ -57,7 +57,7 @@ public:
       return stream;
    }
 
-   constexpr std::strong_ordering operator<=>(Identifier const &other) const noexcept = default;
+   std::strong_ordering operator<=>(Identifier const &other) const noexcept = default;
 
 private:
    explicit Identifier(ValueType const &value);
