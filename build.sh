@@ -126,7 +126,7 @@ function execTest() {
 function testDefault() {
   local total=0
   local failed=0
-  for testFile in "${buildBaseDir}"/default-"${buildTypeSuffix}"/*-test* ; do
+  for testFile in "${buildBaseDir}"/default-"${buildTypeSuffix}"/*-test ; do
     if [ -f "${testFile}" ]; then
       total=$(( total + 1 ))
       if ! execTest "${testFile}"; then
