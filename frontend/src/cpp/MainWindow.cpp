@@ -126,7 +126,8 @@ void MainWindow::drawUserInterface(RenderContext const &context)
       GuiUnlock();
       GuiEnableTooltip();
 
-      if (IsKeyPressed(KEY_INSERT))
+      // TODO: shortcut system
+      if (IsKeyPressed(KEY_INSERT) || (IsKeyPressed(KEY_I) && IsKeyDown(KEY_LEFT_CONTROL)))
       {
          openNewTopicDialog();
       }

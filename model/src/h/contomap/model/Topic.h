@@ -2,6 +2,7 @@
 
 #include <map>
 
+#include "contomap/infrastructure/Generator.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Occurrence.h"
 #include "contomap/model/Role.h"
@@ -40,6 +41,10 @@ public:
     * @return the created instance.
     */
    contomap::model::Occurrence &newOccurrence(contomap::model::Identifiers scope, contomap::model::SpacialCoordinate location);
+
+   // using NameSearch = contomap::infrastructure::Generator<std::reference_wrapper<contomap::model::TopicName const>>;
+
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::TopicName> allNames() const;
 
 private:
    contomap::model::Identifier id;

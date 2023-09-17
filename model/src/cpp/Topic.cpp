@@ -1,5 +1,6 @@
 #include "contomap/model/Topic.h"
 
+using contomap::infrastructure::Search;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 using contomap::model::Occurrence;
@@ -17,6 +18,14 @@ TopicName &Topic::newName(contomap::model::TopicNameValue value)
    auto nameId = Identifier::random();
    auto it = names.emplace(nameId, TopicName(nameId, std::move(value)));
    return it.first->second;
+}
+
+Search<TopicName> Topic::allNames() const
+{
+   for (auto const &[_, name] : names)
+   {
+      co_yield name;
+   }
 }
 
 Occurrence &Topic::newOccurrence(Identifiers scope, SpacialCoordinate location)

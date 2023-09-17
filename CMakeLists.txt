@@ -7,6 +7,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Enable C++20 support
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS "-fcoroutines") # TODO avoid setting this for clang
 
 # Dependencies
 cmake_policy(SET CMP0135 NEW)
@@ -73,8 +74,27 @@ target_compile_options(all_warnings INTERFACE
         $<$<CXX_COMPILER_ID:MSVC>:-W4>
 )
 
+if (!WIN32)
+    add_compile_options($<$<CONFIG:Debug>:-fsanitize=address>)
+    add_link_options($<$<CONFIG:Debug>:-fsanitize=address>)
+endif ()
 
 # This project
+
+file(GLOB_RECURSE LIB_INFRASTRUCTURE_SOURCES "${PROJECT_SOURCE_DIR}/infrastructure/src/cpp/*.cpp")
+add_library(contomap-infrastructure INTERFACE ${LIB_INFRASTRUCTURE_SOURCES})
+target_include_directories(contomap-infrastructure INTERFACE "${PROJECT_SOURCE_DIR}/infrastructure/src/h")
+
+file(GLOB_RECURSE LIB_INFRASTRUCTURE_TEST_SOURCES "${PROJECT_SOURCE_DIR}/infrastructure/test/*.cpp")
+add_executable(contomap-infrastructure-test ${LIB_INFRASTRUCTURE_TEST_SOURCES})
+target_link_libraries(contomap-infrastructure-test
+        PRIVATE
+        all_warnings
+        PUBLIC
+        contomap-infrastructure
+        GTest::gmock_main
+)
+
 
 file(GLOB_RECURSE LIB_MODEL_SOURCES "${PROJECT_SOURCE_DIR}/model/src/cpp/*.cpp")
 add_library(contomap-model STATIC ${LIB_MODEL_SOURCES})
@@ -82,6 +102,8 @@ target_include_directories(contomap-model PUBLIC "${PROJECT_SOURCE_DIR}/model/sr
 target_link_libraries(contomap-model
         PRIVATE
         all_warnings
+        PUBLIC
+        contomap-infrastructure
 )
 
 file(GLOB_RECURSE LIB_MODEL_TEST_SUPPORT_SOURCES "${PROJECT_SOURCE_DIR}/model/test-support/cpp/*.cpp")
