@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "contomap/editor/InputRequestHandler.h"
+#include "contomap/editor/View.h"
 #include "contomap/frontend/Dialog.h"
 #include "contomap/frontend/DisplayEnvironment.h"
 #include "contomap/frontend/Layout.h"
@@ -88,9 +89,10 @@ public:
     * Constructor.
     *
     * @param environment the environment that the window runs in.
+    * @param view the view on the current editor state for display.
     * @param inputRequestHandler the handler for notifying input requests.
     */
-   MainWindow(DisplayEnvironment &environment, contomap::editor::InputRequestHandler &inputRequestHandler);
+   MainWindow(DisplayEnvironment &environment, contomap::editor::View &view, contomap::editor::InputRequestHandler &inputRequestHandler);
 
    /**
     * Initializes and opens the window in the display environment.
@@ -128,6 +130,7 @@ private:
    contomap::frontend::ViewModelState viewModelState;
 
    contomap::frontend::DisplayEnvironment &environment;
+   contomap::editor::View &view;
    contomap::editor::InputRequestHandler &inputRequestHandler;
 
    std::unique_ptr<contomap::frontend::Dialog> currentDialog;

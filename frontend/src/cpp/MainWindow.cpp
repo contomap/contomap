@@ -4,10 +4,15 @@
 #include "contomap/frontend/HelpDialog.h"
 #include "contomap/frontend/MainWindow.h"
 #include "contomap/frontend/NewTopicDialog.h"
+#include "contomap/model/Topics.h"
 
 using contomap::frontend::MainWindow;
 using contomap::frontend::RenderContext;
+using contomap::model::Occurrence;
+using contomap::model::Topic;
+using contomap::model::TopicName;
 using contomap::model::TopicNameValue;
+using contomap::model::Topics;
 
 MainWindow::LengthInPixel::LengthInPixel(MainWindow::LengthInPixel::ValueType value)
    : value(value)
@@ -43,8 +48,9 @@ MainWindow::LengthInPixel MainWindow::Size::getHeight() const
 MainWindow::Size const MainWindow::DEFAULT_SIZE = MainWindow::Size::ofPixel(1280, 720);
 char const MainWindow::DEFAULT_TITLE[] = "contomap";
 
-MainWindow::MainWindow(DisplayEnvironment &environment, contomap::editor::InputRequestHandler &inputRequestHandler)
+MainWindow::MainWindow(DisplayEnvironment &environment, contomap::editor::View &view, contomap::editor::InputRequestHandler &inputRequestHandler)
    : environment(environment)
+   , view(view)
    , inputRequestHandler(inputRequestHandler)
 {
 }
@@ -92,21 +98,49 @@ void MainWindow::drawMap(RenderContext const &context)
    cam.offset = Vector2 { contentSize.x / 2.0f, contentSize.y / 2.0f };
    cam.target = Vector2 { 0.0f, 0.0f };
    cam.rotation = 0.0f;
-   cam.zoom = 10.0f;
+   cam.zoom = 1.0f;
    BeginMode2D(cam);
 
-   /*
-      DrawCircleSector(Vector2 { -15.0f, 0.0f }, 20.0f, 180.0f, 360.0f, 20, Color { 0xFF, 0x00, 0x00, 0x80 });
-      DrawRectangle(-15, -20, 30, 40, Color { 0x00, 0xFF, 0x00, 0x80 });
-      DrawCircleSector(Vector2 { 15.0f, 0.0f }, 20.0f, 0.0f, 180.0f, 20, Color { 0x00, 0x00, 0xFF, 0x80 });
+   auto const &viewScope = view.ofViewScope();
+   auto const &map = view.ofMap();
 
-      Font font = GetFontDefault();
-      std::string text("test");
-      float fontSize = 30.0f;
-      float spacing = 0.0f;
-      auto textSize = MeasureTextEx(font, text.c_str(), fontSize, spacing);
-      DrawTextEx(font, text.c_str(), Vector2 { -textSize.x / 2.0f, -textSize.y / 2.0f }, fontSize, spacing, Color { 0x00, 0x00, 0x00, 0xFF });
-   */
+   auto visibleTopics = map.findTopics(Topics::thatAreIn(viewScope));
+   // TODO: rework algorithm: need first to determine visible/referenced topics; declutter; draw associations; draw topics; animate!
+   for (Topic const &visibleTopic : visibleTopics)
+   {
+      std::string nameText;
+      auto allNames = visibleTopic.allNames();
+      for (TopicName const &name : allNames)
+      {
+         // TODO: filter if in scope, calculate full name plate
+         nameText = name.getValue().raw();
+      }
+
+      for (Occurrence const &occurrence : visibleTopic.occurrencesIn(viewScope))
+      {
+         auto spacialLocation = occurrence.getLocation().getSpacial().getAbsoluteReference();
+         Vector2 projectedLocation { .x = spacialLocation.X(), .y = spacialLocation.Y() };
+
+         Font font = GetFontDefault();
+         float fontSize = 16.0f;
+         float spacing = 1.0f;
+         auto textSize = MeasureTextEx(font, nameText.c_str(), fontSize, spacing);
+         float plateHeight = textSize.y;
+
+         Color plateBackground { 0xB0, 0x80, 0xE0, 0xC0 };
+         float leftCutoff = projectedLocation.x - textSize.x / 2.0f;
+         float rightCutoff = projectedLocation.x + textSize.x / 2.0f;
+         DrawCircleSector(Vector2 { .x = leftCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 180.0f, 360.0f, 20, plateBackground);
+         DrawRectangleRec(
+            Rectangle { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f, .width = rightCutoff - leftCutoff, .height = plateHeight },
+            plateBackground);
+         DrawCircleSector(Vector2 { .x = rightCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 0.0f, 180.0f, 20, plateBackground);
+
+         DrawTextEx(font, nameText.c_str(), Vector2 { .x = projectedLocation.x - textSize.x / 2.0f, .y = projectedLocation.y - textSize.y / 2.0f }, fontSize,
+            spacing, Color { 0x00, 0x00, 0x00, 0xFF });
+      }
+   }
+
    EndMode2D();
 }
 

@@ -39,3 +39,19 @@ Occurrence &Topic::newOccurrence(Identifiers scope, SpacialCoordinate location)
    auto it = occurrences.emplace(occurrenceId, Occurrence(id, std::move(scope), location));
    return it.first->second;
 }
+
+bool Topic::isIn(contomap::model::Identifiers const &scope) const
+{
+   return std::any_of(occurrences.begin(), occurrences.end(), [&scope](std::pair<Identifier, Occurrence> const &kvp) { return kvp.second.isIn(scope); });
+}
+
+Search<Occurrence> Topic::occurrencesIn(contomap::model::Identifiers const &scope) const
+{
+   for (auto const &[_, occurrence] : occurrences)
+   {
+      if (occurrence.isIn(scope))
+      {
+         co_yield occurrence;
+      }
+   }
+}

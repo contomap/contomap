@@ -17,3 +17,13 @@ void Editor::newTopicRequested(TopicNameValue name, SpacialCoordinate location)
    topic.newName(std::move(name));
    topic.newOccurrence(viewScope, location);
 }
+
+contomap::model::Identifiers const &Editor::ofViewScope() const
+{
+   return viewScope;
+}
+
+contomap::model::ContomapView const &Editor::ofMap() const
+{
+   return map;
+}

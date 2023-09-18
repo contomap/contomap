@@ -52,6 +52,22 @@ public:
     */
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::TopicName> allNames() const;
 
+   /**
+    * Return true if this instance has at least one occurrence that is in given scope.
+    *
+    * @param scope the scope to look for.
+    * @return true if the topic is in given scope.
+    */
+   [[nodiscard]] bool isIn(contomap::model::Identifiers const &scope) const;
+
+   /**
+    * Return a Search for all occurrences that are in given scope.
+    *
+    * @param scope the scope to look for.
+    * @return a Search matching the given scope.
+    */
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence> occurrencesIn(contomap::model::Identifiers const &scope) const;
+
 private:
    contomap::model::Identifier id;
 

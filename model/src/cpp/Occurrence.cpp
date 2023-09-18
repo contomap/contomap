@@ -9,3 +9,13 @@ Occurrence::Occurrence(Identifier id, Identifiers scope, SpacialCoordinate spaci
    , location(spacial)
 {
 }
+
+contomap::model::Coordinates const &Occurrence::getLocation() const
+{
+   return location;
+}
+
+bool Occurrence::isIn(contomap::model::Identifiers const &thatScope) const
+{
+   return thatScope.contains(scope);
+}

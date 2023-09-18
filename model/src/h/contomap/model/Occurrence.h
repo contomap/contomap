@@ -23,6 +23,19 @@ public:
     */
    explicit Occurrence(Identifier id, Identifiers scope, SpacialCoordinate spacial);
 
+   /**
+    * @return the location of this occurrence
+    */
+   contomap::model::Coordinates const &getLocation() const;
+
+   /**
+    * Return true if this instance is in the given scope.
+    *
+    * @param thatScope the scope to look for.
+    * @return true if the occurrence is in given scope.
+    */
+   [[nodiscard]] bool isIn(contomap::model::Identifiers const &thatScope) const;
+
 private:
    contomap::model::Identifier id;
    contomap::model::Identifiers scope;
