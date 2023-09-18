@@ -21,9 +21,15 @@ class ContomapView
 public:
    virtual ~ContomapView() = default;
 
-   using Search = contomap::infrastructure::Generator<std::reference_wrapper<contomap::model::Topic const>>;
-
-   [[nodiscard]] virtual Search findTopics(std::shared_ptr<TopicFilter> filter) const = 0;
+   /**
+    * Find topics that match a certain filter.
+    *
+    * The returned search object will yield all topics for which the filter returns true.
+    *
+    * @param filter the filter to call.
+    * @return a Search instance that can be iterated once.
+    */
+   [[nodiscard]] virtual contomap::infrastructure::Search<contomap::model::Topic> findTopics(std::shared_ptr<TopicFilter> filter) const = 0;
 };
 
 }

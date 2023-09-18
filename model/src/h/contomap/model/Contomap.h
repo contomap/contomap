@@ -24,7 +24,7 @@ public:
     */
    [[nodiscard]] contomap::model::Topic &newTopic();
 
-   [[nodiscard]] Search findTopics(std::shared_ptr<TopicFilter> filter) const override;
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Topic> findTopics(std::shared_ptr<TopicFilter> filter) const override;
 
 private:
    std::map<contomap::model::Identifier, contomap::model::Topic> topics;

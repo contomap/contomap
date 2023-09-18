@@ -12,7 +12,7 @@ Topic &Contomap::newTopic()
    return it.first->second;
 }
 
-Contomap::Search Contomap::findTopics(std::shared_ptr<TopicFilter> filter) const
+contomap::infrastructure::Search<Topic> Contomap::findTopics(std::shared_ptr<TopicFilter> filter) const
 {
    for (auto const &[_, topic] : topics)
    {

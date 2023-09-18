@@ -42,8 +42,9 @@ public:
     */
    contomap::model::Occurrence &newOccurrence(contomap::model::Identifiers scope, contomap::model::SpacialCoordinate location);
 
-   // using NameSearch = contomap::infrastructure::Generator<std::reference_wrapper<contomap::model::TopicName const>>;
-
+   /**
+    * @return a Search for all names in the topic.
+    */
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::TopicName> allNames() const;
 
 private:
