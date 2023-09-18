@@ -5,6 +5,12 @@ using contomap::model::Contomap;
 using contomap::model::SpacialCoordinate;
 using contomap::model::TopicNameValue;
 
+Editor::Editor()
+   : map(Contomap::newMap())
+{
+   viewScope.add(map.getDefaultScope());
+}
+
 void Editor::newTopicRequested(TopicNameValue name, SpacialCoordinate location)
 {
    auto &topic = map.newTopic();

@@ -5,6 +5,22 @@ using contomap::model::Contomap;
 using contomap::model::Identifier;
 using contomap::model::Topic;
 
+Contomap::Contomap()
+   : defaultScope(Identifier::random())
+{
+   topics.emplace(defaultScope, Topic(defaultScope));
+}
+
+Contomap Contomap::newMap()
+{
+   return {};
+}
+
+Identifier Contomap::getDefaultScope() const
+{
+   return defaultScope;
+}
+
 Topic &Contomap::newTopic()
 {
    auto id = Identifier::random();
@@ -21,4 +37,10 @@ contomap::infrastructure::Search<Topic> Contomap::findTopics(std::shared_ptr<Top
          co_yield topic;
       }
    }
+}
+
+std::optional<std::reference_wrapper<Topic const>> Contomap::findTopic(contomap::model::Identifier id) const
+{
+   auto it = topics.find(id);
+   return (it != topics.end()) ? std::optional<std::reference_wrapper<Topic const>>(it->second) : std::optional<std::reference_wrapper<Topic const>>();
 }

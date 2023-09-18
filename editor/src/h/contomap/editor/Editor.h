@@ -13,6 +13,8 @@ namespace contomap::editor
 class Editor : public contomap::editor::InputRequestHandler
 {
 public:
+   Editor();
+
    void newTopicRequested(contomap::model::TopicNameValue name, contomap::model::SpacialCoordinate location) override;
 
 private:

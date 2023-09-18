@@ -14,12 +14,19 @@ class AllTopicsFilter : public contomap::model::TopicFilter
    }
 };
 
+TEST(ContomapTest, emptyMapHasADefaultScope)
+{
+   Contomap map = Contomap::newMap();
+   auto topic = map.findTopic(map.getDefaultScope());
+   EXPECT_TRUE(topic.has_value());
+}
+
 TEST(ContomapTest, topicsCanBeIterated)
 {
-   Contomap map;
+   Contomap map = Contomap::newMap();
 
-   [[maybe_unused]] auto t1 = map.newTopic();
-   [[maybe_unused]] auto t2 = map.newTopic();
+   static_cast<void>(map.newTopic());
+   static_cast<void>(map.newTopic());
 
    auto gen = map.findTopics(std::make_shared<AllTopicsFilter>());
 
@@ -28,5 +35,5 @@ TEST(ContomapTest, topicsCanBeIterated)
    {
       count++;
    }
-   EXPECT_EQ(2, count);
+   EXPECT_EQ(3, count);
 }

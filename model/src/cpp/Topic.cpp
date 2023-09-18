@@ -13,6 +13,11 @@ Topic::Topic(Identifier id)
 {
 }
 
+Identifier Topic::getId() const
+{
+   return id;
+}
+
 TopicName &Topic::newName(contomap::model::TopicNameValue value)
 {
    auto nameId = Identifier::random();

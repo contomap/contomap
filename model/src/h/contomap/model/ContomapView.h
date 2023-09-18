@@ -30,6 +30,8 @@ public:
     * @return a Search instance that can be iterated once.
     */
    [[nodiscard]] virtual contomap::infrastructure::Search<contomap::model::Topic> findTopics(std::shared_ptr<TopicFilter> filter) const = 0;
+
+   [[nodiscard]] virtual std::optional<std::reference_wrapper<Topic const>> findTopic(contomap::model::Identifier id) const = 0;
 };
 
 }

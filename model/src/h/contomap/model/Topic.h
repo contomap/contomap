@@ -26,6 +26,11 @@ public:
    explicit Topic(contomap::model::Identifier id);
 
    /**
+    * @return the unique identifier of this topic instance.
+    */
+   [[nodiscard]] contomap::model::Identifier getId() const;
+
+   /**
     * Adds a new name to the topic.
     *
     * @param value the value of the name to add.
