@@ -8,6 +8,7 @@
 #include "contomap/frontend/Dialog.h"
 #include "contomap/frontend/DisplayEnvironment.h"
 #include "contomap/frontend/Layout.h"
+#include "contomap/frontend/MapCamera.h"
 #include "contomap/frontend/RenderContext.h"
 #include "contomap/frontend/ViewModelState.h"
 
@@ -128,6 +129,8 @@ private:
 
    contomap::frontend::Layout layout;
    contomap::frontend::ViewModelState viewModelState;
+
+   contomap::frontend::MapCamera mapCamera;
 
    contomap::frontend::DisplayEnvironment &environment;
    contomap::editor::View &view;

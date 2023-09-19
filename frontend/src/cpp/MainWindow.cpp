@@ -91,15 +91,8 @@ void MainWindow::drawBackground()
 
 void MainWindow::drawMap(RenderContext const &context)
 {
-   Camera2D cam;
-
    auto contentSize = context.getContentSize();
-
-   cam.offset = Vector2 { contentSize.x / 2.0f, contentSize.y / 2.0f };
-   cam.target = Vector2 { 0.0f, 0.0f };
-   cam.rotation = 0.0f;
-   cam.zoom = 1.0f;
-   BeginMode2D(cam);
+   auto projection = mapCamera.beginProjection(contentSize);
 
    auto const &viewScope = view.ofViewScope();
    auto const &map = view.ofMap();
@@ -140,8 +133,6 @@ void MainWindow::drawMap(RenderContext const &context)
             spacing, Color { 0x00, 0x00, 0x00, 0xFF });
       }
    }
-
-   EndMode2D();
 }
 
 void MainWindow::drawUserInterface(RenderContext const &context)
