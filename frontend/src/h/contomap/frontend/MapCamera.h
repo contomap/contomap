@@ -1,5 +1,8 @@
 #pragma once
 
+#include <cstdint>
+#include <memory>
+
 #include <raylib.h>
 
 namespace contomap::frontend
@@ -11,6 +14,94 @@ namespace contomap::frontend
 class MapCamera
 {
 public:
+   /**
+    * ZoomFactor describes a grade of magnification or minification.
+    */
+   class ZoomFactor
+   {
+   public:
+      /** The limit of the farthest zoom - the most minification possible. */
+      static ZoomFactor const FAR_LIMIT;
+      /** The unit value - the reference zoom level. */
+      static ZoomFactor const UNIT;
+      /** The limit of the nearest zoom - the most magnification possible. */
+      static ZoomFactor const NEAR_LIMIT;
+
+      /**
+       * Deleted default constructor.
+       */
+      ZoomFactor() = delete;
+
+      /**
+       * Create an instance based on the given raw floating point value.
+       * The function performs clamping of given value based on the near and far limits.
+       *
+       * @param value the raw value.
+       * @return the resulting zoom factor.
+       */
+      [[nodiscard]] static ZoomFactor from(float value);
+
+      /**
+       * @return the raw factor of this instance.
+       */
+      [[nodiscard]] float raw() const;
+
+      std::strong_ordering operator<=>(ZoomFactor const &other) const noexcept = default;
+
+   private:
+      using StorageType = uint32_t;
+
+      explicit ZoomFactor(StorageType value);
+
+      StorageType value;
+   };
+
+   /**
+    * Gearbox provides the abstraction of changes within the camera.
+    * The gearbox is requested to reach a certain target, and depending on the implementation,
+    * this can be an immediate application of the requested value, or a gradual movement
+    * towards the intended value.
+    */
+   class Gearbox
+   {
+   public:
+      virtual ~Gearbox() = default;
+
+      /**
+       * Sets the target zoom factor for the camera.
+       *
+       * @param target the zoom factor to reach.
+       */
+      virtual void setTargetZoomFactor(ZoomFactor target) = 0;
+      /**
+       * @return the target zoom factor as per previous request.
+       */
+      [[nodiscard]] virtual ZoomFactor getTargetZoomFactor() const = 0;
+      /**
+       * @return the current zoom factor as per movement.
+       */
+      [[nodiscard]] virtual ZoomFactor getCurrentZoomFactor() const = 0;
+   };
+
+   /**
+    * This Gearbox implementation applies all changes immediately.
+    */
+   class ImmediateGearbox : public Gearbox
+   {
+   public:
+      /**
+       * Default constructor.
+       */
+      ImmediateGearbox();
+
+      void setTargetZoomFactor(ZoomFactor target) override;
+      [[nodiscard]] ZoomFactor getTargetZoomFactor() const override;
+      [[nodiscard]] ZoomFactor getCurrentZoomFactor() const override;
+
+   private:
+      ZoomFactor zoomFactor;
+   };
+
    /**
     * Projection is a helper object that keeps a mode active as long as it is within scope.
     */
@@ -38,9 +129,16 @@ public:
    };
 
    /**
-    * Default constructor.
+    * Constructor.
+    *
+    * @param gearbox the gearbox to use for operations.
     */
-   MapCamera();
+   explicit MapCamera(std::shared_ptr<Gearbox> gearbox);
+
+   // TODO: consider a zoom(ZoomOperation) variant, with ZoomFactor ZoomOperation::applyTo(ZoomFactor oldTarget); this then also supports a "set to 100%" op.
+   void zoomNearer();
+
+   void zoomFarther();
 
    /**
     * Enters the projection mode; Drawing operations will be based on the projection transformation.
@@ -51,6 +149,8 @@ public:
    Projection beginProjection(Vector2 viewportSize);
 
 private:
+   int zoomLevel = 0;
+   std::shared_ptr<Gearbox> gearbox;
    Camera2D data {};
 };
 

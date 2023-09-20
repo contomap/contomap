@@ -49,7 +49,8 @@ MainWindow::Size const MainWindow::DEFAULT_SIZE = MainWindow::Size::ofPixel(1280
 char const MainWindow::DEFAULT_TITLE[] = "contomap";
 
 MainWindow::MainWindow(DisplayEnvironment &environment, contomap::editor::View &view, contomap::editor::InputRequestHandler &inputRequestHandler)
-   : environment(environment)
+   : mapCamera(std::make_shared<MapCamera::ImmediateGearbox>())
+   , environment(environment)
    , view(view)
    , inputRequestHandler(inputRequestHandler)
 {
@@ -76,6 +77,20 @@ void MainWindow::drawFrame()
    BeginDrawing();
 
    auto renderContext = RenderContext::fromCurrentState();
+
+   if (currentDialog == nullptr)
+   {
+      // TODO: probably needs some better checks here
+      // TODO: consider pinch zoom as well?
+      if (GetMouseWheelMove() > 0.0f)
+      {
+         mapCamera.zoomNearer();
+      }
+      else if (GetMouseWheelMove() < 0.0f)
+      {
+         mapCamera.zoomFarther();
+      }
+   }
 
    drawBackground();
    drawMap(renderContext);
