@@ -41,9 +41,8 @@ void MapCamera::ImmediateGearbox::timePassed(float seconds)
       .y = (panningUp ? -1.0f : 0.0f) + (panningDown ? 1.0f : 0.0f),
    };
    auto normalized = Vector2Normalize(v);
-   // TODO zoom-dependent speed?
    // TODO extract constant for top speed?
-   position = Vector2Add(position, Vector2Scale(normalized, 800.0f * seconds));
+   position = Vector2Add(position, Vector2Scale(normalized, (800.0f * seconds) / zoomFactor.raw()));
 }
 
 void MapCamera::ImmediateGearbox::setTargetZoomFactor(ZoomFactor target)
