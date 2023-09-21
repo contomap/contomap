@@ -78,6 +78,8 @@ void MainWindow::closeRequested()
 
 void MainWindow::drawFrame()
 {
+   mapCamera.timePassed(GetFrameTime());
+
    BeginDrawing();
 
    auto renderContext = RenderContext::fromCurrentState();
@@ -95,11 +97,11 @@ void MainWindow::drawFrame()
          mapCamera.zoom(doubledRelative(false));
       }
 
-      bool nudgeLeft = IsKeyDown(KEY_LEFT);
-      bool nudgeUp = IsKeyDown(KEY_UP);
-      bool nudgeRight = IsKeyDown(KEY_RIGHT);
-      bool nudgeDown = IsKeyDown(KEY_DOWN);
-      mapCamera.nudge(nudgeLeft, nudgeUp, nudgeRight, nudgeDown);
+      bool panLeft = IsKeyDown(KEY_LEFT);
+      bool panUp = IsKeyDown(KEY_UP);
+      bool panRight = IsKeyDown(KEY_RIGHT);
+      bool panDown = IsKeyDown(KEY_DOWN);
+      mapCamera.pan(panLeft, panUp, panRight, panDown);
 
       if (IsKeyPressed(KEY_HOME))
       {

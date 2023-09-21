@@ -69,6 +69,13 @@ public:
       virtual ~Gearbox() = default;
 
       /**
+       * Updates the internal state of the gearbox on given time passed.
+       *
+       * @param seconds how many seconds have passed since the previous time.
+       */
+      virtual void timePassed(float seconds) = 0;
+
+      /**
        * Sets the target zoom factor for the camera.
        *
        * @param target the zoom factor to reach.
@@ -94,15 +101,15 @@ public:
        */
       virtual void panTo(Vector2 target) = 0;
       /**
-       * Nudges the position slightly.
+       * Performs a continuous panning. The regular call to timePassed()
+       * will update the current position, until the respective direction is off.
        *
-       * @param left nudge it left.
-       * @param up nudge it up.
-       * @param right nudge it right.
-       * @param down nudge it down.
-       * @param the distance to nudge based on the resulting flags.
+       * @param left pan left.
+       * @param up pan up.
+       * @param right pan right.
+       * @param down pan down.
        */
-      virtual void nudge(bool left, bool up, bool right, bool down, float distance) = 0;
+      virtual void pan(bool left, bool up, bool right, bool down) = 0;
    };
 
    /**
@@ -116,17 +123,23 @@ public:
        */
       ImmediateGearbox();
 
+      void timePassed(float seconds) override;
+
       void setTargetZoomFactor(ZoomFactor target) override;
       [[nodiscard]] ZoomFactor getTargetZoomFactor() const override;
       [[nodiscard]] ZoomFactor getCurrentZoomFactor() const override;
 
       [[nodiscard]] Vector2 getCurrentPosition() const override;
       void panTo(Vector2 target) override;
-      void nudge(bool left, bool up, bool right, bool down, float distance) override;
+      void pan(bool left, bool up, bool right, bool down) override;
 
    private:
       Vector2 position;
       ZoomFactor zoomFactor;
+      bool panningLeft = false;
+      bool panningUp = false;
+      bool panningRight = false;
+      bool panningDown = false;
    };
 
    /**
@@ -170,6 +183,13 @@ public:
    explicit MapCamera(std::shared_ptr<Gearbox> gearbox);
 
    /**
+    * Updates the internal state on given time passed.
+    *
+    * @param seconds how many seconds have passed since the previous time.
+    */
+   void timePassed(float seconds);
+
+   /**
     * Apply the given zoom operation on the current target factor.
     *
     * @param op the operation to apply.
@@ -183,14 +203,14 @@ public:
     */
    void panTo(Vector2 target);
    /**
-    * Nudge the position a bit into some direction.
+    * Perform a continuous panning.
     *
-    * @param left nudge left.
-    * @param up nudge up.
-    * @param right nudge right.
-    * @param down nudge down.
+    * @param left pan left.
+    * @param up pan up.
+    * @param right pan right.
+    * @param down pan down.
     */
-   void nudge(bool left, bool up, bool right, bool down);
+   void pan(bool left, bool up, bool right, bool down);
 
    /**
     * Enters the projection mode; Drawing operations will be based on the projection transformation.

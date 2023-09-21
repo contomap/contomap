@@ -34,6 +34,16 @@ MapCamera::ImmediateGearbox::ImmediateGearbox()
 {
 }
 
+void MapCamera::ImmediateGearbox::timePassed(float seconds)
+{
+   Vector2 v {
+      .x = (panningLeft ? -1.0f : 0.0f) + (panningRight ? 1.0f : 0.0f),
+      .y = (panningUp ? -1.0f : 0.0f) + (panningDown ? 1.0f : 0.0f),
+   };
+   auto normalized = Vector2Normalize(v);
+   position = Vector2Add(position, Vector2Scale(normalized, 800.0f * seconds));
+}
+
 void MapCamera::ImmediateGearbox::setTargetZoomFactor(ZoomFactor target)
 {
    zoomFactor = target;
@@ -59,12 +69,12 @@ void MapCamera::ImmediateGearbox::panTo(Vector2 target)
    position = target;
 }
 
-void MapCamera::ImmediateGearbox::nudge(bool left, bool up, bool right, bool down, float distance)
+void MapCamera::ImmediateGearbox::pan(bool left, bool up, bool right, bool down)
 {
-   // TODO this is not correct - misses framerate aware calculation -- distance probably comes via update
-   Vector2 v { .x = (left ? -1.0f : 0.0f) + (right ? 1.0f : 0.0f), .y = (up ? -1.0f : 0.0f) + (down ? 1.0f : 0.0f) };
-   auto normalized = Vector2Normalize(v);
-   position = Vector2Add(position, Vector2Scale(normalized, distance));
+   panningLeft = left;
+   panningUp = up;
+   panningRight = right;
+   panningDown = down;
 }
 
 MapCamera::Projection::Projection(Projection &&other) noexcept
@@ -109,6 +119,11 @@ MapCamera::MapCamera(std::shared_ptr<Gearbox> gearbox)
    memset(&data, 0x00, sizeof(data));
 }
 
+void MapCamera::timePassed(float seconds)
+{
+   gearbox->timePassed(seconds);
+}
+
 void MapCamera::zoom(MapCamera::ZoomOperation const &op)
 {
    gearbox->setTargetZoomFactor(op(gearbox->getTargetZoomFactor()));
@@ -119,9 +134,9 @@ void MapCamera::panTo(Vector2 target)
    gearbox->panTo(target);
 }
 
-void MapCamera::nudge(bool left, bool up, bool right, bool down)
+void MapCamera::pan(bool left, bool up, bool right, bool down)
 {
-   gearbox->nudge(left, up, right, down, 3.0f); // TODO: zoom-dependent distance?
+   gearbox->pan(left, up, right, down); // TODO: zoom-dependent distance?
 }
 
 MapCamera::Projection MapCamera::beginProjection(Vector2 viewportSize)
