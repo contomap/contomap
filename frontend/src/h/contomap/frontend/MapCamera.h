@@ -173,6 +173,9 @@ public:
     */
    using ZoomOperation = std::function<ZoomFactor(ZoomFactor)>;
 
+   /**
+    * The position that is at the center of a map.
+    */
    static Vector2 const HOME_POSITION;
 
    /**
@@ -211,6 +214,11 @@ public:
     * @param down pan down.
     */
    void pan(bool left, bool up, bool right, bool down);
+
+   /**
+    * @return the current position as per gearbox movement.
+    */
+   [[nodiscard]] Vector2 getCurrentPosition() const;
 
    /**
     * Enters the projection mode; Drawing operations will be based on the projection transformation.

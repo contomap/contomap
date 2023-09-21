@@ -41,6 +41,8 @@ void MapCamera::ImmediateGearbox::timePassed(float seconds)
       .y = (panningUp ? -1.0f : 0.0f) + (panningDown ? 1.0f : 0.0f),
    };
    auto normalized = Vector2Normalize(v);
+   // TODO zoom-dependent speed?
+   // TODO extract constant for top speed?
    position = Vector2Add(position, Vector2Scale(normalized, 800.0f * seconds));
 }
 
@@ -96,8 +98,6 @@ MapCamera::Projection::~Projection()
    }
 }
 
-Vector2 const MapCamera::HOME_POSITION { .x = 0.0f, .y = 0.0f };
-
 MapCamera::Projection &MapCamera::Projection::operator=(Projection &&other) noexcept
 {
    moveFrom(std::move(other));
@@ -112,6 +112,8 @@ void MapCamera::Projection::moveFrom(Projection &&other) noexcept
       other.active = false;
    }
 }
+
+Vector2 const MapCamera::HOME_POSITION { .x = 0.0f, .y = 0.0f };
 
 MapCamera::MapCamera(std::shared_ptr<Gearbox> gearbox)
    : gearbox(std::move(gearbox))
@@ -136,7 +138,7 @@ void MapCamera::panTo(Vector2 target)
 
 void MapCamera::pan(bool left, bool up, bool right, bool down)
 {
-   gearbox->pan(left, up, right, down); // TODO: zoom-dependent distance?
+   gearbox->pan(left, up, right, down);
 }
 
 MapCamera::Projection MapCamera::beginProjection(Vector2 viewportSize)
@@ -146,4 +148,9 @@ MapCamera::Projection MapCamera::beginProjection(Vector2 viewportSize)
    data.target = gearbox->getCurrentPosition();
    data.zoom = gearbox->getCurrentZoomFactor().raw();
    return Projection { data };
+}
+
+Vector2 MapCamera::getCurrentPosition() const
+{
+   return gearbox->getCurrentPosition();
 }
