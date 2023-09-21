@@ -227,7 +227,9 @@ void MainWindow::openHelpDialog()
 
 void MainWindow::openNewTopicDialog()
 {
-   pendingDialog = std::make_unique<contomap::frontend::NewTopicDialog>(inputRequestHandler, layout);
+   auto centerPoint = mapCamera.getCurrentPosition();
+   auto location = contomap::model::SpacialCoordinate::absoluteAt(centerPoint.x, centerPoint.y);
+   pendingDialog = std::make_unique<contomap::frontend::NewTopicDialog>(inputRequestHandler, layout, location);
 }
 
 std::vector<std::pair<int, MapCamera::ZoomFactor>> MainWindow::generateZoomLevels()

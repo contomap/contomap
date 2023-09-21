@@ -6,9 +6,11 @@ using contomap::frontend::NewTopicDialog;
 using contomap::frontend::RenderContext;
 using contomap::model::TopicNameValue;
 
-NewTopicDialog::NewTopicDialog(contomap::editor::InputRequestHandler &inputRequestHandler, contomap::frontend::Layout const &layout)
+NewTopicDialog::NewTopicDialog(
+   contomap::editor::InputRequestHandler &inputRequestHandler, contomap::frontend::Layout const &layout, contomap::model::SpacialCoordinate location)
    : inputRequestHandler(inputRequestHandler)
    , layout(layout)
+   , location(location)
 {
 }
 
@@ -35,8 +37,6 @@ bool NewTopicDialog::draw(RenderContext const &context)
    auto potentialTopicName = TopicNameValue::from(newTopicName.data());
    if (accepted && std::holds_alternative<TopicNameValue>(potentialTopicName))
    {
-
-      auto location = contomap::model::SpacialCoordinate::absoluteAt(0.0f, 0.0f); // TODO take from insertion point
       inputRequestHandler.newTopicRequested(std::get<TopicNameValue>(potentialTopicName), location);
       closeDialog = true;
    }

@@ -21,8 +21,10 @@ public:
     *
     * @param inputRequestHandler the handler to call for a new topic.
     * @param layout the layout to use for drawing.
+    * @param location where the topic shall be placed.
     */
-   NewTopicDialog(contomap::editor::InputRequestHandler &inputRequestHandler, contomap::frontend::Layout const &layout);
+   NewTopicDialog(
+      contomap::editor::InputRequestHandler &inputRequestHandler, contomap::frontend::Layout const &layout, contomap::model::SpacialCoordinate location);
    ~NewTopicDialog() override = default;
 
    bool draw(contomap::frontend::RenderContext const &context) override;
@@ -30,6 +32,8 @@ public:
 private:
    contomap::editor::InputRequestHandler &inputRequestHandler;
    contomap::frontend::Layout const &layout;
+
+   contomap::model::SpacialCoordinate location;
 
    std::array<char, contomap::model::TopicNameValue::maxUtf8Bytes() + 1> newTopicName {};
 };
