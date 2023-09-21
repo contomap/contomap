@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include <raygui/raygui.h>
 #include <raylib.h>
 
@@ -7,6 +9,7 @@
 #include "contomap/model/Topics.h"
 
 using contomap::frontend::MainWindow;
+using contomap::frontend::MapCamera;
 using contomap::frontend::RenderContext;
 using contomap::model::Occurrence;
 using contomap::model::Topic;
@@ -47,6 +50,7 @@ MainWindow::LengthInPixel MainWindow::Size::getHeight() const
 
 MainWindow::Size const MainWindow::DEFAULT_SIZE = MainWindow::Size::ofPixel(1280, 720);
 char const MainWindow::DEFAULT_TITLE[] = "contomap";
+std::vector<std::pair<int, contomap::frontend::MapCamera::ZoomFactor>> const MainWindow::ZOOM_LEVELS(MainWindow::generateZoomLevels());
 
 MainWindow::MainWindow(DisplayEnvironment &environment, contomap::editor::View &view, contomap::editor::InputRequestHandler &inputRequestHandler)
    : mapCamera(std::make_shared<MapCamera::ImmediateGearbox>())
@@ -81,14 +85,14 @@ void MainWindow::drawFrame()
    if (currentDialog == nullptr)
    {
       // TODO: probably needs some better checks here
-      // TODO: consider pinch zoom as well?
+      // TODO: consider pinch zoom as well? -> hotkey system
       if (GetMouseWheelMove() > 0.0f)
       {
-         mapCamera.zoomNearer();
+         mapCamera.zoom(doubledRelative(true));
       }
       else if (GetMouseWheelMove() < 0.0f)
       {
-         mapCamera.zoomFarther();
+         mapCamera.zoom(doubledRelative(false));
       }
    }
 
@@ -211,4 +215,32 @@ void MainWindow::openHelpDialog()
 void MainWindow::openNewTopicDialog()
 {
    pendingDialog = std::make_unique<contomap::frontend::NewTopicDialog>(inputRequestHandler, layout);
+}
+
+std::vector<std::pair<int, MapCamera::ZoomFactor>> MainWindow::generateZoomLevels()
+{
+   std::vector<std::pair<int, MapCamera::ZoomFactor>> levels;
+   int stepSize = 5;
+   for (int i = -20; i < 40; i += stepSize)
+   {
+      levels.emplace_back(i, MapCamera::ZoomFactor::from(std::pow(2.0f, static_cast<float>(i) / 10.0f)));
+   }
+   return levels;
+}
+
+MapCamera::ZoomOperation MainWindow::doubledRelative(bool nearer)
+{
+   return [nearer](MapCamera::ZoomFactor currentTarget) {
+      float currentRawTarget = currentTarget.raw();
+      if (nearer)
+      {
+         auto it = std::find_if(ZOOM_LEVELS.begin(), ZOOM_LEVELS.end(), [currentRawTarget](auto pair) { return pair.second.raw() > currentRawTarget; });
+         return (it != ZOOM_LEVELS.end()) ? it->second : ZOOM_LEVELS[ZOOM_LEVELS.size() - 1].second;
+      }
+      else
+      {
+         auto it = std::find_if(ZOOM_LEVELS.rbegin(), ZOOM_LEVELS.rend(), [currentRawTarget](auto pair) { return pair.second.raw() < currentRawTarget; });
+         return (it != ZOOM_LEVELS.rend()) ? it->second : ZOOM_LEVELS[0].second;
+      }
+   };
 }

@@ -88,17 +88,9 @@ MapCamera::MapCamera(std::shared_ptr<Gearbox> gearbox)
    memset(&data, 0x00, sizeof(data));
 }
 
-void MapCamera::zoomNearer()
+void MapCamera::zoom(MapCamera::ZoomOperation op)
 {
-   // TODO add limits -- if applicable with the intended zoom(operation) variant.
-   zoomLevel += 5;
-   gearbox->setTargetZoomFactor(ZoomFactor::from(std::pow(2.0f, static_cast<float>(zoomLevel) / 10.0f)));
-}
-
-void MapCamera::zoomFarther()
-{
-   zoomLevel -= 5;
-   gearbox->setTargetZoomFactor(ZoomFactor::from(std::pow(2.0f, static_cast<float>(zoomLevel) / 10.0f)));
+   gearbox->setTargetZoomFactor(op(gearbox->getTargetZoomFactor()));
 }
 
 MapCamera::Projection MapCamera::beginProjection(Vector2 viewportSize)

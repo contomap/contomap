@@ -118,6 +118,10 @@ public:
 private:
    static Size const DEFAULT_SIZE;
    static char const DEFAULT_TITLE[];
+   static std::vector<std::pair<int, contomap::frontend::MapCamera::ZoomFactor>> const ZOOM_LEVELS;
+
+   [[nodiscard]] static std::vector<std::pair<int, contomap::frontend::MapCamera::ZoomFactor>> generateZoomLevels();
+   [[nodiscard]] static contomap::frontend::MapCamera::ZoomOperation doubledRelative(bool nearer);
 
    void drawBackground();
    void drawMap(RenderContext const &context);

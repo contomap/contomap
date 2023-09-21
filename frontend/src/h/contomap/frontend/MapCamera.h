@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 
 #include <raylib.h>
@@ -129,16 +130,23 @@ public:
    };
 
    /**
+    * ZoomOperation returns a new target zoom factor based on a current value.
+    */
+   using ZoomOperation = std::function<ZoomFactor(ZoomFactor)>;
+
+   /**
     * Constructor.
     *
     * @param gearbox the gearbox to use for operations.
     */
    explicit MapCamera(std::shared_ptr<Gearbox> gearbox);
 
-   // TODO: consider a zoom(ZoomOperation) variant, with ZoomFactor ZoomOperation::applyTo(ZoomFactor oldTarget); this then also supports a "set to 100%" op.
-   void zoomNearer();
-
-   void zoomFarther();
+   /**
+    * Apply the given zoom operation on the current target factor.
+    *
+    * @param op the operation to apply.
+    */
+   void zoom(ZoomOperation op);
 
    /**
     * Enters the projection mode; Drawing operations will be based on the projection transformation.
@@ -149,7 +157,6 @@ public:
    Projection beginProjection(Vector2 viewportSize);
 
 private:
-   int zoomLevel = 0;
    std::shared_ptr<Gearbox> gearbox;
    Camera2D data {};
 };
