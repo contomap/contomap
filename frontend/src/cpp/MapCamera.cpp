@@ -29,7 +29,8 @@ MapCamera::ZoomFactor::ZoomFactor(StorageType value)
 }
 
 MapCamera::ImmediateGearbox::ImmediateGearbox()
-   : zoomFactor(ZoomFactor::UNIT)
+   : position(MapCamera::HOME_POSITION)
+   , zoomFactor(ZoomFactor::UNIT)
 {
 }
 
@@ -46,6 +47,24 @@ MapCamera::ZoomFactor MapCamera::ImmediateGearbox::getTargetZoomFactor() const
 MapCamera::ZoomFactor MapCamera::ImmediateGearbox::getCurrentZoomFactor() const
 {
    return zoomFactor;
+}
+
+Vector2 MapCamera::ImmediateGearbox::getCurrentPosition() const
+{
+   return position;
+}
+
+void MapCamera::ImmediateGearbox::panTo(Vector2 target)
+{
+   position = target;
+}
+
+void MapCamera::ImmediateGearbox::nudge(bool left, bool up, bool right, bool down, float distance)
+{
+   // TODO this is not correct - misses framerate aware calculation -- distance probably comes via update
+   Vector2 v { .x = (left ? -1.0f : 0.0f) + (right ? 1.0f : 0.0f), .y = (up ? -1.0f : 0.0f) + (down ? 1.0f : 0.0f) };
+   auto normalized = Vector2Normalize(v);
+   position = Vector2Add(position, Vector2Scale(normalized, distance));
 }
 
 MapCamera::Projection::Projection(Projection &&other) noexcept
@@ -66,6 +85,8 @@ MapCamera::Projection::~Projection()
       EndMode2D();
    }
 }
+
+Vector2 const MapCamera::HOME_POSITION { .x = 0.0f, .y = 0.0f };
 
 MapCamera::Projection &MapCamera::Projection::operator=(Projection &&other) noexcept
 {
@@ -88,14 +109,26 @@ MapCamera::MapCamera(std::shared_ptr<Gearbox> gearbox)
    memset(&data, 0x00, sizeof(data));
 }
 
-void MapCamera::zoom(MapCamera::ZoomOperation op)
+void MapCamera::zoom(MapCamera::ZoomOperation const &op)
 {
    gearbox->setTargetZoomFactor(op(gearbox->getTargetZoomFactor()));
 }
 
+void MapCamera::panTo(Vector2 target)
+{
+   gearbox->panTo(target);
+}
+
+void MapCamera::nudge(bool left, bool up, bool right, bool down)
+{
+   gearbox->nudge(left, up, right, down, 3.0f); // TODO: zoom-dependent distance?
+}
+
 MapCamera::Projection MapCamera::beginProjection(Vector2 viewportSize)
 {
-   data.offset = Vector2Scale(viewportSize, 0.5f);
+   Vector2 const &centerOfViewport = Vector2Scale(viewportSize, 0.5f);
+   data.offset = centerOfViewport;
+   data.target = gearbox->getCurrentPosition();
    data.zoom = gearbox->getCurrentZoomFactor().raw();
    return Projection { data };
 }

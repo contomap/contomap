@@ -94,6 +94,17 @@ void MainWindow::drawFrame()
       {
          mapCamera.zoom(doubledRelative(false));
       }
+
+      bool nudgeLeft = IsKeyDown(KEY_LEFT);
+      bool nudgeUp = IsKeyDown(KEY_UP);
+      bool nudgeRight = IsKeyDown(KEY_RIGHT);
+      bool nudgeDown = IsKeyDown(KEY_DOWN);
+      mapCamera.nudge(nudgeLeft, nudgeUp, nudgeRight, nudgeDown);
+
+      if (IsKeyPressed(KEY_HOME))
+      {
+         mapCamera.panTo(MapCamera::HOME_POSITION);
+      }
    }
 
    drawBackground();

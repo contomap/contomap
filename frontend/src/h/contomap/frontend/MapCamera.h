@@ -82,6 +82,27 @@ public:
        * @return the current zoom factor as per movement.
        */
       [[nodiscard]] virtual ZoomFactor getCurrentZoomFactor() const = 0;
+
+      /**
+       * @return the current position as per movement.
+       */
+      [[nodiscard]] virtual Vector2 getCurrentPosition() const = 0;
+      /**
+       * Requests to pan to the requested position.
+       *
+       * @param target the target to center on.
+       */
+      virtual void panTo(Vector2 target) = 0;
+      /**
+       * Nudges the position slightly.
+       *
+       * @param left nudge it left.
+       * @param up nudge it up.
+       * @param right nudge it right.
+       * @param down nudge it down.
+       * @param the distance to nudge based on the resulting flags.
+       */
+      virtual void nudge(bool left, bool up, bool right, bool down, float distance) = 0;
    };
 
    /**
@@ -99,7 +120,12 @@ public:
       [[nodiscard]] ZoomFactor getTargetZoomFactor() const override;
       [[nodiscard]] ZoomFactor getCurrentZoomFactor() const override;
 
+      [[nodiscard]] Vector2 getCurrentPosition() const override;
+      void panTo(Vector2 target) override;
+      void nudge(bool left, bool up, bool right, bool down, float distance) override;
+
    private:
+      Vector2 position;
       ZoomFactor zoomFactor;
    };
 
@@ -134,6 +160,8 @@ public:
     */
    using ZoomOperation = std::function<ZoomFactor(ZoomFactor)>;
 
+   static Vector2 const HOME_POSITION;
+
    /**
     * Constructor.
     *
@@ -146,7 +174,23 @@ public:
     *
     * @param op the operation to apply.
     */
-   void zoom(ZoomOperation op);
+   void zoom(ZoomOperation const &op);
+
+   /**
+    * Requests to pan to the specified position.
+    *
+    * @param target the position to pan to.
+    */
+   void panTo(Vector2 target);
+   /**
+    * Nudge the position a bit into some direction.
+    *
+    * @param left nudge left.
+    * @param up nudge up.
+    * @param right nudge right.
+    * @param down nudge down.
+    */
+   void nudge(bool left, bool up, bool right, bool down);
 
    /**
     * Enters the projection mode; Drawing operations will be based on the projection transformation.
