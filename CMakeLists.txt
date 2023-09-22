@@ -85,13 +85,21 @@ file(GLOB_RECURSE LIB_INFRASTRUCTURE_SOURCES "${PROJECT_SOURCE_DIR}/infrastructu
 add_library(contomap-infrastructure INTERFACE ${LIB_INFRASTRUCTURE_SOURCES})
 target_include_directories(contomap-infrastructure INTERFACE "${PROJECT_SOURCE_DIR}/infrastructure/src/h")
 
+file(GLOB_RECURSE LIB_INFRASTRUCTURE_TEST_SUPPORT_SOURCES "${PROJECT_SOURCE_DIR}/infrastructure/test-support/cpp/*.cpp")
+add_library(contomap-infrastructure-test-support INTERFACE ${LIB_INFRASTRUCTURE_TEST_SUPPORT_SOURCES})
+target_include_directories(contomap-infrastructure-test-support INTERFACE "${PROJECT_SOURCE_DIR}/infrastructure/test-support/h")
+target_link_libraries(contomap-infrastructure-test-support
+        INTERFACE
+        contomap-infrastructure
+)
+
 file(GLOB_RECURSE LIB_INFRASTRUCTURE_TEST_SOURCES "${PROJECT_SOURCE_DIR}/infrastructure/test/*.cpp")
 add_executable(contomap-infrastructure-test ${LIB_INFRASTRUCTURE_TEST_SOURCES})
 target_link_libraries(contomap-infrastructure-test
         PRIVATE
         all_warnings
         PUBLIC
-        contomap-infrastructure
+        contomap-infrastructure-test-support
         GTest::gmock_main
 )
 
@@ -168,6 +176,7 @@ target_link_libraries(contomap-frontend-test
         all_warnings
         PUBLIC
         contomap-frontend
+        contomap-infrastructure-test-support
         GTest::gmock_main
 )
 
