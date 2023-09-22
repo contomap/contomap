@@ -41,8 +41,7 @@ void MapCamera::ImmediateGearbox::timePassed(float seconds)
       .y = (panningUp ? -1.0f : 0.0f) + (panningDown ? 1.0f : 0.0f),
    };
    auto normalized = Vector2Normalize(v);
-   // TODO extract constant for top speed?
-   position = Vector2Add(position, Vector2Scale(normalized, (800.0f * seconds) / zoomFactor.raw()));
+   position = Vector2Add(position, Vector2Scale(normalized, (MapCamera::PANNING_SPEED * seconds) / zoomFactor.raw()));
 }
 
 void MapCamera::ImmediateGearbox::setTargetZoomFactor(ZoomFactor target)
@@ -113,6 +112,7 @@ void MapCamera::Projection::moveFrom(Projection &&other) noexcept
 }
 
 Vector2 const MapCamera::HOME_POSITION { .x = 0.0f, .y = 0.0f };
+float const MapCamera::PANNING_SPEED = 800.0f;
 
 MapCamera::MapCamera(std::shared_ptr<Gearbox> gearbox)
    : gearbox(std::move(gearbox))

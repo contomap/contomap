@@ -177,6 +177,10 @@ public:
     * The position that is at the center of a map.
     */
    static Vector2 const HOME_POSITION;
+   /**
+    * The speed (in pixel/second) to reach with panning over time.
+    */
+   static float const PANNING_SPEED;
 
    /**
     * Constructor.
