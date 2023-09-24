@@ -1,14 +1,14 @@
 #include <gtest/gtest.h>
 
 #include "contomap/model/Contomap.h"
-#include "contomap/model/TopicFilter.h"
+#include "contomap/model/Filter.h"
 
 using contomap::model::Contomap;
 using contomap::model::Topic;
 
-class AllTopicsFilter : public contomap::model::TopicFilter
+class AllTopicsFilter : public contomap::model::Filter<Topic>
 {
-   [[nodiscard]] bool matches([[maybe_unused]] contomap::model::Topic const &topic, [[maybe_unused]] contomap::model::ContomapView const &view) const override
+   [[nodiscard]] bool matches([[maybe_unused]] Topic const &topic, [[maybe_unused]] contomap::model::ContomapView const &view) const override
    {
       return true;
    }

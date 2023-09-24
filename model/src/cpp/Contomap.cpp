@@ -1,5 +1,5 @@
 #include "contomap/model/Contomap.h"
-#include "contomap/model/TopicFilter.h"
+#include "contomap/model/Filter.h"
 
 using contomap::model::Association;
 using contomap::model::Contomap;
@@ -36,7 +36,7 @@ Association &Contomap::newAssociation(Identifiers scope, SpacialCoordinate locat
    return it.first->second;
 }
 
-contomap::infrastructure::Search<Topic> Contomap::findTopics(std::shared_ptr<TopicFilter> filter) const
+contomap::infrastructure::Search<Topic> Contomap::findTopics(std::shared_ptr<Filter<Topic>> filter) const
 {
    for (auto const &[_, topic] : topics)
    {

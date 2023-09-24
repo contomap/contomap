@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "contomap/model/TopicFilter.h"
+#include "contomap/model/Filter.h"
 
 namespace contomap::model
 {
@@ -23,7 +23,7 @@ public:
     * @param scope the view scope to filter for.
     * @return a TopicFilter instance that matches all topics with a least one occurrence in given scope.
     */
-   static std::unique_ptr<contomap::model::TopicFilter> thatAreIn(contomap::model::Identifiers const &scope);
+   static std::unique_ptr<contomap::model::Filter<Topic>> thatAreIn(contomap::model::Identifiers const &scope);
 };
 
 }

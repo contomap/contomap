@@ -4,14 +4,13 @@
 
 #include "contomap/infrastructure/Generator.h"
 #include "contomap/model/Association.h"
+#include "contomap/model/Filter.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Style.h"
 #include "contomap/model/Topic.h"
 
 namespace contomap::model
 {
-
-class TopicFilter;
 
 /**
  * ContomapView provides read-only access to a Contomap.
@@ -29,7 +28,7 @@ public:
     * @param filter the filter to call.
     * @return a Search instance that can be iterated once.
     */
-   [[nodiscard]] virtual contomap::infrastructure::Search<contomap::model::Topic> findTopics(std::shared_ptr<TopicFilter> filter) const = 0;
+   [[nodiscard]] virtual contomap::infrastructure::Search<contomap::model::Topic> findTopics(std::shared_ptr<Filter<contomap::model::Topic>> filter) const = 0;
 
    [[nodiscard]] virtual std::optional<std::reference_wrapper<Topic const>> findTopic(contomap::model::Identifier id) const = 0;
 };
