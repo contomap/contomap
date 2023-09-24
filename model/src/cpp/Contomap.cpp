@@ -1,6 +1,7 @@
 #include "contomap/model/Contomap.h"
 #include "contomap/model/Filter.h"
 
+using contomap::infrastructure::Search;
 using contomap::model::Association;
 using contomap::model::Contomap;
 using contomap::model::Identifier;
@@ -36,7 +37,7 @@ Association &Contomap::newAssociation(Identifiers scope, SpacialCoordinate locat
    return it.first->second;
 }
 
-contomap::infrastructure::Search<Topic> Contomap::findTopics(std::shared_ptr<Filter<Topic>> filter) const
+Search<Topic> Contomap::findTopics(std::shared_ptr<Filter<Topic>> filter) const
 {
    for (auto const &[_, topic] : topics)
    {
@@ -47,8 +48,26 @@ contomap::infrastructure::Search<Topic> Contomap::findTopics(std::shared_ptr<Fil
    }
 }
 
-std::optional<std::reference_wrapper<Topic const>> Contomap::findTopic(contomap::model::Identifier id) const
+std::optional<std::reference_wrapper<Topic const>> Contomap::findTopic(Identifier id) const
 {
    auto it = topics.find(id);
    return (it != topics.end()) ? std::optional<std::reference_wrapper<Topic const>>(it->second) : std::optional<std::reference_wrapper<Topic const>>();
+}
+
+Search<Association> Contomap::findAssociations(std::shared_ptr<Filter<Association>> filter) const
+{
+   for (auto const &[_, association] : associations)
+   {
+      if (filter->matches(association, *this))
+      {
+         co_yield association;
+      }
+   }
+}
+
+std::optional<std::reference_wrapper<Association const>> Contomap::findAssociation(Identifier id) const
+{
+   auto it = associations.find(id);
+   return (it != associations.end()) ? std::optional<std::reference_wrapper<Association const>>(it->second)
+                                     : std::optional<std::reference_wrapper<Association const>>();
 }
