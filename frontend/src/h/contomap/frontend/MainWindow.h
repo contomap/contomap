@@ -10,7 +10,6 @@
 #include "contomap/frontend/Layout.h"
 #include "contomap/frontend/MapCamera.h"
 #include "contomap/frontend/RenderContext.h"
-#include "contomap/frontend/ViewModelState.h"
 
 namespace contomap::frontend
 {
@@ -132,9 +131,8 @@ private:
    void openNewTopicDialog();
 
    [[nodiscard]] contomap::model::SpacialCoordinate spacialCameraLocation();
-   
+
    contomap::frontend::Layout layout;
-   contomap::frontend::ViewModelState viewModelState;
 
    contomap::frontend::MapCamera mapCamera;
 
