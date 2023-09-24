@@ -17,6 +17,7 @@ public:
    Editor();
 
    void newTopicRequested(contomap::model::TopicNameValue name, contomap::model::SpacialCoordinate location) override;
+   void newAssociationRequested(contomap::model::SpacialCoordinate location);
 
    [[nodiscard]] contomap::model::Identifiers const &ofViewScope() const override;
    [[nodiscard]] contomap::model::ContomapView const &ofMap() const override;

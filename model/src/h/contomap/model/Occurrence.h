@@ -21,12 +21,12 @@ public:
     * @param scope the scope within which this occurrence is valid.
     * @param spacial the known, initial point where the occurrence is happening.
     */
-   explicit Occurrence(Identifier id, Identifiers scope, SpacialCoordinate spacial);
+   explicit Occurrence(contomap::model::Identifier id, contomap::model::Identifiers scope, contomap::model::SpacialCoordinate spacial);
 
    /**
     * @return the location of this occurrence
     */
-   contomap::model::Coordinates const &getLocation() const;
+   [[nodiscard]] contomap::model::Coordinates const &getLocation() const;
 
    /**
     * Return true if this instance is in the given scope.

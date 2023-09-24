@@ -131,6 +131,8 @@ private:
    void openHelpDialog();
    void openNewTopicDialog();
 
+   [[nodiscard]] contomap::model::SpacialCoordinate spacialCameraLocation();
+   
    contomap::frontend::Layout layout;
    contomap::frontend::ViewModelState viewModelState;
 

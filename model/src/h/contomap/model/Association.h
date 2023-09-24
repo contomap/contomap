@@ -18,8 +18,23 @@ public:
     * Constructor.
     *
     * @param id the primary identifier of this association.
+    * @param scope the scope within which this association is valid.
+    * @param spacial the known, initial point where the association is happening.
     */
-   explicit Association(contomap::model::Identifier id);
+   Association(contomap::model::Identifier id, contomap::model::Identifiers scope, contomap::model::SpacialCoordinate spacial);
+
+   /**
+    * @return the location of this association
+    */
+   [[nodiscard]] contomap::model::Coordinates const &getLocation() const;
+
+   /**
+    * Return true if this instance is in the given scope.
+    *
+    * @param thatScope the scope to look for.
+    * @return true if the association is in given scope.
+    */
+   [[nodiscard]] bool isIn(contomap::model::Identifiers const &thatScope) const;
 
 private:
    contomap::model::Identifier id;

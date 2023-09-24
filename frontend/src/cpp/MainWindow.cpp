@@ -12,6 +12,7 @@ using contomap::frontend::MainWindow;
 using contomap::frontend::MapCamera;
 using contomap::frontend::RenderContext;
 using contomap::model::Occurrence;
+using contomap::model::SpacialCoordinate;
 using contomap::model::Topic;
 using contomap::model::TopicName;
 using contomap::model::TopicNameValue;
@@ -184,9 +185,18 @@ void MainWindow::drawUserInterface(RenderContext const &context)
       GuiEnableTooltip();
 
       // TODO: shortcut system
-      if (IsKeyPressed(KEY_INSERT) || (IsKeyPressed(KEY_I) && IsKeyDown(KEY_LEFT_CONTROL)))
+      bool isInsertOperation = IsKeyPressed(KEY_INSERT) || (IsKeyPressed(KEY_I) && IsKeyDown(KEY_LEFT_CONTROL));
+      bool isAssociationContext = IsKeyDown(KEY_LEFT_SHIFT);
+      if (isInsertOperation)
       {
-         openNewTopicDialog();
+         if (isAssociationContext)
+         {
+            inputRequestHandler.newAssociationRequested(spacialCameraLocation());
+         }
+         else
+         {
+            openNewTopicDialog();
+         }
       }
    }
 
@@ -227,9 +237,7 @@ void MainWindow::openHelpDialog()
 
 void MainWindow::openNewTopicDialog()
 {
-   auto centerPoint = mapCamera.getCurrentPosition();
-   auto location = contomap::model::SpacialCoordinate::absoluteAt(centerPoint.x, centerPoint.y);
-   pendingDialog = std::make_unique<contomap::frontend::NewTopicDialog>(inputRequestHandler, layout, location);
+   pendingDialog = std::make_unique<contomap::frontend::NewTopicDialog>(inputRequestHandler, layout, spacialCameraLocation());
 }
 
 std::vector<std::pair<int, MapCamera::ZoomFactor>> MainWindow::generateZoomLevels()
@@ -241,6 +249,12 @@ std::vector<std::pair<int, MapCamera::ZoomFactor>> MainWindow::generateZoomLevel
       levels.emplace_back(i, MapCamera::ZoomFactor::from(std::pow(2.0f, static_cast<float>(i) / 10.0f)));
    }
    return levels;
+}
+
+SpacialCoordinate MainWindow::spacialCameraLocation()
+{
+   auto centerPoint = mapCamera.getCurrentPosition();
+   return contomap::model::SpacialCoordinate::absoluteAt(centerPoint.x, centerPoint.y);
 }
 
 MapCamera::ZoomOperation MainWindow::doubledRelative(bool nearer)

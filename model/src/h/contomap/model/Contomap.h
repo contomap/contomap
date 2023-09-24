@@ -34,6 +34,15 @@ public:
     */
    [[nodiscard]] contomap::model::Topic &newTopic();
 
+   /**
+    * Crates a new association and adds it to the map.
+    *
+    * @param scope the scope within which the association is valid.
+    * @param location the location in the graphical map.
+    * @return the created instance.
+    */
+   [[nodiscard]] contomap::model::Association &newAssociation(contomap::model::Identifiers scope, contomap::model::SpacialCoordinate location);
+
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Topic> findTopics(std::shared_ptr<TopicFilter> filter) const override;
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Topic const>> findTopic(contomap::model::Identifier id) const override;
 

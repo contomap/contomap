@@ -18,6 +18,11 @@ void Editor::newTopicRequested(TopicNameValue name, SpacialCoordinate location)
    topic.newOccurrence(viewScope, location);
 }
 
+void Editor::newAssociationRequested(contomap::model::SpacialCoordinate location)
+{
+   static_cast<void>(map.newAssociation(viewScope, location));
+}
+
 contomap::model::Identifiers const &Editor::ofViewScope() const
 {
    return viewScope;

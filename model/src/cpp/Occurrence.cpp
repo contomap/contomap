@@ -1,6 +1,7 @@
 #include "contomap/model/Occurrence.h"
 
 using contomap::model::Identifier;
+using contomap::model::Identifiers;
 using contomap::model::Occurrence;
 
 Occurrence::Occurrence(Identifier id, Identifiers scope, SpacialCoordinate spacial)
@@ -15,7 +16,7 @@ contomap::model::Coordinates const &Occurrence::getLocation() const
    return location;
 }
 
-bool Occurrence::isIn(contomap::model::Identifiers const &thatScope) const
+bool Occurrence::isIn(Identifiers const &thatScope) const
 {
    return thatScope.contains(scope);
 }

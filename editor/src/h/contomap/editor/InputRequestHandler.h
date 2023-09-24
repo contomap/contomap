@@ -21,6 +21,13 @@ public:
     * @param location the point at which the topic shall be put at.
     */
    virtual void newTopicRequested(contomap::model::TopicNameValue name, contomap::model::SpacialCoordinate location) = 0;
+
+   /**
+    * Called when a new association shall be created.
+    *
+    * @param location the point at which the association shall be put at.
+    */
+   virtual void newAssociationRequested(contomap::model::SpacialCoordinate location) = 0;
 };
 
 } // namespace contomap::editor
