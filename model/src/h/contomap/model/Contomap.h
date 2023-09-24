@@ -43,9 +43,9 @@ public:
     */
    [[nodiscard]] contomap::model::Association &newAssociation(contomap::model::Identifiers scope, contomap::model::SpacialCoordinate location);
 
-   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Topic> findTopics(std::shared_ptr<Filter<contomap::model::Topic>> filter) const override;
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Topic> find(std::shared_ptr<Filter<contomap::model::Topic>> filter) const override;
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Topic const>> findTopic(contomap::model::Identifier id) const override;
-   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Association> findAssociations(
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Association> find(
       std::shared_ptr<Filter<contomap::model::Association>> filter) const override;
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Association const>> findAssociation(contomap::model::Identifier id) const override;
 

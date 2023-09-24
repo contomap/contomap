@@ -28,7 +28,7 @@ TEST(ContomapTest, topicsCanBeIterated)
    static_cast<void>(map.newTopic());
    static_cast<void>(map.newTopic());
 
-   auto gen = map.findTopics(std::make_shared<AllTopicsFilter>());
+   auto gen = map.find(std::make_shared<AllTopicsFilter>());
 
    size_t count = 0;
    for ([[maybe_unused]] Topic const &topic : gen)

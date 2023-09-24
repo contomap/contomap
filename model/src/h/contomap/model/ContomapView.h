@@ -28,7 +28,7 @@ public:
     * @param filter the filter to call.
     * @return a Search instance that can be iterated once.
     */
-   [[nodiscard]] virtual contomap::infrastructure::Search<contomap::model::Topic> findTopics(std::shared_ptr<Filter<contomap::model::Topic>> filter) const = 0;
+   [[nodiscard]] virtual contomap::infrastructure::Search<contomap::model::Topic> find(std::shared_ptr<Filter<contomap::model::Topic>> filter) const = 0;
 
    /**
     * Find a topic with a specific identifier.
@@ -46,8 +46,7 @@ public:
     * @param filter the filter to call.
     * @return a Search instance that can be iterated once.
     */
-   [[nodiscard]] virtual contomap::infrastructure::Search<contomap::model::Association> findAssociations(
-      std::shared_ptr<Filter<contomap::model::Association>> filter) const
+   [[nodiscard]] virtual contomap::infrastructure::Search<contomap::model::Association> find(std::shared_ptr<Filter<contomap::model::Association>> filter) const
       = 0;
 
    /**

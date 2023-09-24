@@ -130,7 +130,7 @@ void MainWindow::drawMap(RenderContext const &context)
    auto const &viewScope = view.ofViewScope();
    auto const &map = view.ofMap();
 
-   auto visibleTopics = map.findTopics(Topics::thatAreIn(viewScope));
+   auto visibleTopics = map.find(Topics::thatAreIn(viewScope));
    // TODO: rework algorithm: need first to determine visible/referenced topics; declutter; draw associations; draw topics; animate!
    for (Topic const &visibleTopic : visibleTopics)
    {
