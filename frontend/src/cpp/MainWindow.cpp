@@ -6,11 +6,14 @@
 #include "contomap/frontend/HelpDialog.h"
 #include "contomap/frontend/MainWindow.h"
 #include "contomap/frontend/NewTopicDialog.h"
+#include "contomap/model/Associations.h"
 #include "contomap/model/Topics.h"
 
 using contomap::frontend::MainWindow;
 using contomap::frontend::MapCamera;
 using contomap::frontend::RenderContext;
+using contomap::model::Association;
+using contomap::model::Associations;
 using contomap::model::Occurrence;
 using contomap::model::SpacialCoordinate;
 using contomap::model::Topic;
@@ -130,8 +133,39 @@ void MainWindow::drawMap(RenderContext const &context)
    auto const &viewScope = view.ofViewScope();
    auto const &map = view.ofMap();
 
+   // TODO: rework algorithm: need first to determine visible/referenced topics & associations; declutter; draw player lines; draw topics; animate!
+
+   auto visibleAssociations = map.find(Associations::thatAreIn(viewScope));
+   for (Association const &visibleAssociation : visibleAssociations)
+   {
+      std::string nameText(" "); // TODO: resolve name. also: why do triangles overlap if name is empty?
+
+      auto spacialLocation = visibleAssociation.getLocation().getSpacial().getAbsoluteReference();
+      Vector2 projectedLocation { .x = spacialLocation.X(), .y = spacialLocation.Y() };
+
+      Font font = GetFontDefault();
+      float fontSize = 16.0f;
+      float spacing = 1.0f;
+      auto textSize = MeasureTextEx(font, nameText.c_str(), fontSize, spacing);
+      float plateHeight = textSize.y;
+
+      Color plateBackground { 0x80, 0xE0, 0xB0, 0xC0 };
+      float leftCutoff = projectedLocation.x - textSize.x / 2.0f;
+      float rightCutoff = projectedLocation.x + textSize.x / 2.0f;
+      DrawTriangle(Vector2 { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f },
+         Vector2 { .x = leftCutoff - plateHeight / 2.0f, .y = projectedLocation.y }, Vector2 { .x = leftCutoff, .y = projectedLocation.y + plateHeight / 2.0f },
+         plateBackground);
+      DrawRectangleRec(Rectangle { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f, .width = rightCutoff - leftCutoff, .height = plateHeight },
+         plateBackground);
+      DrawTriangle(Vector2 { .x = rightCutoff, .y = projectedLocation.y - plateHeight / 2.0f },
+         Vector2 { .x = rightCutoff, .y = projectedLocation.y + plateHeight / 2.0f },
+         Vector2 { .x = rightCutoff + plateHeight / 2.0f, .y = projectedLocation.y }, plateBackground);
+
+      DrawTextEx(font, nameText.c_str(), Vector2 { .x = projectedLocation.x - textSize.x / 2.0f, .y = projectedLocation.y - textSize.y / 2.0f }, fontSize,
+         spacing, Color { 0x00, 0x00, 0x00, 0xFF });
+   }
+
    auto visibleTopics = map.find(Topics::thatAreIn(viewScope));
-   // TODO: rework algorithm: need first to determine visible/referenced topics; declutter; draw associations; draw topics; animate!
    for (Topic const &visibleTopic : visibleTopics)
    {
       std::string nameText;
