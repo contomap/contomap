@@ -53,6 +53,11 @@ public:
    void remove(contomap::model::Identifier id);
 
    /**
+    * Removes all identifiers from the collection.
+    */
+   void clear();
+
+   /**
     * @return true if the collection is empty, false otherwise.
     */
    [[nodiscard]] bool empty() const;

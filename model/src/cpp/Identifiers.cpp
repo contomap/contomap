@@ -25,6 +25,11 @@ void Identifiers::remove(Identifier id)
    set.erase(id);
 }
 
+void Identifiers::clear()
+{
+   set.clear();
+}
+
 bool Identifiers::empty() const
 {
    return set.empty();

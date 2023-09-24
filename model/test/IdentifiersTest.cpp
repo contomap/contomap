@@ -32,6 +32,18 @@ TEST(IdentifiersTest, addAndRemove)
    EXPECT_TRUE(one.empty());
 }
 
+TEST(IdentifiersTest, clearing)
+{
+   Identifiers empty;
+   Identifiers ids;
+   ids.add(Identifier::random());
+   ids.add(Identifier::random());
+   ids.add(Identifier::random());
+   ids.clear();
+   EXPECT_EQ(ids, empty);
+   EXPECT_TRUE(ids.empty());
+}
+
 TEST(IdentifiersTest, collectionIsASet)
 {
    Identifiers one;
