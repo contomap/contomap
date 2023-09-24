@@ -8,7 +8,7 @@ using contomap::model::Topic;
 
 class AllTopicsFilter : public contomap::model::TopicFilter
 {
-   [[nodiscard]] bool matches(contomap::model::Topic const &topic, contomap::model::ContomapView const &view) const override
+   [[nodiscard]] bool matches([[maybe_unused]] contomap::model::Topic const &topic, [[maybe_unused]] contomap::model::ContomapView const &view) const override
    {
       return true;
    }

@@ -1,7 +1,10 @@
 #include <cstring>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #include <raylib.h>
 #include <raymath.h>
+#pragma GCC diagnostic pop
 
 #include "contomap/frontend/MapCamera.h"
 

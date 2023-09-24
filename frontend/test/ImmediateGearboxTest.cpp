@@ -4,7 +4,10 @@
 
 #include "contomap/test/Steps.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #include <raymath.h>
+#pragma GCC diagnostic pop
 
 using contomap::frontend::MapCamera;
 

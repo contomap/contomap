@@ -70,7 +70,7 @@ endif ()
 
 add_library(all_warnings INTERFACE)
 target_compile_options(all_warnings INTERFACE
-        $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-Wall>
+        $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-Wall -Wextra -Wpedantic>
         $<$<CXX_COMPILER_ID:MSVC>:-W4>
 )
 
