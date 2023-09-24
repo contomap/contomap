@@ -105,9 +105,9 @@ public:
    void closeRequested();
 
    /**
-    * This method is periodically called to draw the next frame.
+    * This method is periodically called to process the next frame: handle state changes and draw the next frame.
     */
-   void drawFrame();
+   void nextFrame();
 
    /**
     * Close the window in the display environment.
@@ -121,6 +121,9 @@ private:
 
    [[nodiscard]] static std::vector<std::pair<int, contomap::frontend::MapCamera::ZoomFactor>> generateZoomLevels();
    [[nodiscard]] static contomap::frontend::MapCamera::ZoomOperation doubledRelative(bool nearer);
+
+   void processInput();
+   void updateState();
 
    void drawBackground();
    void drawMap(RenderContext const &context);

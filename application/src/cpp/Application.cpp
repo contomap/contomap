@@ -17,9 +17,9 @@ void Application::closeRequested()
    mainWindow.closeRequested();
 }
 
-void Application::drawFrame()
+void Application::nextFrame()
 {
-   mainWindow.drawFrame();
+   mainWindow.nextFrame();
 }
 
 void Application::close()
