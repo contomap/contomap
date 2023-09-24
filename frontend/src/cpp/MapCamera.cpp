@@ -8,6 +8,7 @@
 
 #include "contomap/frontend/MapCamera.h"
 
+using contomap::frontend::FrameTime;
 using contomap::frontend::MapCamera;
 
 MapCamera::ZoomFactor const MapCamera::ZoomFactor::FAR_LIMIT(1000);
@@ -37,14 +38,14 @@ MapCamera::ImmediateGearbox::ImmediateGearbox()
 {
 }
 
-void MapCamera::ImmediateGearbox::timePassed(float seconds)
+void MapCamera::ImmediateGearbox::timePassed(FrameTime amount)
 {
    Vector2 v {
       .x = (panningLeft ? -1.0f : 0.0f) + (panningRight ? 1.0f : 0.0f),
       .y = (panningUp ? -1.0f : 0.0f) + (panningDown ? 1.0f : 0.0f),
    };
    auto normalized = Vector2Normalize(v);
-   position = Vector2Add(position, Vector2Scale(normalized, (MapCamera::PANNING_SPEED * seconds) / zoomFactor.raw()));
+   position = Vector2Add(position, Vector2Scale(normalized, (MapCamera::PANNING_SPEED * amount.rawSeconds()) / zoomFactor.raw()));
 }
 
 void MapCamera::ImmediateGearbox::setTargetZoomFactor(ZoomFactor target)
@@ -123,9 +124,9 @@ MapCamera::MapCamera(std::shared_ptr<Gearbox> gearbox)
    memset(&data, 0x00, sizeof(data));
 }
 
-void MapCamera::timePassed(float seconds)
+void MapCamera::timePassed(FrameTime amount)
 {
-   gearbox->timePassed(seconds);
+   gearbox->timePassed(amount);
 }
 
 void MapCamera::zoom(MapCamera::ZoomOperation const &op)

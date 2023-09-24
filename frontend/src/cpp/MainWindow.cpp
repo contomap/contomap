@@ -82,7 +82,8 @@ void MainWindow::closeRequested()
 
 void MainWindow::drawFrame()
 {
-   mapCamera.timePassed(GetFrameTime());
+   auto frameTime = contomap::frontend::FrameTime::fromLastFrame();
+   mapCamera.timePassed(frameTime);
 
    BeginDrawing();
 

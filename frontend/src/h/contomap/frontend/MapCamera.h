@@ -6,6 +6,8 @@
 
 #include <raylib.h>
 
+#include <contomap/frontend/FrameTime.h>
+
 namespace contomap::frontend
 {
 
@@ -71,9 +73,9 @@ public:
       /**
        * Updates the internal state of the gearbox on given time passed.
        *
-       * @param seconds how many seconds have passed since the previous time.
+       * @param amount how much time has passed since the previous invocation.
        */
-      virtual void timePassed(float seconds) = 0;
+      virtual void timePassed(contomap::frontend::FrameTime amount) = 0;
 
       /**
        * Sets the target zoom factor for the camera.
@@ -123,7 +125,7 @@ public:
        */
       ImmediateGearbox();
 
-      void timePassed(float seconds) override;
+      void timePassed(contomap::frontend::FrameTime amount) override;
 
       void setTargetZoomFactor(ZoomFactor target) override;
       [[nodiscard]] ZoomFactor getTargetZoomFactor() const override;
@@ -192,9 +194,9 @@ public:
    /**
     * Updates the internal state on given time passed.
     *
-    * @param seconds how many seconds have passed since the previous time.
+    * @param amount how much time has passed since the previous invocation.
     */
-   void timePassed(float seconds);
+   void timePassed(contomap::frontend::FrameTime amount);
 
    /**
     * Apply the given zoom operation on the current target factor.

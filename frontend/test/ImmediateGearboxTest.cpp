@@ -9,6 +9,7 @@
 #include <raymath.h>
 #pragma GCC diagnostic pop
 
+using contomap::frontend::FrameTime;
 using contomap::frontend::MapCamera;
 
 class ImmediateGearboxTest : public testing::Test, public contomap::test::Steps<ImmediateGearboxTest>
@@ -19,9 +20,9 @@ public:
       instance = std::make_unique<MapCamera::ImmediateGearbox>();
    }
 
-   void timePasses(float seconds)
+   void timePasses(FrameTime amount)
    {
-      instance->timePassed(seconds);
+      instance->timePassed(amount);
    }
 
    void panningTo(Vector2 target)
@@ -55,9 +56,14 @@ public:
       EXPECT_EQ(expected, instance->getTargetZoomFactor()) << message;
    }
 
-   static constexpr float oneSecond()
+   static FrameTime oneSecond()
    {
-      return 1.0f;
+      return ofSeconds(1.0f);
+   }
+
+   static FrameTime ofSeconds(float value)
+   {
+      return FrameTime::fromSeconds(value);
    }
 
    static constexpr Vector2 somePosition()
@@ -94,7 +100,7 @@ TEST_F(ImmediateGearboxTest, panIsAppliedOverTime)
 {
    float seconds = 4.0f;
    given().panning(true, false, false, true);
-   when().timePasses(oneSecond() * seconds);
+   when().timePasses(ofSeconds(seconds));
    then().currentPositionShouldBeCloseTo(Vector2Scale(Vector2Normalize(Vector2 { .x = -1.0f, .y = 1.0f }), MapCamera::PANNING_SPEED * seconds));
 }
 
