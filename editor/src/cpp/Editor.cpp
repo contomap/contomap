@@ -16,11 +16,13 @@ void Editor::newTopicRequested(TopicNameValue name, SpacialCoordinate location)
    auto &topic = map.newTopic();
    topic.newName(std::move(name));
    topic.newOccurrence(viewScope, location);
+   selection.setForTopic(topic.getId());
 }
 
 void Editor::newAssociationRequested(contomap::model::SpacialCoordinate location)
 {
-   static_cast<void>(map.newAssociation(viewScope, location));
+   auto &association = map.newAssociation(viewScope, location);
+   selection.setForAssociation(association.getId());
 }
 
 contomap::model::Identifiers const &Editor::ofViewScope() const

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "contomap/editor/InputRequestHandler.h"
+#include "contomap/editor/Selection.h"
 #include "contomap/editor/View.h"
 #include "contomap/model/Contomap.h"
 #include "contomap/model/Identifiers.h"
@@ -17,7 +18,7 @@ public:
    Editor();
 
    void newTopicRequested(contomap::model::TopicNameValue name, contomap::model::SpacialCoordinate location) override;
-   void newAssociationRequested(contomap::model::SpacialCoordinate location);
+   void newAssociationRequested(contomap::model::SpacialCoordinate location) override;
 
    [[nodiscard]] contomap::model::Identifiers const &ofViewScope() const override;
    [[nodiscard]] contomap::model::ContomapView const &ofMap() const override;
@@ -25,6 +26,7 @@ public:
 private:
    contomap::model::Contomap map;
    contomap::model::Identifiers viewScope;
+   contomap::editor::Selection selection;
 };
 
 } // namespace contomap::editor

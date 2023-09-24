@@ -24,6 +24,11 @@ public:
    Association(contomap::model::Identifier id, contomap::model::Identifiers scope, contomap::model::SpacialCoordinate spacial);
 
    /**
+    * @return the unique identifier of this association instance.
+    */
+   [[nodiscard]] contomap::model::Identifier getId() const;
+
+   /**
     * @return the location of this association
     */
    [[nodiscard]] contomap::model::Coordinates const &getLocation() const;

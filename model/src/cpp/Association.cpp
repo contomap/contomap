@@ -12,6 +12,11 @@ Association::Association(Identifier id, Identifiers scope, SpacialCoordinate spa
 {
 }
 
+Identifier Association::getId() const
+{
+   return id;
+}
+
 contomap::model::Coordinates const &Association::getLocation() const
 {
    return location;
