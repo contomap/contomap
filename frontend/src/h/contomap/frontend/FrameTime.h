@@ -19,19 +19,19 @@ public:
     * @param raw the raw value, in seconds.
     * @return the created instance.
     */
-   static FrameTime fromSeconds(float raw);
+   [[nodiscard]] static FrameTime fromSeconds(float raw);
 
    /**
     * Create a new instance based on previous render time.
     *
     * @return the created instance.
     */
-   static FrameTime fromLastFrame();
+   [[nodiscard]] static FrameTime fromLastFrame();
 
    /**
     * @return the raw value of the frame time, in seconds.
     */
-   float rawSeconds() const;
+   [[nodiscard]] float rawSeconds() const;
 
 private:
    explicit FrameTime(float seconds);
