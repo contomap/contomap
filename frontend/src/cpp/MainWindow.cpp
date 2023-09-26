@@ -1,7 +1,12 @@
 #include <cmath>
 
 #include <raygui/raygui.h>
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #include <raylib.h>
+#include <raymath.h>
+#pragma GCC diagnostic pop
 
 #include "contomap/frontend/HelpDialog.h"
 #include "contomap/frontend/MainWindow.h"
@@ -9,6 +14,9 @@
 #include "contomap/model/Associations.h"
 #include "contomap/model/Topics.h"
 
+using contomap::editor::InputRequestHandler;
+using contomap::editor::SelectionAction;
+using contomap::editor::SelectionMode;
 using contomap::frontend::MainWindow;
 using contomap::frontend::MapCamera;
 using contomap::frontend::RenderContext;
@@ -50,6 +58,28 @@ MainWindow::LengthInPixel MainWindow::Size::getWidth() const
 MainWindow::LengthInPixel MainWindow::Size::getHeight() const
 {
    return height;
+}
+
+MainWindow::Focus::Focus()
+   : distance(std::numeric_limits<float>::max())
+{
+}
+
+void MainWindow::Focus::registerItem(std::shared_ptr<FocusItem> newItem, float newDistance)
+{
+   if (newDistance < distance)
+   {
+      item = std::move(newItem);
+      distance = newDistance;
+   }
+}
+
+void MainWindow::Focus::modifySelection(InputRequestHandler &handler, SelectionAction action, SelectionMode mode) const
+{
+   if (item != nullptr)
+   {
+      item->modifySelection(handler, action, mode);
+   }
 }
 
 MainWindow::Size const MainWindow::DEFAULT_SIZE = MainWindow::Size::ofPixel(1280, 720);
@@ -135,6 +165,13 @@ void MainWindow::processInput()
             openNewTopicDialog();
          }
       }
+
+      if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+      {
+         auto action = IsKeyDown(KEY_LEFT_CONTROL) ? SelectionAction::Toggle : SelectionAction::Set;
+         auto mode = IsKeyDown(KEY_LEFT_SHIFT) ? SelectionMode::Spread : SelectionMode::Sole;
+         currentFocus.modifySelection(inputRequestHandler, action, mode);
+      }
    }
 }
 
@@ -153,11 +190,16 @@ void MainWindow::drawMap(RenderContext const &context)
 {
    auto contentSize = context.getContentSize();
    auto projection = mapCamera.beginProjection(contentSize);
+   auto focusCoordinate = projection.unproject(GetMousePosition());
+   Focus focus;
 
    auto const &viewScope = view.ofViewScope();
    auto const &map = view.ofMap();
+   auto const &selection = view.ofSelection();
 
    // TODO: rework algorithm: need first to determine visible/referenced topics & associations; declutter; draw player lines; draw topics; animate!
+
+   // TODO: find better way to indicate selected and focused items.
 
    auto visibleAssociations = map.find(Associations::thatAreIn(viewScope));
    for (Association const &visibleAssociation : visibleAssociations)
@@ -176,6 +218,27 @@ void MainWindow::drawMap(RenderContext const &context)
       Color plateBackground { 0x80, 0xE0, 0xB0, 0xC0 };
       float leftCutoff = projectedLocation.x - textSize.x / 2.0f;
       float rightCutoff = projectedLocation.x + textSize.x / 2.0f;
+
+      Rectangle area {
+         .x = leftCutoff - plateHeight / 2.0f,
+         .y = projectedLocation.y - textSize.y / 2.0f,
+         .width = textSize.x + plateHeight,
+         .height = plateHeight,
+      };
+      if (CheckCollisionPointRec(focusCoordinate, area))
+      {
+         focus.registerItem(std::make_shared<AssociationFocusItem>(visibleAssociation.getId()), Vector2Distance(focusCoordinate, projectedLocation));
+      }
+
+      if (selection.containsAssociation(visibleAssociation.getId()))
+      {
+         plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x80 });
+      }
+      if (currentFocus.isAssociation(visibleAssociation.getId()))
+      {
+         plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x40 });
+      }
+
       DrawTriangle(Vector2 { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f },
          Vector2 { .x = leftCutoff - plateHeight / 2.0f, .y = projectedLocation.y }, Vector2 { .x = leftCutoff, .y = projectedLocation.y + plateHeight / 2.0f },
          plateBackground);
@@ -214,6 +277,27 @@ void MainWindow::drawMap(RenderContext const &context)
          Color plateBackground { 0xB0, 0x80, 0xE0, 0xC0 };
          float leftCutoff = projectedLocation.x - textSize.x / 2.0f;
          float rightCutoff = projectedLocation.x + textSize.x / 2.0f;
+
+         Rectangle area {
+            .x = leftCutoff - plateHeight / 2.0f,
+            .y = projectedLocation.y - textSize.y / 2.0f,
+            .width = textSize.x + plateHeight,
+            .height = plateHeight,
+         };
+         if (CheckCollisionPointRec(focusCoordinate, area))
+         {
+            focus.registerItem(std::make_shared<OccurrenceFocusItem>(occurrence.getId()), Vector2Distance(focusCoordinate, projectedLocation));
+         }
+
+         if (selection.containsOccurrence(occurrence.getId()))
+         {
+            plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x80 });
+         }
+         if (currentFocus.isOccurrence(occurrence.getId()))
+         {
+            plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x40 });
+         }
+
          DrawCircleSector(Vector2 { .x = leftCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 180.0f, 360.0f, 20, plateBackground);
          DrawRectangleRec(
             Rectangle { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f, .width = rightCutoff - leftCutoff, .height = plateHeight },
@@ -224,6 +308,8 @@ void MainWindow::drawMap(RenderContext const &context)
             spacing, Color { 0x00, 0x00, 0x00, 0xFF });
       }
    }
+
+   currentFocus = focus;
 }
 
 void MainWindow::drawUserInterface(RenderContext const &context)

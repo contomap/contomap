@@ -87,8 +87,9 @@ MapCamera::Projection::Projection(Projection &&other) noexcept
 }
 
 MapCamera::Projection::Projection(Camera2D data)
+   : cameraData(data)
 {
-   BeginMode2D(data);
+   BeginMode2D(cameraData);
    active = true;
 }
 
@@ -106,8 +107,14 @@ MapCamera::Projection &MapCamera::Projection::operator=(Projection &&other) noex
    return *this;
 }
 
+Vector2 MapCamera::Projection::unproject(Vector2 pixel) const
+{
+   return GetScreenToWorld2D(pixel, cameraData);
+}
+
 void MapCamera::Projection::moveFrom(Projection &&other) noexcept
 {
+   cameraData = other.cameraData;
    if (other.active)
    {
       active = true;

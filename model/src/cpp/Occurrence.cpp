@@ -11,6 +11,11 @@ Occurrence::Occurrence(Identifier id, Identifiers scope, SpacialCoordinate spaci
 {
 }
 
+Identifier Occurrence::getId() const
+{
+   return id;
+}
+
 contomap::model::Coordinates const &Occurrence::getLocation() const
 {
    return location;

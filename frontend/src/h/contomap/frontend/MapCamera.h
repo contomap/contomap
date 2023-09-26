@@ -164,9 +164,12 @@ public:
       Projection &operator=(Projection const &) = delete;
       Projection &operator=(Projection &&other) noexcept;
 
+      [[nodiscard]] Vector2 unproject(Vector2 pixel) const;
+
    private:
       void moveFrom(Projection &&other) noexcept;
 
+      Camera2D cameraData;
       bool active = false;
    };
 

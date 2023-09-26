@@ -1,5 +1,8 @@
 #pragma once
 
+#include "contomap/editor/SelectionAction.h"
+#include "contomap/editor/SelectionMode.h"
+#include "contomap/model/Identifier.h"
 #include "contomap/model/SpacialCoordinate.h"
 #include "contomap/model/TopicNameValue.h"
 
@@ -28,6 +31,10 @@ public:
     * @param location the point at which the association shall be put at.
     */
    virtual void newAssociationRequested(contomap::model::SpacialCoordinate location) = 0;
+
+   virtual void modifySelectionOfOccurrence(contomap::model::Identifier id, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode) = 0;
+   virtual void modifySelectionOfAssociation(contomap::model::Identifier id, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode)
+      = 0;
 };
 
 } // namespace contomap::editor

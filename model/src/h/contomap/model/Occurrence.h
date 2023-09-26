@@ -24,6 +24,11 @@ public:
    explicit Occurrence(contomap::model::Identifier id, contomap::model::Identifiers scope, contomap::model::SpacialCoordinate spacial);
 
    /**
+    * @return the unique identifier of this occurrence instance.
+    */
+   [[nodiscard]] contomap::model::Identifier getId() const;
+
+   /**
     * @return the location of this occurrence
     */
    [[nodiscard]] contomap::model::Coordinates const &getLocation() const;

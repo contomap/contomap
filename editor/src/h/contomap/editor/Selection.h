@@ -22,11 +22,24 @@ public:
    void clear();
 
    /**
-    * Set the selection to be for the identified topic.
+    * Set the selection to be for the identified occurrence.
     *
-    * @param id identifier of the topic.
+    * @param id identifier of the occurrence.
     */
-   void setForTopic(contomap::model::Identifier id);
+   void setForOccurrence(contomap::model::Identifier id);
+
+   /**
+    * Toggles the selection of the identified occurrence.
+    *
+    * @param id identifier for the occurrence.
+    */
+   void toggleOccurrence(contomap::model::Identifier id);
+
+   /**
+    * @param id identifier for the occurrence to check.
+    * @return true if the identified occurrence is in the selection.
+    */
+   [[nodiscard]] bool containsOccurrence(contomap::model::Identifier id) const;
 
    /**
     * Set the selection to be for the identified association.
@@ -35,8 +48,21 @@ public:
     */
    void setForAssociation(contomap::model::Identifier id);
 
+   /**
+    * Toggles the selection of the identified association.
+    *
+    * @param id identifier for the association.
+    */
+   void toggleAssociation(contomap::model::Identifier id);
+
+   /**
+    * @param id identifier for the association to check.
+    * @return true if the identified association is in the selection.
+    */
+   bool containsAssociation(contomap::model::Identifier id) const;
+
 private:
-   contomap::model::Identifiers topics;
+   contomap::model::Identifiers occurrences;
    contomap::model::Identifiers associations;
 };
 

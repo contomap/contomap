@@ -4,6 +4,8 @@
 #include <memory>
 
 #include "contomap/editor/InputRequestHandler.h"
+#include "contomap/editor/SelectionAction.h"
+#include "contomap/editor/SelectionMode.h"
 #include "contomap/editor/View.h"
 #include "contomap/frontend/Dialog.h"
 #include "contomap/frontend/DisplayEnvironment.h"
@@ -115,6 +117,94 @@ public:
    void close();
 
 private:
+   class FocusItem
+   {
+   public:
+      virtual ~FocusItem() = default;
+
+      [[nodiscard]] virtual bool isAssociation([[maybe_unused]] contomap::model::Identifier otherId) const
+      {
+         return false;
+      }
+      [[nodiscard]] virtual bool isOccurrence([[maybe_unused]] contomap::model::Identifier otherId) const
+      {
+         return false;
+      }
+      virtual void modifySelection(
+         contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode) const
+         = 0;
+   };
+
+   class AssociationFocusItem : public FocusItem
+   {
+   public:
+      explicit AssociationFocusItem(contomap::model::Identifier id)
+         : id(id)
+      {
+      }
+
+      [[nodiscard]] bool isAssociation(contomap::model::Identifier otherId) const override
+      {
+         return id == otherId;
+      }
+
+      void modifySelection(
+         contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode) const override
+      {
+         handler.modifySelectionOfAssociation(id, action, mode);
+      }
+
+   private:
+      contomap::model::Identifier id;
+   };
+
+   class OccurrenceFocusItem : public FocusItem
+   {
+   public:
+      explicit OccurrenceFocusItem(contomap::model::Identifier id)
+         : id(id)
+      {
+      }
+
+      [[nodiscard]] bool isOccurrence(contomap::model::Identifier otherId) const override
+      {
+         return id == otherId;
+      }
+
+      void modifySelection(
+         contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode) const override
+      {
+         handler.modifySelectionOfOccurrence(id, action, mode);
+      }
+
+   private:
+      contomap::model::Identifier id;
+   };
+
+   class Focus
+   {
+   public:
+      Focus();
+
+      void registerItem(std::shared_ptr<FocusItem> newItem, float newDistance);
+
+      [[nodiscard]] bool isAssociation(contomap::model::Identifier otherId) const
+      {
+         return (item != nullptr) && item->isAssociation(otherId);
+      }
+      [[nodiscard]] virtual bool isOccurrence(contomap::model::Identifier otherId) const
+      {
+         return (item != nullptr) && item->isOccurrence(otherId);
+      }
+
+      void modifySelection(
+         contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode) const;
+
+   private:
+      std::shared_ptr<FocusItem> item;
+      float distance;
+   };
+
    static Size const DEFAULT_SIZE;
    static char const DEFAULT_TITLE[];
    static std::vector<std::pair<int, contomap::frontend::MapCamera::ZoomFactor>> const ZOOM_LEVELS;
@@ -145,6 +235,8 @@ private:
 
    std::unique_ptr<contomap::frontend::Dialog> currentDialog;
    std::unique_ptr<contomap::frontend::Dialog> pendingDialog;
+
+   Focus currentFocus;
 };
 
 } // namespace contomap::frontend

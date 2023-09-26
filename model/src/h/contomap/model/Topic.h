@@ -36,7 +36,7 @@ public:
     * @param value the value of the name to add.
     * @return the created instance.
     */
-   contomap::model::TopicName &newName(contomap::model::TopicNameValue value);
+   [[nodiscard]] contomap::model::TopicName &newName(contomap::model::TopicNameValue value);
 
    /**
     * Adds a new occurrence to the topic.
@@ -45,7 +45,7 @@ public:
     * @param location the location in the graphical map.
     * @return the created instance.
     */
-   contomap::model::Occurrence &newOccurrence(contomap::model::Identifiers scope, contomap::model::SpacialCoordinate location);
+   [[nodiscard]] contomap::model::Occurrence &newOccurrence(contomap::model::Identifiers scope, contomap::model::SpacialCoordinate location);
 
    /**
     * @return a Search for all names in the topic.
