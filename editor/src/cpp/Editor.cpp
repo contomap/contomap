@@ -33,6 +33,9 @@ void Editor::modifySelection(SelectedType type, Identifier id, SelectionAction a
 {
    // TODO if/elseif might not be best approach. See if some strategy approach can help.
 
+   // mode is a strategy that provides a list of implicitly included things, based on ContomapView
+   // action then operates on Selection object
+
    if (mode == SelectionMode::Sole)
    {
       if (action == SelectionAction::Set)
@@ -42,6 +45,19 @@ void Editor::modifySelection(SelectedType type, Identifier id, SelectionAction a
       else if (action == SelectionAction::Toggle)
       {
          selection.toggle(type, id);
+      }
+   }
+   else if (mode == SelectionMode::Spread)
+   {
+      if (action == SelectionAction::Set)
+      {
+         // on occurrence: Set occurrence, and all its (currently scoped) associations and the related roles
+         // on association: Set association, and all its (currently scoped) occurrences and the related roles
+         // on role: Set role, and its (currently scoped) association and occurrences
+      }
+      else if (action == SelectionAction::Toggle)
+      {
+         // for the selected type, do the inverse to its current state to itself, and align all the related things, as in Set branch.
       }
    }
 }
