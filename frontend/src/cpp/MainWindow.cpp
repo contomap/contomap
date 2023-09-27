@@ -81,6 +81,10 @@ void MainWindow::Focus::modifySelection(InputRequestHandler &handler, SelectionA
    {
       item->modifySelection(handler, action, mode);
    }
+   else
+   {
+      handler.clearSelection();
+   }
 }
 
 MainWindow::Size const MainWindow::DEFAULT_SIZE = MainWindow::Size::ofPixel(1280, 720);

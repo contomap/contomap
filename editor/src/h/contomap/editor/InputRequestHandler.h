@@ -33,6 +33,19 @@ public:
     */
    virtual void newAssociationRequested(contomap::model::SpacialCoordinate location) = 0;
 
+   /**
+    * Called to clear the current selection.
+    */
+   virtual void clearSelection() = 0;
+
+   /**
+    * Called to modify the active selection.
+    *
+    * @param type the type of the identified thing.
+    * @param id the unique identifier of the focused item.
+    * @param action what kind of selection action is requested.
+    * @param mode how to perform the action.
+    */
    virtual void modifySelection(
       contomap::editor::SelectedType type, contomap::model::Identifier id, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode)
       = 0;

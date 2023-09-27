@@ -29,6 +29,11 @@ void Editor::newAssociationRequested(contomap::model::SpacialCoordinate location
    selection.setSole(SelectedType::Association, association.getId());
 }
 
+void Editor::clearSelection()
+{
+   selection.clear();
+}
+
 void Editor::modifySelection(SelectedType type, Identifier id, SelectionAction action, SelectionMode mode)
 {
    // TODO if/elseif might not be best approach. See if some strategy approach can help.

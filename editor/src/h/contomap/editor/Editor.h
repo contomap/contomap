@@ -19,6 +19,7 @@ public:
 
    void newTopicRequested(contomap::model::TopicNameValue name, contomap::model::SpacialCoordinate location) override;
    void newAssociationRequested(contomap::model::SpacialCoordinate location) override;
+   void clearSelection() override;
    void modifySelection(contomap::editor::SelectedType type, contomap::model::Identifier id, contomap::editor::SelectionAction action,
       contomap::editor::SelectionMode mode) override;
 
