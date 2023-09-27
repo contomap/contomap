@@ -23,7 +23,10 @@ using contomap::frontend::MapCamera;
 using contomap::frontend::RenderContext;
 using contomap::model::Association;
 using contomap::model::Associations;
+using contomap::model::Identifier;
+using contomap::model::Identifiers;
 using contomap::model::Occurrence;
+using contomap::model::Role;
 using contomap::model::SpacialCoordinate;
 using contomap::model::Topic;
 using contomap::model::TopicName;
@@ -157,7 +160,7 @@ void MainWindow::processInput()
          mapCamera.panTo(MapCamera::HOME_POSITION);
       }
 
-      bool isInsertOperation = IsKeyPressed(KEY_INSERT) || (IsKeyPressed(KEY_I) && IsKeyDown(KEY_LEFT_CONTROL));
+      bool isInsertOperation = IsKeyPressed(KEY_INSERT) || IsKeyPressed(KEY_I);
       bool isAssociationContext = IsKeyDown(KEY_LEFT_SHIFT);
       if (isInsertOperation)
       {
@@ -169,6 +172,11 @@ void MainWindow::processInput()
          {
             openNewTopicDialog();
          }
+      }
+
+      if (IsKeyPressed(KEY_L))
+      {
+         inputRequestHandler.linkSelection();
       }
 
       if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
@@ -206,6 +214,9 @@ void MainWindow::drawMap(RenderContext const &context)
 
    // TODO: find better way to indicate selected and focused items.
 
+   Identifiers associationIds;
+   std::map<Identifier, Vector2> associationLocationsById;
+
    auto visibleAssociations = map.find(Associations::thatAreIn(viewScope));
    for (Association const &visibleAssociation : visibleAssociations)
    {
@@ -230,6 +241,10 @@ void MainWindow::drawMap(RenderContext const &context)
          .width = textSize.x + plateHeight,
          .height = plateHeight,
       };
+
+      associationIds.add(visibleAssociation.getId());
+      associationLocationsById[visibleAssociation.getId()] = projectedLocation; // TODO: store collision area, for intersection later
+
       if (CheckCollisionPointRec(focusCoordinate, area))
       {
          focus.registerItem(std::make_shared<AssociationFocusItem>(visibleAssociation.getId()), Vector2Distance(focusCoordinate, projectedLocation));
@@ -268,10 +283,22 @@ void MainWindow::drawMap(RenderContext const &context)
          nameText = name.getValue().raw();
       }
 
+      std::vector<std::reference_wrapper<Role const>> roles;
+      for (Role const &role : visibleTopic.rolesAssociatedWith(associationIds))
+      {
+         roles.push_back(role);
+      }
+
       for (Occurrence const &occurrence : visibleTopic.occurrencesIn(viewScope))
       {
          auto spacialLocation = occurrence.getLocation().getSpacial().getAbsoluteReference();
          Vector2 projectedLocation { .x = spacialLocation.X(), .y = spacialLocation.Y() };
+
+         for (Role const &role : roles)
+         {
+            auto associationLocation = associationLocationsById[role.getParent()];
+            DrawLineV(projectedLocation, associationLocation, Color { 0x00, 0x00, 0x00, 0xFF });
+         }
 
          Font font = GetFontDefault();
          float fontSize = 16.0f;

@@ -8,3 +8,13 @@ Role::Role(Identifier id, Identifier parent)
    , parent(parent)
 {
 }
+
+Identifier Role::getId() const
+{
+   return id;
+}
+
+Identifier Role::getParent() const
+{
+   return parent;
+}

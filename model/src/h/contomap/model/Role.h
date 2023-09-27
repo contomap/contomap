@@ -21,6 +21,16 @@ public:
     */
    Role(contomap::model::Identifier id, contomap::model::Identifier parent);
 
+   /**
+    * @return the primary identifier of this role.
+    */
+   [[nodiscard]] Identifier getId() const;
+
+   /**
+    * @return the primary identifier of the assocation this role is part of.
+    */
+   [[nodiscard]] Identifier getParent() const;
+
 private:
    contomap::model::Identifier id;
    contomap::model::Identifier parent;

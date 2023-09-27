@@ -49,6 +49,8 @@ public:
     */
    [[nodiscard]] bool contains(contomap::editor::SelectedType type, contomap::model::Identifier id) const;
 
+   [[nodiscard]] contomap::model::Identifiers const &of(contomap::editor::SelectedType type) const;
+
 private:
    std::map<contomap::editor::SelectedType, contomap::model::Identifiers> identifiers;
 };

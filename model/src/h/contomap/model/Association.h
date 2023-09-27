@@ -8,6 +8,8 @@
 namespace contomap::model
 {
 
+class Role;
+
 /**
  * An Association represents the link or relation between topics.
  */
@@ -40,6 +42,13 @@ public:
     * @return true if the association is in given scope.
     */
    [[nodiscard]] bool isIn(contomap::model::Identifiers const &thatScope) const;
+
+   /**
+    * Adds given role to the association.
+    *
+    * @param role the role to add.
+    */
+   void addRole(contomap::model::Role const &role);
 
 private:
    contomap::model::Identifier id;

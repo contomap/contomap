@@ -233,6 +233,6 @@ private:
 /**
  * A Search is a generator for constant references of a certain type.
  */
-template <class T> using Search = contomap::infrastructure::Generator<std::reference_wrapper<T const>>;
+template <class T> using Search = contomap::infrastructure::Generator<std::reference_wrapper<T>>;
 
 }

@@ -1,13 +1,17 @@
 #include "contomap/editor/Editor.h"
+#include "contomap/model/Topics.h"
 
 using contomap::editor::Editor;
 using contomap::editor::SelectedType;
 using contomap::editor::SelectionAction;
 using contomap::editor::SelectionMode;
+using contomap::model::Association;
 using contomap::model::Contomap;
 using contomap::model::Identifier;
 using contomap::model::SpacialCoordinate;
+using contomap::model::Topic;
 using contomap::model::TopicNameValue;
+using contomap::model::Topics;
 
 Editor::Editor()
    : map(Contomap::newMap())
@@ -64,6 +68,28 @@ void Editor::modifySelection(SelectedType type, Identifier id, SelectionAction a
       {
          // for the selected type, do the inverse to its current state to itself, and align all the related things, as in Set branch.
       }
+   }
+}
+
+void Editor::linkSelection()
+{
+   auto &associationIds = selection.of(SelectedType::Association);
+   auto &occurrenceIds = selection.of(SelectedType::Occurrence);
+   if (!associationIds.empty())
+   {
+      for (auto associationId : associationIds)
+      {
+         Association &association = map.findAssociation(associationId).value();
+         auto topics = map.find(Topics::thatOccurAs(occurrenceIds));
+         for (Topic &topic : topics)
+         {
+            static_cast<void>(topic.newRole(association));
+         }
+      }
+   }
+   else if (!occurrenceIds.empty())
+   {
+      // TODO: create association in the middle of all occurrences, create roles.
    }
 }
 

@@ -49,6 +49,13 @@ public:
    virtual void modifySelection(
       contomap::editor::SelectedType type, contomap::model::Identifier id, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode)
       = 0;
+
+   /**
+    * Called to request a link between the selected items.
+    * In case the selection contains one (or more) associations, all the topics from the selected occurrences will be assigned to them.
+    * In case the selection contains only occurrences, their respective topics will be linked with one new association.
+    */
+   virtual void linkSelection() = 0;
 };
 
 } // namespace contomap::editor

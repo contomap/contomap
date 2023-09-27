@@ -3,6 +3,7 @@
 #include <map>
 
 #include "contomap/infrastructure/Generator.h"
+#include "contomap/model/Association.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Occurrence.h"
 #include "contomap/model/Role.h"
@@ -48,9 +49,17 @@ public:
    [[nodiscard]] contomap::model::Occurrence &newOccurrence(contomap::model::Identifiers scope, contomap::model::SpacialCoordinate location);
 
    /**
+    * Adds a new role to the topic.
+    *
+    * @param association the association this topic has a role in.
+    * @return the created instance.
+    */
+   [[nodiscard]] contomap::model::Role &newRole(contomap::model::Association &association);
+
+   /**
     * @return a Search for all names in the topic.
     */
-   [[nodiscard]] contomap::infrastructure::Search<contomap::model::TopicName> allNames() const;
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::TopicName const> allNames() const;
 
    /**
     * Return true if this instance has at least one occurrence that is in given scope.
@@ -61,12 +70,28 @@ public:
    [[nodiscard]] bool isIn(contomap::model::Identifiers const &scope) const;
 
    /**
+    * Return true if this instance has at least one occurrence that is in given list.
+    *
+    * @param occurrenceIds the identifiers to look for.
+    * @return true if the topic has at least one occurrence in the set.
+    */
+   [[nodiscard]] bool occursAsAnyOf(contomap::model::Identifiers const &occurrenceIds) const;
+
+   /**
     * Return a Search for all occurrences that are in given scope.
     *
     * @param scope the scope to look for.
     * @return a Search matching the given scope.
     */
-   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence> occurrencesIn(contomap::model::Identifiers const &scope) const;
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence const> occurrencesIn(contomap::model::Identifiers const &scope) const;
+
+   /**
+    * Return a Search for all roles that are related to given associations.
+    *
+    * @param associations the associations to look for.
+    * @return a Search matching the given scope.
+    */
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role const> rolesAssociatedWith(contomap::model::Identifiers const &associations) const;
 
 private:
    contomap::model::Identifier id;

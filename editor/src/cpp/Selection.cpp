@@ -3,6 +3,7 @@
 using contomap::editor::SelectedType;
 using contomap::editor::Selection;
 using contomap::model::Identifier;
+using contomap::model::Identifiers;
 
 void Selection::clear()
 {
@@ -32,4 +33,11 @@ bool Selection::contains(SelectedType type, Identifier id) const
 {
    auto it = identifiers.find(type);
    return (it != identifiers.end()) && (it->second.contains(id));
+}
+
+Identifiers const &Selection::of(SelectedType type) const
+{
+   static Identifiers const empty;
+   auto it = identifiers.find(type);
+   return (it != identifiers.end()) ? it->second : empty;
 }

@@ -1,8 +1,10 @@
 #include "contomap/model/Association.h"
+#include "contomap/model/Role.h"
 
 using contomap::model::Association;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
+using contomap::model::Role;
 using contomap::model::SpacialCoordinate;
 
 Association::Association(Identifier id, Identifiers scope, SpacialCoordinate spacial)
@@ -25,4 +27,14 @@ contomap::model::Coordinates const &Association::getLocation() const
 bool Association::isIn(Identifiers const &thatScope) const
 {
    return thatScope.contains(scope);
+}
+
+void Association::addRole(Role const &role)
+{
+   if (role.getParent() != id)
+   {
+      // TODO: consider throwing an exception
+      return;
+   }
+   roles.add(role.getId());
 }
