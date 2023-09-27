@@ -1,56 +1,35 @@
 #include "contomap/editor/Selection.h"
 
+using contomap::editor::SelectedType;
 using contomap::editor::Selection;
 using contomap::model::Identifier;
 
 void Selection::clear()
 {
-   occurrences.clear();
-   associations.clear();
+   identifiers.clear();
 }
 
-void Selection::setForOccurrence(Identifier id)
+void Selection::setSole(SelectedType type, Identifier id)
 {
    clear();
-   occurrences.add(id);
+   identifiers[type].add(id);
 }
 
-void Selection::toggleOccurrence(contomap::model::Identifier id)
+void Selection::toggle(SelectedType type, Identifier id)
 {
-   if (occurrences.contains(id))
+   auto &specific = identifiers[type];
+   if (specific.contains(id))
    {
-      occurrences.remove(id);
+      specific.remove(id);
    }
    else
    {
-      occurrences.add(id);
+      specific.add(id);
    }
 }
 
-bool Selection::containsOccurrence(Identifier id) const
+bool Selection::contains(SelectedType type, Identifier id) const
 {
-   return occurrences.contains(id);
-}
-
-void Selection::setForAssociation(Identifier id)
-{
-   clear();
-   associations.add(id);
-}
-
-void Selection::toggleAssociation(contomap::model::Identifier id)
-{
-   if (associations.contains(id))
-   {
-      associations.remove(id);
-   }
-   else
-   {
-      associations.add(id);
-   }
-}
-
-bool Selection::containsAssociation(Identifier id) const
-{
-   return associations.contains(id);
+   auto it = identifiers.find(type);
+   return (it != identifiers.end()) && (it->second.contains(id));
 }

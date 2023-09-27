@@ -1,6 +1,7 @@
 #include "contomap/editor/Editor.h"
 
 using contomap::editor::Editor;
+using contomap::editor::SelectedType;
 using contomap::editor::SelectionAction;
 using contomap::editor::SelectionMode;
 using contomap::model::Contomap;
@@ -19,16 +20,16 @@ void Editor::newTopicRequested(TopicNameValue name, SpacialCoordinate location)
    auto &topic = map.newTopic();
    static_cast<void>(topic.newName(std::move(name)));
    auto &occurrence = topic.newOccurrence(viewScope, location);
-   selection.setForOccurrence(occurrence.getId());
+   selection.setSole(SelectedType::Occurrence, occurrence.getId());
 }
 
 void Editor::newAssociationRequested(contomap::model::SpacialCoordinate location)
 {
    auto &association = map.newAssociation(viewScope, location);
-   selection.setForAssociation(association.getId());
+   selection.setSole(SelectedType::Association, association.getId());
 }
 
-void Editor::modifySelectionOfOccurrence(Identifier id, SelectionAction action, SelectionMode mode)
+void Editor::modifySelection(SelectedType type, Identifier id, SelectionAction action, SelectionMode mode)
 {
    // TODO if/elseif might not be best approach. See if some strategy approach can help.
 
@@ -36,28 +37,11 @@ void Editor::modifySelectionOfOccurrence(Identifier id, SelectionAction action, 
    {
       if (action == SelectionAction::Set)
       {
-         selection.setForOccurrence(id);
+         selection.setSole(type, id);
       }
       else if (action == SelectionAction::Toggle)
       {
-         selection.toggleOccurrence(id);
-      }
-   }
-}
-
-void Editor::modifySelectionOfAssociation(Identifier id, SelectionAction action, SelectionMode mode)
-{
-   // TODO this is a lot of duplication for a second type. When roles/players will be added, this is even more duplication.
-
-   if (mode == SelectionMode::Sole)
-   {
-      if (action == SelectionAction::Set)
-      {
-         selection.setForAssociation(id);
-      }
-      else if (action == SelectionAction::Toggle)
-      {
-         selection.toggleAssociation(id);
+         selection.toggle(type, id);
       }
    }
 }

@@ -15,6 +15,7 @@
 #include "contomap/model/Topics.h"
 
 using contomap::editor::InputRequestHandler;
+using contomap::editor::SelectedType;
 using contomap::editor::SelectionAction;
 using contomap::editor::SelectionMode;
 using contomap::frontend::MainWindow;
@@ -230,7 +231,7 @@ void MainWindow::drawMap(RenderContext const &context)
          focus.registerItem(std::make_shared<AssociationFocusItem>(visibleAssociation.getId()), Vector2Distance(focusCoordinate, projectedLocation));
       }
 
-      if (selection.containsAssociation(visibleAssociation.getId()))
+      if (selection.contains(SelectedType::Association, visibleAssociation.getId()))
       {
          plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x80 });
       }
@@ -289,7 +290,7 @@ void MainWindow::drawMap(RenderContext const &context)
             focus.registerItem(std::make_shared<OccurrenceFocusItem>(occurrence.getId()), Vector2Distance(focusCoordinate, projectedLocation));
          }
 
-         if (selection.containsOccurrence(occurrence.getId()))
+         if (selection.contains(SelectedType::Occurrence, occurrence.getId()))
          {
             plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x80 });
          }

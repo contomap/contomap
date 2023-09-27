@@ -151,7 +151,7 @@ private:
       void modifySelection(
          contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode) const override
       {
-         handler.modifySelectionOfAssociation(id, action, mode);
+         handler.modifySelection(contomap::editor::SelectedType::Association, id, action, mode);
       }
 
    private:
@@ -174,7 +174,7 @@ private:
       void modifySelection(
          contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode) const override
       {
-         handler.modifySelectionOfOccurrence(id, action, mode);
+         handler.modifySelection(contomap::editor::SelectedType::Occurrence, id, action, mode);
       }
 
    private:

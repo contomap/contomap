@@ -19,8 +19,8 @@ public:
 
    void newTopicRequested(contomap::model::TopicNameValue name, contomap::model::SpacialCoordinate location) override;
    void newAssociationRequested(contomap::model::SpacialCoordinate location) override;
-   void modifySelectionOfOccurrence(contomap::model::Identifier id, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode) override;
-   void modifySelectionOfAssociation(contomap::model::Identifier id, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode) override;
+   void modifySelection(contomap::editor::SelectedType type, contomap::model::Identifier id, contomap::editor::SelectionAction action,
+      contomap::editor::SelectionMode mode) override;
 
    [[nodiscard]] contomap::model::Identifiers const &ofViewScope() const override;
    [[nodiscard]] contomap::model::ContomapView const &ofMap() const override;

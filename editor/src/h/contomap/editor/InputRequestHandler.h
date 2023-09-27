@@ -1,5 +1,6 @@
 #pragma once
 
+#include "contomap/editor/SelectedType.h"
 #include "contomap/editor/SelectionAction.h"
 #include "contomap/editor/SelectionMode.h"
 #include "contomap/model/Identifier.h"
@@ -32,8 +33,8 @@ public:
     */
    virtual void newAssociationRequested(contomap::model::SpacialCoordinate location) = 0;
 
-   virtual void modifySelectionOfOccurrence(contomap::model::Identifier id, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode) = 0;
-   virtual void modifySelectionOfAssociation(contomap::model::Identifier id, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode)
+   virtual void modifySelection(
+      contomap::editor::SelectedType type, contomap::model::Identifier id, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode)
       = 0;
 };
 
