@@ -27,7 +27,7 @@ public:
    [[nodiscard]] Identifier getId() const;
 
    /**
-    * @return the primary identifier of the assocation this role is part of.
+    * @return the primary identifier of the association this role is part of.
     */
    [[nodiscard]] Identifier getParent() const;
 
