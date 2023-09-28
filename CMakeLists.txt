@@ -86,10 +86,10 @@ add_library(contomap-infrastructure INTERFACE ${LIB_INFRASTRUCTURE_SOURCES})
 target_include_directories(contomap-infrastructure INTERFACE "${PROJECT_SOURCE_DIR}/infrastructure/src/h")
 
 file(GLOB_RECURSE LIB_INFRASTRUCTURE_TEST_SUPPORT_SOURCES "${PROJECT_SOURCE_DIR}/infrastructure/test-support/cpp/*.cpp")
-add_library(contomap-infrastructure-test-support INTERFACE ${LIB_INFRASTRUCTURE_TEST_SUPPORT_SOURCES})
-target_include_directories(contomap-infrastructure-test-support INTERFACE "${PROJECT_SOURCE_DIR}/infrastructure/test-support/h")
+add_library(contomap-infrastructure-test-support STATIC ${LIB_INFRASTRUCTURE_TEST_SUPPORT_SOURCES})
+target_include_directories(contomap-infrastructure-test-support PUBLIC "${PROJECT_SOURCE_DIR}/infrastructure/test-support/h")
 target_link_libraries(contomap-infrastructure-test-support
-        INTERFACE
+        PUBLIC
         contomap-infrastructure
 )
 
@@ -122,6 +122,7 @@ target_link_libraries(contomap-model-test-support
         all_warnings
         PUBLIC
         contomap-model
+        contomap-infrastructure-test-support
 )
 
 file(GLOB_RECURSE LIB_MODEL_TEST_SOURCES "${PROJECT_SOURCE_DIR}/model/test/*.cpp")
