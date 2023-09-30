@@ -19,12 +19,13 @@ Editor::Editor()
    viewScope.add(map.getDefaultScope());
 }
 
-void Editor::newTopicRequested(TopicNameValue name, SpacialCoordinate location)
+Identifier Editor::newTopicRequested(TopicNameValue name, SpacialCoordinate location)
 {
    auto &topic = map.newTopic();
    static_cast<void>(topic.newName(std::move(name)));
    auto &occurrence = topic.newOccurrence(viewScope, location);
    selection.setSole(SelectedType::Occurrence, occurrence.getId());
+   return topic.getId();
 }
 
 void Editor::newAssociationRequested(contomap::model::SpacialCoordinate location)

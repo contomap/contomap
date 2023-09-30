@@ -123,6 +123,7 @@ target_link_libraries(contomap-model-test-support
         PUBLIC
         contomap-model
         contomap-infrastructure-test-support
+        GTest::gmock_main
 )
 
 file(GLOB_RECURSE LIB_MODEL_TEST_SOURCES "${PROJECT_SOURCE_DIR}/model/test/*.cpp")
@@ -154,6 +155,8 @@ target_link_libraries(contomap-editor-test
         all_warnings
         PUBLIC
         contomap-editor
+        contomap-model-test-support
+        contomap-infrastructure-test-support
         GTest::gmock_main
 )
 

@@ -23,8 +23,9 @@ public:
     *
     * @param name how the new topic shall be named.
     * @param location the point at which the topic shall be put at.
+    * @return identifier of the created topic
     */
-   virtual void newTopicRequested(contomap::model::TopicNameValue name, contomap::model::SpacialCoordinate location) = 0;
+   virtual contomap::model::Identifier newTopicRequested(contomap::model::TopicNameValue name, contomap::model::SpacialCoordinate location) = 0;
 
    /**
     * Called when a new association shall be created.

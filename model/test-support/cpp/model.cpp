@@ -13,4 +13,16 @@ std::ostream &operator<<(std::ostream &stream, contomap::model::SpacialCoordinat
    return stream;
 }
 
+std::ostream &operator<<(std::ostream &stream, contomap::model::Topic const &topic)
+{
+   stream << "id=" << topic.getId();
+   stream << ", names=[";
+   for (contomap::model::TopicName const &name : topic.allNames())
+   {
+      stream << " \"" << name.getValue().raw() << '"';
+   }
+   stream << " ]";
+   return stream;
+}
+
 }
