@@ -3,6 +3,7 @@
 #include "contomap/editor/Editor.h"
 
 #include "contomap/test/fixtures/ContomapViewFixture.h"
+#include "contomap/test/matchers/Coordinates.h"
 #include "contomap/test/matchers/Topics.h"
 #include "contomap/test/printers/model.h"
 #include "contomap/test/samples/CoordinateSamples.h"
@@ -12,11 +13,14 @@
 using contomap::editor::Editor;
 using contomap::editor::InputRequestHandler;
 using contomap::model::Identifier;
+using contomap::model::Identifiers;
+using contomap::model::Occurrence;
 using contomap::model::SpacialCoordinate;
 using contomap::model::TopicNameValue;
 
 using contomap::test::fixtures::ContomapViewFixture;
 using contomap::test::matchers::hasName;
+using contomap::test::matchers::isCloseTo;
 using contomap::test::samples::someNameValue;
 using contomap::test::samples::someSpacialCoordinate;
 
@@ -53,9 +57,9 @@ public:
          return *this;
       }
 
-      NewTopicRequest &at(SpacialCoordinate::CoordinateType x, SpacialCoordinate::CoordinateType y)
+      NewTopicRequest &at(SpacialCoordinate value)
       {
-         position = SpacialCoordinate::absoluteAt(x, y);
+         position = value;
          return *this;
       }
 
@@ -127,6 +131,11 @@ public:
       return viewFixture;
    }
 
+   Identifiers viewScope()
+   {
+      return instance.ofViewScope();
+   }
+
 private:
    Editor instance;
    UserFixture userFixture;
@@ -146,6 +155,17 @@ TEST_F(EditorTest, newTopicsCanBeCreated)
 
 TEST_F(EditorTest, newTopicsKeepTheirProperties)
 {
-   Identifier id = when().user().requestsANewTopic().withName("test").at(10.0f, 20.0f);
-   then().view().ofMap().shouldHaveTopicThat(id, [](auto const &topic) { EXPECT_THAT(topic, hasName("test")); });
+   auto position = someSpacialCoordinate();
+   auto name = someNameValue();
+   Identifier id = when().user().requestsANewTopic().withName(name.raw()).at(position);
+   then().view().ofMap().shouldHaveTopicThat(id, [this, &name, &position](auto const &topic) {
+      EXPECT_THAT(topic, hasName(name.raw()));
+      size_t occurrences = 0;
+      for (Occurrence const &occurrence : topic.occurrencesIn(viewScope()))
+      {
+         EXPECT_THAT(occurrence.getLocation().getSpacial(), isCloseTo(position));
+         occurrences++;
+      }
+      EXPECT_EQ(1, occurrences);
+   });
 }
