@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ranges>
+
 // The following block based on a workaround
 // See https://github.com/msys2/MINGW-packages/issues/7565
 #if defined __GNUC__ && defined _WIN32
@@ -29,7 +31,7 @@ namespace contomap::infrastructure
  *
  * @tparam T the result type that is produced with the generator.
  */
-template <std::movable T> class Generator
+template <std::movable T> class Generator : public std::ranges::view_base
 {
 public:
    /**
@@ -166,6 +168,11 @@ public:
    class Iterator
    {
    public:
+      /** difference_type necessary for ranges compatibility. */
+      using difference_type = std::ptrdiff_t;
+      /** value_type necessary for ranges-to-legacy algorithm compatibility. */
+      using value_type = T;
+
       /**
        * Constructor.
        *
@@ -179,9 +186,18 @@ public:
       /**
        * The increment operator advances to the next item from the generator.
        */
-      void operator++()
+      Iterator &operator++()
       {
          coroutineHandle.resume();
+         return *this;
+      }
+      /**
+       * The increment operator advances to the next item from the generator.
+       */
+      Iterator operator++(int)
+      {
+         coroutineHandle.resume();
+         return *this;
       }
       /**
        * The dereference operator returns the currently contained value.
@@ -209,7 +225,7 @@ public:
    /**
     * @return the start iteration of the generator.
     */
-   Iterator begin()
+   Iterator begin() const
    {
       if (coroutineHandle)
       {
@@ -221,7 +237,7 @@ public:
    /**
     * @return the default sentinel value for terminating an iteration.
     */
-   std::default_sentinel_t end()
+   std::default_sentinel_t end() const
    {
       return {};
    }

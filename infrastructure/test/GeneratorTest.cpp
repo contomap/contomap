@@ -1,3 +1,5 @@
+#include <ranges>
+
 #include <gtest/gtest.h>
 
 #include "contomap/infrastructure/Generator.h"
@@ -21,4 +23,18 @@ TEST(GeneratorTest, canIterateOverResults)
    }
    std::vector<int> expected { 10, 11, 12, 13 };
    EXPECT_EQ(expected, result);
+}
+
+TEST(GeneratorTest, rangeCompatibility)
+{
+   // requirements for std::ranges::range
+   static_assert(std::weakly_incrementable<Generator<int>::Iterator>);
+   // requirements for std::ranges::view
+   static_assert(!std::copy_constructible<Generator<int>>);
+   static_assert(!std::copyable<Generator<int>>);
+   static_assert(std::ranges::enable_view<Generator<int>>);
+   static_assert(std::ranges::range<Generator<int>>);
+   // requirements for std::ranges::range
+   static_assert(std::movable<Generator<int>>);
+   static_assert(std::copyable<Generator<int>::Iterator>);
 }
