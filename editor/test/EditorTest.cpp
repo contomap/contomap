@@ -12,10 +12,14 @@
 
 using contomap::editor::Editor;
 using contomap::editor::InputRequestHandler;
+using contomap::editor::SelectedType;
+using contomap::editor::SelectionAction;
+using contomap::editor::SelectionMode;
 using contomap::model::Association;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 using contomap::model::Occurrence;
+using contomap::model::Role;
 using contomap::model::SpacialCoordinate;
 using contomap::model::Topic;
 using contomap::model::TopicNameValue;
@@ -143,6 +147,26 @@ public:
          return NewAssociationRequest(handler);
       }
 
+      void clearsTheSelection()
+      {
+         handler.clearSelection();
+      }
+
+      void linksTheSelection()
+      {
+         handler.linkSelection();
+      }
+
+      void selects(SelectedType type, Identifier id)
+      {
+         handler.modifySelection(type, id, SelectionAction::Set, SelectionMode::Sole);
+      }
+
+      void togglesSelectionOf(SelectedType type, Identifier id)
+      {
+         handler.modifySelection(type, id, SelectionAction::Toggle, SelectionMode::Sole);
+      }
+
    private:
       InputRequestHandler &handler;
    };
@@ -187,6 +211,12 @@ public:
       return instance.ofViewScope();
    }
 
+   Occurrence const &occurrenceOf(Identifier topicId)
+   {
+      std::reference_wrapper<Topic const> topic = instance.ofMap().findTopic(topicId).value();
+      return *topic.get().occurrencesIn(viewScope()).begin();
+   }
+
 private:
    Editor instance;
    UserFixture userFixture;
@@ -226,5 +256,20 @@ TEST_F(EditorTest, newAssociationsKeepTheirProperties)
    then().view().ofMap().shouldHaveAssociationThat(id, [&id, &position](Association const &association) {
       EXPECT_THAT(id, testing::Eq(association.getId()));
       EXPECT_THAT(association.getLocation().getSpacial(), isCloseTo(position));
+   });
+}
+
+TEST_F(EditorTest, rolesCanBeCreatedThroughSelection)
+{
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier associationId = given().user().requestsANewAssociation();
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(topicId).getId());
+   given().user().togglesSelectionOf(SelectedType::Association, associationId);
+   when().user().linksTheSelection();
+   then().view().ofMap().shouldHaveTopicThat(topicId, [&associationId](Topic const &topic) {
+      std::vector<Identifier> roles;
+      std::ranges::copy(topic.rolesAssociatedWith(Identifiers::ofSingle(associationId)) | std::views::transform([](Role const &role) { return role.getId(); }),
+         std::back_inserter(roles));
+      EXPECT_THAT(roles, testing::SizeIs(1));
    });
 }
