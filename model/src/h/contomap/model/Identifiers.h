@@ -18,6 +18,14 @@ public:
    using CollectionType = std::set<Identifier>;
 
    /**
+    * Factory function to create an instance with a single entry.
+    *
+    * @param id the identifier to contain
+    * @return a new instance
+    */
+   static Identifiers ofSingle(Identifier id);
+
+   /**
     * Equality operator.
     * @param other the other identifiers to compare against.
     * @return true if equal.

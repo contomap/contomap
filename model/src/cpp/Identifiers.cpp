@@ -5,6 +5,13 @@
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 
+Identifiers Identifiers::ofSingle(Identifier id)
+{
+   Identifiers ids;
+   ids.add(id);
+   return ids;
+}
+
 Identifiers::CollectionType::const_iterator Identifiers::begin() const
 {
    return set.begin();
