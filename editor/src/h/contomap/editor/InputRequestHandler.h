@@ -32,7 +32,7 @@ public:
     *
     * @param location the point at which the association shall be put at.
     */
-   virtual void newAssociationRequested(contomap::model::SpacialCoordinate location) = 0;
+   virtual contomap::model::Identifier newAssociationRequested(contomap::model::SpacialCoordinate location) = 0;
 
    /**
     * Called to clear the current selection.

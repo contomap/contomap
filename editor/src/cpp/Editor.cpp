@@ -28,10 +28,11 @@ Identifier Editor::newTopicRequested(TopicNameValue name, SpacialCoordinate loca
    return topic.getId();
 }
 
-void Editor::newAssociationRequested(contomap::model::SpacialCoordinate location)
+Identifier Editor::newAssociationRequested(contomap::model::SpacialCoordinate location)
 {
    auto &association = map.newAssociation(viewScope, location);
    selection.setSole(SelectedType::Association, association.getId());
+   return association.getId();
 }
 
 void Editor::clearSelection()

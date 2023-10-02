@@ -32,7 +32,7 @@ void ContomapViewFixture::shouldHaveTopicCountOf(size_t expected)
    EXPECT_EQ(expected, count);
 }
 
-void ContomapViewFixture::shouldHaveTopicThat(contomap::model::Identifier id, std::function<void(contomap::model::Topic const &)> asserter)
+void ContomapViewFixture::shouldHaveTopicThat(contomap::model::Identifier id, std::function<void(contomap::model::Topic const &)> const &asserter)
 {
    auto topic = view.findTopic(id);
    if (!topic.has_value())
@@ -40,4 +40,14 @@ void ContomapViewFixture::shouldHaveTopicThat(contomap::model::Identifier id, st
       FAIL() << "Topic with ID " << id << " not found";
    }
    asserter(topic.value());
+}
+
+void ContomapViewFixture::shouldHaveAssociationThat(contomap::model::Identifier id, std::function<void(contomap::model::Association const &)> const &asserter)
+{
+   auto association = view.findAssociation(id);
+   if (!association.has_value())
+   {
+      FAIL() << "Association with ID " << id << " not found";
+   }
+   asserter(association.value());
 }

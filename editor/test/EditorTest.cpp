@@ -12,10 +12,12 @@
 
 using contomap::editor::Editor;
 using contomap::editor::InputRequestHandler;
+using contomap::model::Association;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 using contomap::model::Occurrence;
 using contomap::model::SpacialCoordinate;
+using contomap::model::Topic;
 using contomap::model::TopicNameValue;
 
 using contomap::test::fixtures::ContomapViewFixture;
@@ -79,6 +81,50 @@ public:
       SpacialCoordinate position;
    };
 
+   class NewAssociationRequest
+   {
+   public:
+      explicit NewAssociationRequest(NewAssociationRequest const &) = delete;
+      explicit NewAssociationRequest(NewAssociationRequest &&) = delete;
+      explicit NewAssociationRequest(InputRequestHandler &handler)
+         : handler(handler)
+         , position(someSpacialCoordinate())
+      {
+      }
+      ~NewAssociationRequest()
+      {
+         static_cast<void>(resolve());
+      }
+
+      NewAssociationRequest &operator=(NewAssociationRequest const &) = delete;
+      NewAssociationRequest &operator=(NewAssociationRequest &&) = delete;
+
+      operator Identifier()
+      {
+         return resolve();
+      }
+
+      NewAssociationRequest &at(SpacialCoordinate value)
+      {
+         position = value;
+         return *this;
+      }
+
+   private:
+      [[nodiscard]] Identifier resolve()
+      {
+         if (!id.has_value())
+         {
+            id = handler.newAssociationRequested(position);
+         }
+         return id.value();
+      }
+
+      InputRequestHandler &handler;
+      std::optional<Identifier> id;
+      SpacialCoordinate position;
+   };
+
    class UserFixture
    {
    public:
@@ -90,6 +136,11 @@ public:
       NewTopicRequest requestsANewTopic()
       {
          return NewTopicRequest(handler);
+      }
+
+      NewAssociationRequest requestsANewAssociation()
+      {
+         return NewAssociationRequest(handler);
       }
 
    private:
@@ -158,12 +209,22 @@ TEST_F(EditorTest, newTopicsKeepTheirProperties)
    auto position = someSpacialCoordinate();
    auto name = someNameValue();
    Identifier id = when().user().requestsANewTopic().withName(name.raw()).at(position);
-   then().view().ofMap().shouldHaveTopicThat(id, [this, &id, &name, &position](auto const &topic) {
+   then().view().ofMap().shouldHaveTopicThat(id, [this, &id, &name, &position](Topic const &topic) {
       EXPECT_THAT(id, testing::Eq(topic.getId()));
       EXPECT_THAT(topic, hasName(name.raw()));
       std::vector<SpacialCoordinate> coordinates;
       std::ranges::copy(topic.occurrencesIn(viewScope()) | std::views::transform([](Occurrence const &o) { return o.getLocation().getSpacial(); }),
          std::back_inserter(coordinates));
       EXPECT_THAT(coordinates, testing::ElementsAre(isCloseTo(position)));
+   });
+}
+
+TEST_F(EditorTest, newAssociationsKeepTheirProperties)
+{
+   auto position = someSpacialCoordinate();
+   Identifier id = when().user().requestsANewAssociation().at(position);
+   then().view().ofMap().shouldHaveAssociationThat(id, [&id, &position](Association const &association) {
+      EXPECT_THAT(id, testing::Eq(association.getId()));
+      EXPECT_THAT(association.getLocation().getSpacial(), isCloseTo(position));
    });
 }

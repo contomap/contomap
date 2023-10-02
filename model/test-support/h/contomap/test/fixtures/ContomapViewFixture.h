@@ -11,7 +11,8 @@ public:
    explicit ContomapViewFixture(contomap::model::ContomapView const &view);
 
    void shouldHaveTopicCountOf(size_t expected);
-   void shouldHaveTopicThat(contomap::model::Identifier id, std::function<void(contomap::model::Topic const &)> asserter);
+   void shouldHaveTopicThat(contomap::model::Identifier id, std::function<void(contomap::model::Topic const &)> const &asserter);
+   void shouldHaveAssociationThat(contomap::model::Identifier id, std::function<void(contomap::model::Association const &)> const &asserter);
 
 private:
    contomap::model::ContomapView const &view;
