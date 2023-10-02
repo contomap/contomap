@@ -160,12 +160,9 @@ TEST_F(EditorTest, newTopicsKeepTheirProperties)
    Identifier id = when().user().requestsANewTopic().withName(name.raw()).at(position);
    then().view().ofMap().shouldHaveTopicThat(id, [this, &name, &position](auto const &topic) {
       EXPECT_THAT(topic, hasName(name.raw()));
-      size_t occurrences = 0;
-      for (Occurrence const &occurrence : topic.occurrencesIn(viewScope()))
-      {
-         EXPECT_THAT(occurrence.getLocation().getSpacial(), isCloseTo(position));
-         occurrences++;
-      }
-      EXPECT_EQ(1, occurrences);
+      std::vector<SpacialCoordinate> coordinates;
+      std::ranges::copy(topic.occurrencesIn(viewScope()) | std::views::transform([](Occurrence const &o) { return o.getLocation().getSpacial(); }),
+         std::back_inserter(coordinates));
+      EXPECT_THAT(coordinates, testing::ElementsAre(isCloseTo(position)));
    });
 }
