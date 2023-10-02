@@ -158,7 +158,8 @@ TEST_F(EditorTest, newTopicsKeepTheirProperties)
    auto position = someSpacialCoordinate();
    auto name = someNameValue();
    Identifier id = when().user().requestsANewTopic().withName(name.raw()).at(position);
-   then().view().ofMap().shouldHaveTopicThat(id, [this, &name, &position](auto const &topic) {
+   then().view().ofMap().shouldHaveTopicThat(id, [this, &id, &name, &position](auto const &topic) {
+      EXPECT_THAT(id, testing::Eq(topic.getId()));
       EXPECT_THAT(topic, hasName(name.raw()));
       std::vector<SpacialCoordinate> coordinates;
       std::ranges::copy(topic.occurrencesIn(viewScope()) | std::views::transform([](Occurrence const &o) { return o.getLocation().getSpacial(); }),
