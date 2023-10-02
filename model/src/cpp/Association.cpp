@@ -24,6 +24,11 @@ contomap::model::Coordinates const &Association::getLocation() const
    return location;
 }
 
+void Association::moveTo(SpacialCoordinate absolutePosition)
+{
+   location.setSpacial(absolutePosition);
+}
+
 bool Association::isIn(Identifiers const &thatScope) const
 {
    return thatScope.contains(scope);

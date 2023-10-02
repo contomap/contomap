@@ -304,3 +304,13 @@ TEST_F(EditorTest, newAssociationsIsCreatedBetweenSelectedTopicsByLinkingThrough
       EXPECT_THAT(roles, testing::SizeIs(1));
    });
 }
+
+TEST_F(EditorTest, newAssociationsCreatedByLinkingThroughSelectionIsCentredBetweenParticipants)
+{
+   Identifier topicId1 = given().user().requestsANewTopic().at(SpacialCoordinate::absoluteAt(-5.0f, 10.0f));
+   Identifier topicId2 = given().user().requestsANewTopic().at(SpacialCoordinate::absoluteAt(0.0f, 20.0f));
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(topicId1).getId());
+   given().user().togglesSelectionOf(SelectedType::Occurrence, occurrenceOf(topicId2).getId());
+   when().user().linksTheSelection();
+   then().view().ofMap().shouldHaveOneAssociationNear(SpacialCoordinate::absoluteAt(-2.5f, 15.0f));
+}

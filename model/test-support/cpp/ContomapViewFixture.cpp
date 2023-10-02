@@ -2,14 +2,17 @@
 
 #include "contomap/test/fixtures/ContomapViewFixture.h"
 
+using contomap::model::Association;
 using contomap::model::ContomapView;
+using contomap::model::Filter;
+using contomap::model::Identifier;
 using contomap::model::Topic;
 
 using contomap::test::fixtures::ContomapViewFixture;
 
 class AllTopicsFilter : public contomap::model::Filter<Topic>
 {
-   [[nodiscard]] bool matches([[maybe_unused]] Topic const &topic, [[maybe_unused]] contomap::model::ContomapView const &view) const override
+   [[nodiscard]] bool matches([[maybe_unused]] Topic const &topic, [[maybe_unused]] ContomapView const &view) const override
    {
       return true;
    }
@@ -32,7 +35,7 @@ void ContomapViewFixture::shouldHaveTopicCountOf(size_t expected)
    EXPECT_EQ(expected, count);
 }
 
-void ContomapViewFixture::shouldHaveTopicThat(contomap::model::Identifier id, std::function<void(contomap::model::Topic const &)> const &asserter)
+void ContomapViewFixture::shouldHaveTopicThat(Identifier id, std::function<void(Topic const &)> const &asserter)
 {
    auto topic = view.findTopic(id);
    if (!topic.has_value())
@@ -42,7 +45,7 @@ void ContomapViewFixture::shouldHaveTopicThat(contomap::model::Identifier id, st
    asserter(topic.value());
 }
 
-void ContomapViewFixture::shouldHaveAssociationThat(contomap::model::Identifier id, std::function<void(contomap::model::Association const &)> const &asserter)
+void ContomapViewFixture::shouldHaveAssociationThat(Identifier id, std::function<void(Association const &)> const &asserter)
 {
    auto association = view.findAssociation(id);
    if (!association.has_value())
@@ -50,4 +53,16 @@ void ContomapViewFixture::shouldHaveAssociationThat(contomap::model::Identifier 
       FAIL() << "Association with ID " << id << " not found";
    }
    asserter(association.value());
+}
+
+void ContomapViewFixture::shouldHaveOneAssociationNear(contomap::model::SpacialCoordinate position)
+{
+   auto associations = view.find(Filter<Association>::of([&position](Association const &association, ContomapView const &) {
+      auto const &expectedPoint = position.getAbsoluteReference();
+      auto const &argPoint = association.getLocation().getSpacial().getAbsoluteReference();
+      return (std::abs(argPoint.X() - expectedPoint.X()) < 0.001f) && (std::abs(argPoint.Y() - expectedPoint.Y()) < 0.001f);
+   }));
+   auto associationsView = std::ranges::common_view { std::move(associations) };
+   size_t count = std::count_if(associationsView.begin(), associationsView.end(), [](auto const &) { return true; });
+   EXPECT_EQ(1, count);
 }

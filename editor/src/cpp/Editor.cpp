@@ -8,6 +8,7 @@ using contomap::editor::SelectionMode;
 using contomap::model::Association;
 using contomap::model::Contomap;
 using contomap::model::Identifier;
+using contomap::model::Occurrence;
 using contomap::model::SpacialCoordinate;
 using contomap::model::Topic;
 using contomap::model::TopicNameValue;
@@ -93,12 +94,23 @@ void Editor::linkSelection()
    {
       auto &association = map.newAssociation(viewScope, SpacialCoordinate::absoluteAt(0.0f, 0.0f));
       auto topics = map.find(Topics::thatOccurAs(occurrenceIds));
+      float x = 0.0f;
+      float y = 0.0f;
+      size_t count = 0;
       for (Topic &topic : topics)
       {
          static_cast<void>(topic.newRole(association));
-      }
 
-      // TODO: create association in the middle of all occurrences, create roles.
+         // TODO: this resolution is wrong -- only the selected occurrences should be used to calculate average
+         for (Occurrence const &occurrence : topic.occurrencesIn(viewScope))
+         {
+            auto occurrenceLocation = occurrence.getLocation().getSpacial().getAbsoluteReference();
+            x += occurrenceLocation.X();
+            y += occurrenceLocation.Y();
+         }
+         count++;
+      }
+      association.moveTo(SpacialCoordinate::absoluteAt(x / static_cast<float>(count), y / static_cast<float>(count)));
    }
 }
 

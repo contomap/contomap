@@ -36,6 +36,13 @@ public:
    [[nodiscard]] contomap::model::Coordinates const &getLocation() const;
 
    /**
+    * Moves the association to the specified position.
+    *
+    * @param absolutePosition the new location.
+    */
+   void moveTo(SpacialCoordinate absolutePosition);
+
+   /**
     * Return true if this instance is in the given scope.
     *
     * @param thatScope the scope to look for.
