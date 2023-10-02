@@ -91,6 +91,13 @@ void Editor::linkSelection()
    }
    else if (!occurrenceIds.empty())
    {
+      auto &association = map.newAssociation(viewScope, SpacialCoordinate::absoluteAt(0.0f, 0.0f));
+      auto topics = map.find(Topics::thatOccurAs(occurrenceIds));
+      for (Topic &topic : topics)
+      {
+         static_cast<void>(topic.newRole(association));
+      }
+
       // TODO: create association in the middle of all occurrences, create roles.
    }
 }
