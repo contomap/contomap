@@ -179,6 +179,11 @@ void MainWindow::processInput()
          inputRequestHandler.linkSelection();
       }
 
+      if (IsKeyPressed(KEY_DELETE))
+      {
+         inputRequestHandler.deleteSelection();
+      }
+
       if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
       {
          auto action = IsKeyDown(KEY_LEFT_CONTROL) ? SelectionAction::Toggle : SelectionAction::Set;
