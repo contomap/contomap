@@ -24,8 +24,6 @@ public:
     * Creates a new TopicName from the given raw string.
     * The string must not be empty and be shorter than the allowed maximum length.
     *
-    * TODO replace return value with a better type
-    *
     * @param value the raw string value to take over
     * @return either the right type of the created name, or an error instead.
     */
