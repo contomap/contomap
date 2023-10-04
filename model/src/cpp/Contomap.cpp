@@ -37,6 +37,11 @@ Association &Contomap::newAssociation(Identifiers scope, SpacialCoordinate locat
    return it.first->second;
 }
 
+void Contomap::deleteRoles(Identifiers const &ids)
+{
+   std::for_each(ids.begin(), ids.end(), [this](Identifier id) { deleteRole(id); });
+}
+
 void Contomap::deleteAssociations(Identifiers const &ids)
 {
    std::for_each(ids.begin(), ids.end(), [this](Identifier id) { deleteAssociation(id); });
@@ -99,7 +104,21 @@ std::optional<std::reference_wrapper<Association>> Contomap::findAssociation(Ide
    return (it != associations.end()) ? std::optional<std::reference_wrapper<Association>>(it->second) : std::optional<std::reference_wrapper<Association>>();
 }
 
-void Contomap::deleteAssociation(contomap::model::Identifier id)
+void Contomap::deleteRole(Identifier id)
+{
+   for (auto &[associationId, association] : associations)
+   {
+      if (association.hasRole(id))
+      {
+         for (auto &[topicId, topic] : topics)
+         {
+            topic.removeRole(association, id);
+         }
+      }
+   }
+}
+
+void Contomap::deleteAssociation(Identifier id)
 {
    if (!associations.contains(id))
    {

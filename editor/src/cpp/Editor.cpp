@@ -117,6 +117,7 @@ void Editor::linkSelection()
 
 void Editor::deleteSelection()
 {
+   map.deleteRoles(selection.of(SelectedType::Role));
    map.deleteAssociations(selection.of(SelectedType::Association));
    map.deleteOccurrences(selection.of(SelectedType::Occurrence));
    selection.clear();

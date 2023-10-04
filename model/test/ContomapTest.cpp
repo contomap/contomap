@@ -105,3 +105,23 @@ TEST_F(ContomapTest, rolesOfRemovedTopicAreAlsoRemoved)
    view().shouldHaveAssociationThat(
       association.getId(), [](Association const &association) { EXPECT_FALSE(association.hasRoles()) << "Association should not have any roles left"; });
 }
+
+TEST_F(ContomapTest, rolesCanBeRemoved)
+{
+   auto &topic = map.newTopic();
+   static_cast<void>(topic.newOccurrence({}, someSpacialCoordinate()).getId());
+   auto &association = map.newAssociation(Identifiers {}, someSpacialCoordinate());
+   auto roleId1 = topic.newRole(association).getId();
+   auto roleId2 = topic.newRole(association).getId();
+
+   map.deleteRoles(Identifiers::ofSingle(roleId1));
+
+   view().shouldHaveTopicThat(topic.getId(), [&association, roleId2](Topic const &topic) {
+      auto rolesView = std::ranges::common_view(topic.rolesAssociatedWith(Identifiers::ofSingle(association.getId())));
+      std::vector<std::reference_wrapper<Role const>> roles(rolesView.begin(), rolesView.end());
+      ASSERT_THAT(roles, testing::SizeIs(1));
+      EXPECT_THAT(roles[0].get().getId(), testing::Eq(roleId2));
+   });
+
+   EXPECT_TRUE(association.hasRoles()) << "Association should still have roles";
+}

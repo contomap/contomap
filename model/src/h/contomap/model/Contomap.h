@@ -44,6 +44,13 @@ public:
    [[nodiscard]] contomap::model::Association &newAssociation(contomap::model::Identifiers scope, contomap::model::SpacialCoordinate location);
 
    /**
+    * Deletes the roles with given identifiers.
+    *
+    * @param ids the identifiers of all roles to remove.
+    */
+   void deleteRoles(contomap::model::Identifiers const &ids);
+
+   /**
     * Deletes the associations with given identifiers.
     *
     * @param ids the identifiers of all associations to remove.
@@ -68,6 +75,7 @@ public:
 private:
    Contomap();
 
+   void deleteRole(contomap::model::Identifier id);
    void deleteAssociation(contomap::model::Identifier id);
    void deleteOccurrence(contomap::model::Identifier id);
    bool topicShouldBeRemoved(Topic const &topic);

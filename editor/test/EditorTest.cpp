@@ -243,6 +243,13 @@ public:
       return *topic.get().occurrencesIn(viewScope()).begin();
    }
 
+   Role const &roleOf(Identifier topicId, Identifier associationId)
+   {
+      std::vector<std::reference_wrapper<Role const>> roles;
+      std::ranges::copy(instance.ofMap().findTopic(topicId).value().get().rolesAssociatedWith(Identifiers::ofSingle(associationId)), std::back_inserter(roles));
+      return roles.at(0);
+   }
+
 private:
    Editor instance;
    UserFixture userFixture;
@@ -392,4 +399,24 @@ TEST_F(EditorTest, deletingLastOccurrenceRemovesTopic)
    then().view().ofMap().shouldNotHaveTopic(topicId);
    asWellAs().view().ofSelection().should(
       [](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers {})) << "Occurrence is still selected"; });
+}
+
+TEST_F(EditorTest, deletingRoleRemovesIt)
+{
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier associationId = given().user().requestsANewAssociation();
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(topicId).getId());
+   given().user().togglesSelectionOf(SelectedType::Association, associationId);
+   given().user().linksTheSelection();
+
+   given().user().selects(SelectedType::Role, roleOf(topicId, associationId).getId());
+   when().user().deletesTheSelection();
+   then().view().ofMap().shouldHaveTopicThat(topicId, [&associationId](Topic const &topic) {
+      std::vector<Identifier> roles;
+      std::ranges::copy(topic.rolesAssociatedWith(Identifiers::ofSingle(associationId)) | std::views::transform([](Role const &role) { return role.getId(); }),
+         std::back_inserter(roles));
+      EXPECT_THAT(roles, testing::SizeIs(0)) << "Role still assigned";
+   });
+   asWellAs().view().ofSelection().should(
+      [](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Role), testing::Eq(Identifiers {})) << "Role is still selected"; });
 }
