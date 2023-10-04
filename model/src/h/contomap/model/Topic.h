@@ -110,7 +110,7 @@ public:
     * @param scope the scope to look for.
     * @return a Search matching the given scope.
     */
-   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence const> occurrencesIn(contomap::model::Identifiers const &scope) const;
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence const> occurrencesIn(contomap::model::Identifiers scope) const;
 
    /**
     * Return a Search for all roles that are related to given associations.
@@ -118,7 +118,7 @@ public:
     * @param associations the associations to look for.
     * @return a Search matching the given scope.
     */
-   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role const> rolesAssociatedWith(contomap::model::Identifiers const &associations) const;
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role const> rolesAssociatedWith(contomap::model::Identifiers associations) const;
 
 private:
    contomap::model::Identifier id;

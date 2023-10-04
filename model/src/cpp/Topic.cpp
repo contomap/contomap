@@ -94,7 +94,7 @@ bool Topic::isWithoutOccurrences() const
    return occurrences.empty();
 }
 
-Search<Occurrence const> Topic::occurrencesIn(contomap::model::Identifiers const &scope) const // NOLINT
+Search<Occurrence const> Topic::occurrencesIn(contomap::model::Identifiers scope) const // NOLINT
 {
    for (auto const &[_, occurrence] : occurrences)
    {
@@ -105,7 +105,7 @@ Search<Occurrence const> Topic::occurrencesIn(contomap::model::Identifiers const
    }
 }
 
-Search<Role const> Topic::rolesAssociatedWith(Identifiers const &associations) const // NOLINT
+Search<Role const> Topic::rolesAssociatedWith(Identifiers associations) const // NOLINT
 {
    for (auto const &[_, role] : roles)
    {
