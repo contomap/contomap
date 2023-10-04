@@ -34,7 +34,7 @@ bool Association::isIn(Identifiers const &thatScope) const
    return thatScope.contains(scope);
 }
 
-Role Association::addRole()
+Role::Seed Association::addRole()
 {
    auto roleId = Identifier::random();
    roles.add(roleId);

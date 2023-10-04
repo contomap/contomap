@@ -3,9 +3,9 @@
 using contomap::model::Identifier;
 using contomap::model::Role;
 
-Role::Role(Identifier id, Identifier parent)
-   : id(id)
-   , parent(parent)
+Role::Role(Seed const &seed)
+   : id(seed.id)
+   , parent(seed.parent)
 {
 }
 

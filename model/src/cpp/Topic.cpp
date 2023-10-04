@@ -48,8 +48,8 @@ bool Topic::removeOccurrence(Identifier occurrenceId)
 
 Role &Topic::newRole(Association &association)
 {
-   auto const &role = association.addRole();
-   auto it = roles.emplace(role.getId(), role);
+   auto const &seed = association.addRole();
+   auto it = roles.emplace(seed.getId(), seed);
    return it.first->second;
 }
 

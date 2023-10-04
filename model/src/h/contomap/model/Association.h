@@ -4,11 +4,10 @@
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
 #include "contomap/model/OptionalIdentifier.h"
+#include "contomap/model/Role.h"
 
 namespace contomap::model
 {
-
-class Role;
 
 /**
  * An Association represents the link or relation between topics.
@@ -55,7 +54,7 @@ public:
     *
     * @return the created role details. Use the result as a template for storing the concrete instance somewhere.
     */
-   [[nodiscard]] Role addRole();
+   [[nodiscard]] Role::Seed addRole();
 
    /**
     * Removes given role from the association.
