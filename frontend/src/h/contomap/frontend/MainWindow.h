@@ -126,6 +126,10 @@ private:
       {
          return false;
       }
+      [[nodiscard]] virtual bool isRole([[maybe_unused]] contomap::model::Identifier otherId) const
+      {
+         return false;
+      }
       [[nodiscard]] virtual bool isOccurrence([[maybe_unused]] contomap::model::Identifier otherId) const
       {
          return false;
@@ -152,6 +156,29 @@ private:
          contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode) const override
       {
          handler.modifySelection(contomap::editor::SelectedType::Association, id, action, mode);
+      }
+
+   private:
+      contomap::model::Identifier id;
+   };
+
+   class RoleFocusItem : public FocusItem
+   {
+   public:
+      explicit RoleFocusItem(contomap::model::Identifier id)
+         : id(id)
+      {
+      }
+
+      [[nodiscard]] bool isRole(contomap::model::Identifier otherId) const override
+      {
+         return id == otherId;
+      }
+
+      void modifySelection(
+         contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode) const override
+      {
+         handler.modifySelection(contomap::editor::SelectedType::Role, id, action, mode);
       }
 
    private:
@@ -191,6 +218,10 @@ private:
       [[nodiscard]] bool isAssociation(contomap::model::Identifier otherId) const
       {
          return (item != nullptr) && item->isAssociation(otherId);
+      }
+      [[nodiscard]] bool isRole(contomap::model::Identifier otherId) const
+      {
+         return (item != nullptr) && item->isRole(otherId);
       }
       [[nodiscard]] virtual bool isOccurrence(contomap::model::Identifier otherId) const
       {

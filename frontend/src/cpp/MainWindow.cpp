@@ -302,7 +302,26 @@ void MainWindow::drawMap(RenderContext const &context)
          for (Role const &role : roles)
          {
             auto associationLocation = associationLocationsById[role.getParent()];
-            DrawLineV(projectedLocation, associationLocation, Color { 0x00, 0x00, 0x00, 0xFF });
+
+            if (CheckCollisionPointLine(focusCoordinate, projectedLocation, associationLocation, 5))
+            {
+               focus.registerItem(std::make_shared<RoleFocusItem>(role.getId()), 0.0f);
+            }
+
+            Color roleColor { 0x00, 0x00, 0x00, 0xFF };
+            float thickness = 1.0f;
+            if (selection.contains(SelectedType::Role, role.getId()))
+            {
+               roleColor = ColorTint(roleColor, Color { 0xFF, 0x00, 0x00, 0x80 });
+               thickness += 2.0f;
+            }
+            if (currentFocus.isRole(role.getId()))
+            {
+               roleColor = ColorTint(roleColor, Color { 0xFF, 0xFF, 0xFF, 0x40 });
+               thickness += 0.5f;
+            }
+
+            DrawLineEx(projectedLocation, associationLocation, thickness, roleColor);
          }
 
          Font font = GetFontDefault();
