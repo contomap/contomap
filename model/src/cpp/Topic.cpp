@@ -41,6 +41,11 @@ Occurrence &Topic::newOccurrence(Identifiers scope, SpacialCoordinate location)
    return it.first->second;
 }
 
+bool Topic::removeOccurrence(Identifier occurrenceId)
+{
+   return occurrences.erase(occurrenceId) > 0;
+}
+
 Role &Topic::newRole(Association &association)
 {
    auto roleId = Identifier::random();
@@ -83,6 +88,11 @@ bool Topic::occursAsAnyOf(Identifiers const &occurrenceIds) const
 {
    return std::any_of(
       occurrences.begin(), occurrences.end(), [&occurrenceIds](std::pair<Identifier, Occurrence> const &kvp) { return occurrenceIds.contains(kvp.first); });
+}
+
+bool Topic::isWithoutOccurrences() const
+{
+   return occurrences.empty();
 }
 
 Search<Occurrence const> Topic::occurrencesIn(contomap::model::Identifiers const &scope) const

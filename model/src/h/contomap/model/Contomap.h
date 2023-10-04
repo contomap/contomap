@@ -46,9 +46,16 @@ public:
    /**
     * Deletes the associations with given identifiers.
     *
-    * @param ids the identifiers of all associations to remove
+    * @param ids the identifiers of all associations to remove.
     */
    void deleteAssociations(contomap::model::Identifiers const &ids);
+
+   /**
+    * Deletes the occurrences with given identifiers.
+    *
+    * @param ids the identifiers of all occurrences to remove.
+    */
+   void deleteOccurrences(contomap::model::Identifiers const &ids);
 
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Topic const> find(std::shared_ptr<Filter<contomap::model::Topic>> filter) const override;
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Topic> find(std::shared_ptr<Filter<contomap::model::Topic>> filter);
@@ -62,6 +69,9 @@ private:
    Contomap();
 
    void deleteAssociation(contomap::model::Identifier id);
+   void deleteOccurrence(contomap::model::Identifier id);
+   bool topicShouldBeRemoved(Topic const &topic);
+   void deleting(contomap::model::Topic &topic);
 
    std::map<contomap::model::Identifier, contomap::model::Topic> topics;
    std::map<contomap::model::Identifier, contomap::model::Association> associations;

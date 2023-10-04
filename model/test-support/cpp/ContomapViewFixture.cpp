@@ -22,6 +22,11 @@ void ContomapViewFixture::shouldHaveTopicCountOf(size_t expected) const
    EXPECT_EQ(expected, count) << "Wrong number of topics";
 }
 
+void ContomapViewFixture::shouldNotHaveTopic(Identifier id) const
+{
+   EXPECT_FALSE(view.findTopic(id).has_value()) << "Topic found although shouldn't be present";
+}
+
 void ContomapViewFixture::shouldHaveTopicThat(Identifier id, std::function<void(Topic const &)> const &asserter) const
 {
    auto topic = view.findTopic(id);

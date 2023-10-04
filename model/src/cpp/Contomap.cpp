@@ -42,6 +42,11 @@ void Contomap::deleteAssociations(Identifiers const &ids)
    std::for_each(ids.begin(), ids.end(), [this](Identifier id) { deleteAssociation(id); });
 }
 
+void Contomap::deleteOccurrences(Identifiers const &ids)
+{
+   std::for_each(ids.begin(), ids.end(), [this](Identifier id) { deleteOccurrence(id); });
+}
+
 Search<Topic const> Contomap::find(std::shared_ptr<Filter<Topic>> filter) const
 {
    for (auto const &it : topics)
@@ -106,4 +111,36 @@ void Contomap::deleteAssociation(contomap::model::Identifier id)
       topic.removeRolesOf(association);
    }
    associations.erase(id);
+}
+
+void Contomap::deleteOccurrence(Identifier id)
+{
+   for (auto it = topics.begin(); it != topics.end();)
+   {
+      Topic &topic = it->second;
+
+      if (topic.removeOccurrence(id) && topicShouldBeRemoved(topic))
+      {
+         deleting(topic);
+         it = topics.erase(it);
+      }
+      else
+      {
+         ++it;
+      }
+   }
+}
+
+bool Contomap::topicShouldBeRemoved(Topic const &topic)
+{
+   return topic.isWithoutOccurrences();
+}
+
+void Contomap::deleting(Topic &topic)
+{
+   // This is not the best algorithm, to try out all the associations, instead of iterating over the existing roles.
+   for (auto &[_, association] : associations)
+   {
+      topic.removeRolesOf(association);
+   }
 }

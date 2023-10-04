@@ -6,6 +6,7 @@
 #include "contomap/test/fixtures/ContomapViewFixture.h"
 #include "contomap/test/samples/CoordinateSamples.h"
 
+using contomap::model::Association;
 using contomap::model::Contomap;
 using contomap::model::ContomapView;
 using contomap::model::Filter;
@@ -65,4 +66,42 @@ TEST_F(ContomapTest, deletingAssociationsCleansUpRoles)
          std::back_inserter(roles));
       EXPECT_THAT(roles, testing::SizeIs(0)) << "Roles are still assigned";
    });
+}
+
+TEST_F(ContomapTest, deletingOccurrenceWhileOthersRemain)
+{
+   auto &topic = map.newTopic();
+   auto occurrenceId1 = topic.newOccurrence({}, someSpacialCoordinate()).getId();
+   auto occurrenceId2 = topic.newOccurrence({}, someSpacialCoordinate()).getId();
+
+   map.deleteOccurrences(Identifiers::ofSingle(occurrenceId1));
+
+   view().shouldHaveTopicThat(topic.getId(), [occurrenceId1, occurrenceId2](Topic const &topic) {
+      EXPECT_THAT(topic.occursAsAnyOf(Identifiers::ofSingle(occurrenceId1)), testing::Eq(false)) << "Topic should no longer occur through deleted instance";
+      EXPECT_THAT(topic.occursAsAnyOf(Identifiers::ofSingle(occurrenceId2)), testing::Eq(true)) << "Topic should still occur through remaining instance";
+   });
+}
+
+TEST_F(ContomapTest, deletingFinalOccurrenceRemovesTopic)
+{
+   auto &topic = map.newTopic();
+   auto topicId = topic.getId();
+   auto occurrenceId = topic.newOccurrence({}, someSpacialCoordinate()).getId();
+
+   map.deleteOccurrences(Identifiers::ofSingle(occurrenceId));
+
+   view().shouldNotHaveTopic(topicId);
+}
+
+TEST_F(ContomapTest, rolesOfRemovedTopicAreAlsoRemoved)
+{
+   auto &topic = map.newTopic();
+   auto occurrenceId = topic.newOccurrence({}, someSpacialCoordinate()).getId();
+   auto &association = map.newAssociation(Identifiers {}, someSpacialCoordinate());
+   static_cast<void>(topic.newRole(association));
+
+   map.deleteOccurrences(Identifiers::ofSingle(occurrenceId));
+
+   view().shouldHaveAssociationThat(
+      association.getId(), [](Association const &association) { EXPECT_FALSE(association.hasRoles()) << "Association should not have any roles left"; });
 }

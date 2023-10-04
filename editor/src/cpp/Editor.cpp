@@ -118,6 +118,7 @@ void Editor::linkSelection()
 void Editor::deleteSelection()
 {
    map.deleteAssociations(selection.of(SelectedType::Association));
+   map.deleteOccurrences(selection.of(SelectedType::Occurrence));
    selection.clear();
 }
 

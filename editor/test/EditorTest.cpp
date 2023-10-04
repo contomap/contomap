@@ -378,3 +378,18 @@ TEST_F(EditorTest, deletingAssociationRemovesTheAssociationAndRoles)
    asWellAs().view().ofSelection().should(
       [](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Association), testing::Eq(Identifiers {})) << "Association is still selected"; });
 }
+
+TEST_F(EditorTest, deletingLastOccurrenceRemovesTopic)
+{
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier occurrenceId = occurrenceOf(topicId).getId();
+   Identifier associationId = given().user().requestsANewAssociation();
+   given().user().selects(SelectedType::Occurrence, occurrenceId);
+   given().user().togglesSelectionOf(SelectedType::Association, associationId);
+   given().user().linksTheSelection();
+   given().user().selects(SelectedType::Occurrence, occurrenceId);
+   when().user().deletesTheSelection();
+   then().view().ofMap().shouldNotHaveTopic(topicId);
+   asWellAs().view().ofSelection().should(
+      [](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers {})) << "Occurrence is still selected"; });
+}

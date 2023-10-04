@@ -49,6 +49,14 @@ public:
    [[nodiscard]] contomap::model::Occurrence &newOccurrence(contomap::model::Identifiers scope, contomap::model::SpacialCoordinate location);
 
    /**
+    * Removes any occurrence that has given identifier.
+    *
+    * @param occurrenceId the identifier of the occurrence to remove.
+    * @return true if the topic had the identified occurrence.
+    */
+   bool removeOccurrence(contomap::model::Identifier occurrenceId);
+
+   /**
     * Adds a new role to the topic.
     *
     * @param association the association this topic has a role in.
@@ -91,6 +99,11 @@ public:
     * @return true if the topic has at least one occurrence in the set.
     */
    [[nodiscard]] bool occursAsAnyOf(contomap::model::Identifiers const &occurrenceIds) const;
+
+   /**
+    * @return true if the topic is currently without occurrences.
+    */
+   [[nodiscard]] bool isWithoutOccurrences() const;
 
    /**
     * Return a Search for all occurrences that are in given scope.

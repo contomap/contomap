@@ -49,7 +49,7 @@ bool Association::removeRole(Role const &role)
    return roles.remove(role.getId());
 }
 
-Identifiers Association::allRoles() const
+bool Association::hasRoles() const
 {
-   return roles;
+   return !roles.empty();
 }
