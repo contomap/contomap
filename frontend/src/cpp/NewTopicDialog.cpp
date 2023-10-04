@@ -12,6 +12,7 @@ NewTopicDialog::NewTopicDialog(
    , layout(layout)
    , location(location)
 {
+   newTopicName.fill(0x00);
 }
 
 bool NewTopicDialog::draw(RenderContext const &context)
