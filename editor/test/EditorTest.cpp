@@ -153,11 +153,6 @@ public:
          return NewAssociationRequest(handler);
       }
 
-      void clearsTheSelection()
-      {
-         handler.clearSelection();
-      }
-
       void linksTheSelection()
       {
          handler.linkSelection();
@@ -186,8 +181,7 @@ public:
    {
    public:
       explicit ViewFixture(contomap::editor::View &view)
-         : view(view)
-         , mapViewFixture(view.ofMap())
+         : mapViewFixture(view.ofMap())
          , selectionFixture(view.ofSelection())
       {
       }
@@ -203,7 +197,6 @@ public:
       }
 
    private:
-      contomap::editor::View &view;
       ContomapViewFixture mapViewFixture;
       SelectionFixture selectionFixture;
    };

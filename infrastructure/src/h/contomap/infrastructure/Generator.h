@@ -174,6 +174,11 @@ public:
       using value_type = T;
 
       /**
+       * Default constructor.
+       */
+      Iterator() = default;
+
+      /**
        * Constructor.
        *
        * @param handle the coroutine handle to cover
