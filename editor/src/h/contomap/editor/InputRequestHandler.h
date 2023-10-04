@@ -57,6 +57,11 @@ public:
     * In case the selection contains only occurrences, their respective topics will be linked with one new association.
     */
    virtual void linkSelection() = 0;
+
+   /**
+    * Called to request to delete all the selected items.
+    */
+   virtual void deleteSelection() = 0;
 };
 
 } // namespace contomap::editor

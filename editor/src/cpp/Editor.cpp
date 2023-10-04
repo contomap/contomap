@@ -111,7 +111,12 @@ void Editor::linkSelection()
          count++;
       }
       association.moveTo(SpacialCoordinate::absoluteAt(x / static_cast<float>(count), y / static_cast<float>(count)));
+      selection.setSole(SelectedType::Association, association.getId());
    }
+}
+
+void Editor::deleteSelection()
+{
 }
 
 contomap::model::Identifiers const &Editor::ofViewScope() const

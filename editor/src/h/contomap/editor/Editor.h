@@ -23,6 +23,7 @@ public:
    void modifySelection(contomap::editor::SelectedType type, contomap::model::Identifier id, contomap::editor::SelectionAction action,
       contomap::editor::SelectionMode mode) override;
    void linkSelection() override;
+   void deleteSelection() override;
 
    [[nodiscard]] contomap::model::Identifiers const &ofViewScope() const override;
    [[nodiscard]] contomap::model::ContomapView const &ofMap() const override;

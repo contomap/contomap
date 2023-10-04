@@ -10,9 +10,12 @@
 #include "contomap/test/samples/TopicNameSamples.h"
 #include "contomap/test/Steps.h"
 
+#include "SelectionFixture.h"
+
 using contomap::editor::Editor;
 using contomap::editor::InputRequestHandler;
 using contomap::editor::SelectedType;
+using contomap::editor::Selection;
 using contomap::editor::SelectionAction;
 using contomap::editor::SelectionMode;
 using contomap::model::Association;
@@ -27,6 +30,7 @@ using contomap::model::Topic;
 using contomap::model::TopicNameValue;
 
 using contomap::test::fixtures::ContomapViewFixture;
+using contomap::test::fixtures::SelectionFixture;
 using contomap::test::matchers::hasName;
 using contomap::test::matchers::isCloseTo;
 using contomap::test::samples::someNameValue;
@@ -179,6 +183,7 @@ public:
       explicit ViewFixture(contomap::editor::View &view)
          : view(view)
          , mapViewFixture(view.ofMap())
+         , selectionFixture(view.ofSelection())
       {
       }
 
@@ -187,9 +192,15 @@ public:
          return mapViewFixture;
       }
 
+      SelectionFixture &ofSelection()
+      {
+         return selectionFixture;
+      }
+
    private:
       contomap::editor::View &view;
       ContomapViewFixture mapViewFixture;
+      SelectionFixture selectionFixture;
    };
 
    EditorTest()
@@ -313,4 +324,38 @@ TEST_F(EditorTest, newAssociationsCreatedByLinkingThroughSelectionIsCentredBetwe
    given().user().togglesSelectionOf(SelectedType::Occurrence, occurrenceOf(topicId2).getId());
    when().user().linksTheSelection();
    then().view().ofMap().shouldHaveOneAssociationNear(SpacialCoordinate::absoluteAt(-2.5f, 15.0f));
+}
+
+TEST_F(EditorTest, newTopicHasItsOccurrenceSelected)
+{
+   when().user().requestsANewTopic();
+   then().view().ofSelection().should([](Selection const &selection) {
+      EXPECT_THAT(selection.of(SelectedType::Association), testing::Eq(Identifiers {}));
+      EXPECT_THAT(selection.of(SelectedType::Role), testing::Eq(Identifiers {}));
+      EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Not(testing::Eq(Identifiers {})));
+   });
+}
+
+TEST_F(EditorTest, newAssociationHasItSelected)
+{
+   when().user().requestsANewAssociation();
+   then().view().ofSelection().should([](Selection const &selection) {
+      EXPECT_THAT(selection.of(SelectedType::Association), testing::Not(testing::Eq(Identifiers {})));
+      EXPECT_THAT(selection.of(SelectedType::Role), testing::Eq(Identifiers {}));
+      EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers {}));
+   });
+}
+
+TEST_F(EditorTest, newAssociationThroughLinkingHasItSelected)
+{
+   Identifier topicId1 = given().user().requestsANewTopic().at(SpacialCoordinate::absoluteAt(-5.0f, 10.0f));
+   Identifier topicId2 = given().user().requestsANewTopic().at(SpacialCoordinate::absoluteAt(0.0f, 20.0f));
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(topicId1).getId());
+   given().user().togglesSelectionOf(SelectedType::Occurrence, occurrenceOf(topicId2).getId());
+   when().user().linksTheSelection();
+   then().view().ofSelection().should([](Selection const &selection) {
+      EXPECT_THAT(selection.of(SelectedType::Association), testing::Not(testing::Eq(Identifiers {})));
+      EXPECT_THAT(selection.of(SelectedType::Role), testing::Eq(Identifiers {}));
+      EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers {}));
+   });
 }
