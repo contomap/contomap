@@ -101,7 +101,6 @@ void Editor::linkSelection()
       {
          static_cast<void>(topic.newRole(association));
 
-         // TODO: this resolution is wrong -- only the selected occurrences should be used to calculate average
          for (Occurrence const &occurrence : topic.occurrencesIn(viewScope))
          {
             auto occurrenceLocation = occurrence.getLocation().getSpacial().getAbsoluteReference();
