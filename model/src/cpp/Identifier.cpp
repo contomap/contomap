@@ -12,15 +12,6 @@ Identifier::Identifier(ValueType const &value)
 {
 }
 
-std::variant<std::monostate, Identifier> Identifier::from(ValueType value)
-{
-   if (std::find_first_of(value.begin(), value.end(), ALLOWED_CHARACTERS.begin(), ALLOWED_CHARACTERS.end()) == value.end())
-   {
-      return {};
-   }
-   return Identifier(value);
-}
-
 Identifier Identifier::random()
 {
    // This algorithm creates a random identifier using the set of allowed characters, with the

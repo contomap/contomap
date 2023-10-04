@@ -19,16 +19,6 @@ public:
    using ValueType = std::array<char, 12>;
 
    /**
-    * Creates a new Identifier from the given raw value.
-    *
-    * TODO replace return value with a better type
-    *
-    * @param value the raw value to take over
-    * @return either the right type of the created identifier, or an error instead.
-    */
-   [[nodiscard]] static std::variant<std::monostate, Identifier> from(ValueType value);
-
-   /**
     * Create a random identifier.
     *
     * According to Nano ID, a 1% chance of a duplicate would come after around 2-8 billion IDs.
