@@ -4,7 +4,6 @@
 using contomap::editor::Editor;
 using contomap::editor::SelectedType;
 using contomap::editor::SelectionAction;
-using contomap::editor::SelectionMode;
 using contomap::model::Association;
 using contomap::model::Contomap;
 using contomap::model::Identifier;
@@ -41,36 +40,15 @@ void Editor::clearSelection()
    selection.clear();
 }
 
-void Editor::modifySelection(SelectedType type, Identifier id, SelectionAction action, SelectionMode mode)
+void Editor::modifySelection(SelectedType type, Identifier id, SelectionAction action)
 {
-   // TODO if/elseif might not be best approach. See if some strategy approach can help.
-
-   // mode is a strategy that provides a list of implicitly included things, based on ContomapView
-   // action then operates on Selection object
-
-   if (mode == SelectionMode::Sole)
+   if (action == SelectionAction::Set)
    {
-      if (action == SelectionAction::Set)
-      {
-         selection.setSole(type, id);
-      }
-      else if (action == SelectionAction::Toggle)
-      {
-         selection.toggle(type, id);
-      }
+      selection.setSole(type, id);
    }
-   else if (mode == SelectionMode::Spread)
+   else if (action == SelectionAction::Toggle)
    {
-      if (action == SelectionAction::Set)
-      {
-         // on occurrence: Set occurrence, and all its (currently scoped) associations and the related roles
-         // on association: Set association, and all its (currently scoped) occurrences and the related roles
-         // on role: Set role, and its (currently scoped) association and occurrences
-      }
-      else if (action == SelectionAction::Toggle)
-      {
-         // for the selected type, do the inverse to its current state to itself, and align all the related things, as in Set branch.
-      }
+      selection.toggle(type, id);
    }
 }
 

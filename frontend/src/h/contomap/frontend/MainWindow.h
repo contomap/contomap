@@ -5,7 +5,6 @@
 
 #include "contomap/editor/InputRequestHandler.h"
 #include "contomap/editor/SelectionAction.h"
-#include "contomap/editor/SelectionMode.h"
 #include "contomap/editor/View.h"
 #include "contomap/frontend/Dialog.h"
 #include "contomap/frontend/DisplayEnvironment.h"
@@ -134,9 +133,7 @@ private:
       {
          return false;
       }
-      virtual void modifySelection(
-         contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode) const
-         = 0;
+      virtual void modifySelection(contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action) const = 0;
    };
 
    class AssociationFocusItem : public FocusItem
@@ -152,10 +149,9 @@ private:
          return id == otherId;
       }
 
-      void modifySelection(
-         contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode) const override
+      void modifySelection(contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action) const override
       {
-         handler.modifySelection(contomap::editor::SelectedType::Association, id, action, mode);
+         handler.modifySelection(contomap::editor::SelectedType::Association, id, action);
       }
 
    private:
@@ -175,10 +171,9 @@ private:
          return id == otherId;
       }
 
-      void modifySelection(
-         contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode) const override
+      void modifySelection(contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action) const override
       {
-         handler.modifySelection(contomap::editor::SelectedType::Role, id, action, mode);
+         handler.modifySelection(contomap::editor::SelectedType::Role, id, action);
       }
 
    private:
@@ -198,10 +193,9 @@ private:
          return id == otherId;
       }
 
-      void modifySelection(
-         contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode) const override
+      void modifySelection(contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action) const override
       {
-         handler.modifySelection(contomap::editor::SelectedType::Occurrence, id, action, mode);
+         handler.modifySelection(contomap::editor::SelectedType::Occurrence, id, action);
       }
 
    private:
@@ -228,8 +222,7 @@ private:
          return (item != nullptr) && item->isOccurrence(otherId);
       }
 
-      void modifySelection(
-         contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode) const;
+      void modifySelection(contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action) const;
 
    private:
       std::shared_ptr<FocusItem> item;

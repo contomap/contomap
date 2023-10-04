@@ -2,7 +2,6 @@
 
 #include "contomap/editor/SelectedType.h"
 #include "contomap/editor/SelectionAction.h"
-#include "contomap/editor/SelectionMode.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/SpacialCoordinate.h"
 #include "contomap/model/TopicNameValue.h"
@@ -46,11 +45,8 @@ public:
     * @param type the type of the identified thing.
     * @param id the unique identifier of the focused item.
     * @param action what kind of selection action is requested.
-    * @param mode how to perform the action.
     */
-   virtual void modifySelection(
-      contomap::editor::SelectedType type, contomap::model::Identifier id, contomap::editor::SelectionAction action, contomap::editor::SelectionMode mode)
-      = 0;
+   virtual void modifySelection(contomap::editor::SelectedType type, contomap::model::Identifier id, contomap::editor::SelectionAction action) = 0;
 
    /**
     * Called to request a link between the selected items.

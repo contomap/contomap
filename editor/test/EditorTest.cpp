@@ -17,7 +17,6 @@ using contomap::editor::InputRequestHandler;
 using contomap::editor::SelectedType;
 using contomap::editor::Selection;
 using contomap::editor::SelectionAction;
-using contomap::editor::SelectionMode;
 using contomap::model::Association;
 using contomap::model::ContomapView;
 using contomap::model::Filter;
@@ -165,12 +164,12 @@ public:
 
       void selects(SelectedType type, Identifier id)
       {
-         handler.modifySelection(type, id, SelectionAction::Set, SelectionMode::Sole);
+         handler.modifySelection(type, id, SelectionAction::Set);
       }
 
       void togglesSelectionOf(SelectedType type, Identifier id)
       {
-         handler.modifySelection(type, id, SelectionAction::Toggle, SelectionMode::Sole);
+         handler.modifySelection(type, id, SelectionAction::Toggle);
       }
 
    private:

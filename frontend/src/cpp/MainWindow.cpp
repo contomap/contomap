@@ -17,7 +17,6 @@
 using contomap::editor::InputRequestHandler;
 using contomap::editor::SelectedType;
 using contomap::editor::SelectionAction;
-using contomap::editor::SelectionMode;
 using contomap::frontend::MainWindow;
 using contomap::frontend::MapCamera;
 using contomap::frontend::RenderContext;
@@ -78,11 +77,11 @@ void MainWindow::Focus::registerItem(std::shared_ptr<FocusItem> newItem, float n
    }
 }
 
-void MainWindow::Focus::modifySelection(InputRequestHandler &handler, SelectionAction action, SelectionMode mode) const
+void MainWindow::Focus::modifySelection(InputRequestHandler &handler, SelectionAction action) const
 {
    if (item != nullptr)
    {
-      item->modifySelection(handler, action, mode);
+      item->modifySelection(handler, action);
    }
    else
    {
@@ -187,8 +186,7 @@ void MainWindow::processInput()
       if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
       {
          auto action = IsKeyDown(KEY_LEFT_CONTROL) ? SelectionAction::Toggle : SelectionAction::Set;
-         auto mode = IsKeyDown(KEY_LEFT_SHIFT) ? SelectionMode::Spread : SelectionMode::Sole;
-         currentFocus.modifySelection(inputRequestHandler, action, mode);
+         currentFocus.modifySelection(inputRequestHandler, action);
       }
    }
 }
