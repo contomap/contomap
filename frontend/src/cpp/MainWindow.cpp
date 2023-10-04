@@ -291,7 +291,7 @@ void MainWindow::drawMap(RenderContext const &context)
       std::vector<std::reference_wrapper<Role const>> roles;
       for (Role const &role : visibleTopic.rolesAssociatedWith(associationIds))
       {
-         roles.push_back(role);
+         roles.emplace_back(role);
       }
 
       for (Occurrence const &occurrence : visibleTopic.occurrencesIn(viewScope))

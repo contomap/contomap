@@ -81,7 +81,7 @@ void MapCamera::ImmediateGearbox::pan(bool left, bool up, bool right, bool down)
    panningDown = down;
 }
 
-MapCamera::Projection::Projection(Projection &&other) noexcept
+contomap::frontend::MapCamera::Projection::Projection(MapCamera::Projection &&other) noexcept
 {
    moveFrom(std::move(other));
 }
@@ -101,7 +101,7 @@ MapCamera::Projection::~Projection()
    }
 }
 
-MapCamera::Projection &MapCamera::Projection::operator=(Projection &&other) noexcept
+MapCamera::Projection &contomap::frontend::MapCamera::Projection::operator=(MapCamera::Projection &&other) noexcept
 {
    moveFrom(std::move(other));
    return *this;

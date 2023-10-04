@@ -64,12 +64,29 @@ public:
     */
    void deleteOccurrences(contomap::model::Identifiers const &ids);
 
-   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Topic const> find(std::shared_ptr<Filter<contomap::model::Topic>> filter) const override;
-   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Topic> find(std::shared_ptr<Filter<contomap::model::Topic>> filter);
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Topic const> find(
+      std::shared_ptr<contomap::model::Filter<contomap::model::Topic>> filter) const override;
+
+   /**
+    * Find topics that match a certain filter, for potential modification.
+    *
+    * The returned search object will yield all topics for which the filter returns true.
+    *
+    * @param filter the filter to call.
+    * @return a Search instance that can be iterated once.
+    */
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Topic> find(std::shared_ptr<contomap::model::Filter<contomap::model::Topic>> filter);
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Topic const>> findTopic(contomap::model::Identifier id) const override;
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Association const> find(
-      std::shared_ptr<Filter<contomap::model::Association>> filter) const override;
+      std::shared_ptr<contomap::model::Filter<contomap::model::Association>> filter) const override;
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Association const>> findAssociation(contomap::model::Identifier id) const override;
+
+   /**
+    * Find a association with a specific identifier, for potential modification.
+    *
+    * @param id the identifier to search for.
+    * @return a reference to the matching association, if existing.
+    */
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Association>> findAssociation(contomap::model::Identifier id);
 
 private:

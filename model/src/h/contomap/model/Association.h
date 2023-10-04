@@ -66,6 +66,7 @@ public:
    bool removeRole(contomap::model::Role const &role);
 
    /**
+    * @param roleId the identifier to check.
     * @return true if the association has the role with given identifier.
     */
    [[nodiscard]] bool hasRole(contomap::model::Identifier roleId) const;

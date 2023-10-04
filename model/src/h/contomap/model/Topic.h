@@ -22,7 +22,6 @@ public:
     * Constructor.
     *
     * @param id the primary identifier of this name.
-    * @param value the human readable name.
     */
    explicit Topic(contomap::model::Identifier id);
 

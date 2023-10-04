@@ -58,6 +58,12 @@ public:
       return stream;
    }
 
+   /**
+    * Spaceship operator.
+    *
+    * @param other the other instance to compare to.
+    * @return the ordering for this type.
+    */
    std::strong_ordering operator<=>(OptionalIdentifier const &other) const noexcept = default;
 
    /**

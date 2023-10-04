@@ -52,7 +52,7 @@ void Contomap::deleteOccurrences(Identifiers const &ids)
    std::for_each(ids.begin(), ids.end(), [this](Identifier id) { deleteOccurrence(id); });
 }
 
-Search<Topic const> Contomap::find(std::shared_ptr<Filter<Topic>> filter) const
+contomap::infrastructure::Search<contomap::model::Topic const> Contomap::find(std::shared_ptr<contomap::model::Filter<contomap::model::Topic>> filter) const
 {
    for (auto const &it : topics)
    {
@@ -63,7 +63,7 @@ Search<Topic const> Contomap::find(std::shared_ptr<Filter<Topic>> filter) const
    }
 }
 
-Search<Topic> Contomap::find(std::shared_ptr<Filter<contomap::model::Topic>> filter)
+contomap::infrastructure::Search<contomap::model::Topic> Contomap::find(std::shared_ptr<contomap::model::Filter<contomap::model::Topic>> filter)
 {
    for (auto &it : topics)
    {
@@ -80,7 +80,8 @@ std::optional<std::reference_wrapper<Topic const>> Contomap::findTopic(Identifie
    return (it != topics.end()) ? std::optional<std::reference_wrapper<Topic const>>(it->second) : std::optional<std::reference_wrapper<Topic const>>();
 }
 
-Search<Association const> Contomap::find(std::shared_ptr<Filter<Association>> filter) const
+contomap::infrastructure::Search<contomap::model::Association const> Contomap::find(
+   std::shared_ptr<contomap::model::Filter<contomap::model::Association>> filter) const
 {
    for (auto const &[_, association] : associations)
    {

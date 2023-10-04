@@ -185,6 +185,7 @@ public:
 
       /**
        * The increment operator advances to the next item from the generator.
+       * @return this.
        */
       Iterator &operator++()
       {
@@ -193,6 +194,7 @@ public:
       }
       /**
        * The increment operator advances to the next item from the generator.
+       * @return this.
        */
       Iterator operator++(int)
       {

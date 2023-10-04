@@ -49,6 +49,12 @@ public:
        */
       [[nodiscard]] float raw() const;
 
+      /**
+       * Spaceship operator.
+       *
+       * @param other the other instance to compare to.
+       * @return the ordering for this type.
+       */
       std::strong_ordering operator<=>(ZoomFactor const &other) const noexcept = default;
 
    private:
@@ -152,6 +158,11 @@ public:
    public:
       Projection() = delete;
       Projection(Projection const &) = delete;
+      /**
+       * Move constructor.
+       *
+       * @param other the other projection to take over from.
+       */
       Projection(Projection &&other) noexcept;
       /**
        * Constructor to begin a projection mode.
@@ -162,8 +173,20 @@ public:
       ~Projection();
 
       Projection &operator=(Projection const &) = delete;
+      /**
+       * Move assignment operator.
+       *
+       * @param other the other projection to take over from.
+       * @return this
+       */
       Projection &operator=(Projection &&other) noexcept;
 
+      /**
+       * Calculate the model coordinate for given pixel location.
+       *
+       * @param pixel the projected location the camera's lens.
+       * @return the nearest coordinate in model space.
+       */
       [[nodiscard]] Vector2 unproject(Vector2 pixel) const;
 
    private:

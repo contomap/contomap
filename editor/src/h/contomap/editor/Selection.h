@@ -49,6 +49,12 @@ public:
     */
    [[nodiscard]] bool contains(contomap::editor::SelectedType type, contomap::model::Identifier id) const;
 
+   /**
+    * Provide the set of selected identifiers for given type.
+    *
+    * @param type the type to filter for.
+    * @return a set of identifiers for the given selected type.
+    */
    [[nodiscard]] contomap::model::Identifiers const &of(contomap::editor::SelectedType type) const;
 
 private:

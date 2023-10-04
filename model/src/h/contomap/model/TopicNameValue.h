@@ -31,7 +31,13 @@ public:
     */
    [[nodiscard]] static std::variant<std::monostate, TopicNameValue> from(std::string value);
 
-   std::strong_ordering operator<=>(TopicNameValue const &b) const noexcept = default;
+   /**
+    * Spaceship operator.
+    *
+    * @param other the other instance to compare to.
+    * @return the ordering for this type.
+    */
+   std::strong_ordering operator<=>(TopicNameValue const &other) const noexcept = default;
 
    /**
     * @return the raw text from this value.
