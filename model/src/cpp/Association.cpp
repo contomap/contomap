@@ -34,14 +34,11 @@ bool Association::isIn(Identifiers const &thatScope) const
    return thatScope.contains(scope);
 }
 
-void Association::addRole(Role const &role)
+Role Association::addRole()
 {
-   if (role.getParent() != id)
-   {
-      // TODO: consider throwing an exception
-      return;
-   }
-   roles.add(role.getId());
+   auto roleId = Identifier::random();
+   roles.add(roleId);
+   return { roleId, getId() };
 }
 
 bool Association::removeRole(Role const &role)

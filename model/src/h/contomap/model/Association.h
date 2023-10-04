@@ -51,11 +51,11 @@ public:
    [[nodiscard]] bool isIn(contomap::model::Identifiers const &thatScope) const;
 
    /**
-    * Adds given role to the association.
+    * Adds a new role to the association.
     *
-    * @param role the role to add.
+    * @return the created role details. Use the result as a template for storing the concrete instance somewhere.
     */
-   void addRole(contomap::model::Role const &role);
+   [[nodiscard]] Role addRole();
 
    /**
     * Removes given role from the association.
