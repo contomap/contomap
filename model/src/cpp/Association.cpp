@@ -43,3 +43,13 @@ void Association::addRole(Role const &role)
    }
    roles.add(role.getId());
 }
+
+bool Association::removeRole(Role const &role)
+{
+   return roles.remove(role.getId());
+}
+
+Identifiers Association::allRoles() const
+{
+   return roles;
+}

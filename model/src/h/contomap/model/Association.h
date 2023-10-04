@@ -57,6 +57,19 @@ public:
     */
    void addRole(contomap::model::Role const &role);
 
+   /**
+    * Removes given role from the association.
+    *
+    * @param role the role to remove.
+    * @return true if the role was part of this association.
+    */
+   bool removeRole(contomap::model::Role const &role);
+
+   /**
+    * @return the identifiers of all assigned roles.
+    */
+   [[nodiscard]] contomap::model::Identifiers allRoles() const;
+
 private:
    contomap::model::Identifier id;
    contomap::model::Identifiers scope;

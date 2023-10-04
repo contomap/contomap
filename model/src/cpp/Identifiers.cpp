@@ -27,9 +27,9 @@ void Identifiers::add(Identifier id)
    set.insert(id);
 }
 
-void Identifiers::remove(Identifier id)
+bool Identifiers::remove(Identifier id)
 {
-   set.erase(id);
+   return set.erase(id) > 0;
 }
 
 void Identifiers::clear()

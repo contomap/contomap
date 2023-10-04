@@ -117,6 +117,8 @@ void Editor::linkSelection()
 
 void Editor::deleteSelection()
 {
+   map.deleteAssociations(selection.of(SelectedType::Association));
+   selection.clear();
 }
 
 contomap::model::Identifiers const &Editor::ofViewScope() const

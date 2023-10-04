@@ -43,6 +43,13 @@ public:
     */
    [[nodiscard]] contomap::model::Association &newAssociation(contomap::model::Identifiers scope, contomap::model::SpacialCoordinate location);
 
+   /**
+    * Deletes the associations with given identifiers.
+    *
+    * @param ids the identifiers of all associations to remove
+    */
+   void deleteAssociations(contomap::model::Identifiers const &ids);
+
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Topic const> find(std::shared_ptr<Filter<contomap::model::Topic>> filter) const override;
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Topic> find(std::shared_ptr<Filter<contomap::model::Topic>> filter);
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Topic const>> findTopic(contomap::model::Identifier id) const override;
@@ -53,6 +60,8 @@ public:
 
 private:
    Contomap();
+
+   void deleteAssociation(contomap::model::Identifier id);
 
    std::map<contomap::model::Identifier, contomap::model::Topic> topics;
    std::map<contomap::model::Identifier, contomap::model::Association> associations;

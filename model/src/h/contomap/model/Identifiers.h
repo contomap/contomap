@@ -57,8 +57,9 @@ public:
     * Removes the given identifier from the collection. If the identifier was not contained, nothing happens.
     *
     * @param id the identifier to remove.
+    * @return true if the given identifier was in that collection.
     */
-   void remove(contomap::model::Identifier id);
+   bool remove(contomap::model::Identifier id);
 
    /**
     * Removes all identifiers from the collection.

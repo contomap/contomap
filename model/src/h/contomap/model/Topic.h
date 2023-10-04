@@ -57,6 +57,21 @@ public:
    [[nodiscard]] contomap::model::Role &newRole(contomap::model::Association &association);
 
    /**
+    * Remove all the roles for given association.
+    *
+    * @param association the association to no longer relate to.
+    */
+   void removeRolesOf(contomap::model::Association &association);
+
+   /**
+    * Removes the role with given identifier from this topic.
+    *
+    * @param association the association this topic has the given role in.
+    * @param roleId the role to remove.
+    */
+   void removeRole(contomap::model::Association &association, contomap::model::Identifier roleId);
+
+   /**
     * @return a Search for all names in the topic.
     */
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::TopicName const> allNames() const;

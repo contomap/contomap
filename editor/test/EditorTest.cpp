@@ -163,6 +163,11 @@ public:
          handler.linkSelection();
       }
 
+      void deletesTheSelection()
+      {
+         handler.deleteSelection();
+      }
+
       void selects(SelectedType type, Identifier id)
       {
          handler.modifySelection(type, id, SelectionAction::Set, SelectionMode::Sole);
@@ -358,4 +363,18 @@ TEST_F(EditorTest, newAssociationThroughLinkingHasItSelected)
       EXPECT_THAT(selection.of(SelectedType::Role), testing::Eq(Identifiers {}));
       EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers {}));
    });
+}
+
+TEST_F(EditorTest, deletingAssociationRemovesTheAssociationAndRoles)
+{
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier associationId = given().user().requestsANewAssociation();
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(topicId).getId());
+   given().user().togglesSelectionOf(SelectedType::Association, associationId);
+   given().user().linksTheSelection();
+   given().user().selects(SelectedType::Association, associationId);
+   when().user().deletesTheSelection();
+   then().view().ofMap().shouldHaveAssociationCountOf(0);
+   asWellAs().view().ofSelection().should(
+      [](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Association), testing::Eq(Identifiers {})) << "Association is still selected"; });
 }

@@ -10,11 +10,12 @@ class ContomapViewFixture
 public:
    explicit ContomapViewFixture(contomap::model::ContomapView const &view);
 
-   void shouldHaveTopicCountOf(size_t expected);
-   void shouldHaveTopicThat(contomap::model::Identifier id, std::function<void(contomap::model::Topic const &)> const &asserter);
-   void shouldHaveAssociationThat(contomap::model::Identifier id, std::function<void(contomap::model::Association const &)> const &asserter);
+   void shouldHaveTopicCountOf(size_t expected) const;
+   void shouldHaveTopicThat(contomap::model::Identifier id, std::function<void(contomap::model::Topic const &)> const &asserter) const;
+   void shouldHaveAssociationCountOf(size_t expected) const;
+   void shouldHaveAssociationThat(contomap::model::Identifier id, std::function<void(contomap::model::Association const &)> const &asserter) const;
 
-   void shouldHaveOneAssociationNear(contomap::model::SpacialCoordinate position);
+   void shouldHaveOneAssociationNear(contomap::model::SpacialCoordinate position) const;
 
 private:
    contomap::model::ContomapView const &view;

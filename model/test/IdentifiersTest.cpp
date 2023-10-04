@@ -25,11 +25,12 @@ TEST(IdentifiersTest, addAndRemove)
    Identifiers one;
    auto id = Identifier::random();
    one.add(id);
-   EXPECT_NE(one, empty);
-   EXPECT_FALSE(one.empty());
-   one.remove(id);
-   EXPECT_EQ(one, empty);
-   EXPECT_TRUE(one.empty());
+   EXPECT_NE(one, empty) << "identifiers can't be equal to empty collection if something was added";
+   EXPECT_FALSE(one.empty()) << "identifiers can't be empty if something was added";
+   EXPECT_TRUE(one.remove(id)) << "removal should return true if previously present";
+   EXPECT_EQ(one, empty) << "identifiers should be equal to empty collection after removing single element";
+   EXPECT_TRUE(one.empty()) << "identifiers should be empty if single element was removed";
+   EXPECT_FALSE(one.remove(Identifier::random())) << "removal should return false if unknown was removed";
 }
 
 TEST(IdentifiersTest, clearing)

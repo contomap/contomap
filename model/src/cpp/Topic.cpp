@@ -41,12 +41,37 @@ Occurrence &Topic::newOccurrence(Identifiers scope, SpacialCoordinate location)
    return it.first->second;
 }
 
-Role &Topic::newRole(contomap::model::Association &association)
+Role &Topic::newRole(Association &association)
 {
    auto roleId = Identifier::random();
    auto it = roles.emplace(roleId, Role(roleId, association.getId()));
    association.addRole(it.first->second);
    return it.first->second;
+}
+
+void Topic::removeRolesOf(Association &association)
+{
+   for (auto it = roles.begin(); it != roles.end();)
+   {
+      if (association.removeRole(it->second))
+      {
+         it = roles.erase(it);
+      }
+      else
+      {
+         ++it;
+      }
+   }
+}
+
+void Topic::removeRole(Association &association, Identifier roleId)
+{
+   if (!roles.contains(roleId))
+   {
+      return;
+   }
+   association.removeRole(roles.at(roleId));
+   roles.erase(roleId);
 }
 
 bool Topic::isIn(Identifiers const &scope) const
