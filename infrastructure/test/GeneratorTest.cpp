@@ -6,7 +6,7 @@
 
 using contomap::infrastructure::Generator;
 
-static Generator<int> range(int first, int last)
+static Generator<int> range(int first, int last) // NOLINT
 {
    while (first < last)
    {
