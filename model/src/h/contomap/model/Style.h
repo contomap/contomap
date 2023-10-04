@@ -24,8 +24,6 @@ public:
 private:
    contomap::model::Identifier id;
    contomap::model::OptionalIdentifier localTo;
-
-   // TODO: visual members
 };
 
 }
