@@ -7,7 +7,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Enable C++20 support
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS "-fcoroutines") # TODO avoid setting this for clang
 
 # Dependencies
 cmake_policy(SET CMP0135 NEW)
@@ -83,6 +82,7 @@ endif ()
 
 file(GLOB_RECURSE LIB_INFRASTRUCTURE_SOURCES "${PROJECT_SOURCE_DIR}/infrastructure/src/cpp/*.cpp")
 add_library(contomap-infrastructure INTERFACE ${LIB_INFRASTRUCTURE_SOURCES})
+target_compile_options(contomap-infrastructure INTERFACE $<$<CXX_COMPILER_ID:GNU>:-fcoroutines>)
 target_include_directories(contomap-infrastructure INTERFACE "${PROJECT_SOURCE_DIR}/infrastructure/src/h")
 
 file(GLOB_RECURSE LIB_INFRASTRUCTURE_TEST_SUPPORT_SOURCES "${PROJECT_SOURCE_DIR}/infrastructure/test-support/cpp/*.cpp")
