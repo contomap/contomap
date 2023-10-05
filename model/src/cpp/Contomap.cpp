@@ -160,7 +160,7 @@ void Contomap::deleteOccurrence(Identifier id)
 
 bool Contomap::topicShouldBeRemoved(Topic const &topic)
 {
-   return topic.isWithoutOccurrences();
+   return topic.isWithoutOccurrences() && (topic.getId() != defaultScope);
 }
 
 void Contomap::deleting(Topic &topic)

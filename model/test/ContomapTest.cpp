@@ -93,6 +93,17 @@ TEST_F(ContomapTest, deletingFinalOccurrenceRemovesTopic)
    view().shouldNotHaveTopic(topicId);
 }
 
+TEST_F(ContomapTest, deletingFinalOccurrenceOfDefaultViewScopeDoesNotDeleteIt)
+{
+   auto &topic = map.findTopic(map.getDefaultScope()).value().get();
+   auto topicId = topic.getId();
+   auto occurrenceId = topic.newOccurrence({}, someSpacialCoordinate()).getId();
+
+   map.deleteOccurrences(Identifiers::ofSingle(occurrenceId));
+
+   view().shouldHaveTopicThat(topicId, [](Topic const &foundTopic) { EXPECT_TRUE(foundTopic.isWithoutOccurrences()); });
+}
+
 TEST_F(ContomapTest, rolesOfRemovedTopicAreAlsoRemoved)
 {
    auto &topic = map.newTopic();
