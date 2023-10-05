@@ -160,7 +160,7 @@ void MainWindow::processInput()
          mapCamera.panTo(MapCamera::HOME_POSITION);
       }
 
-      bool isInsertOperation = IsKeyPressed(KEY_INSERT) || IsKeyPressed(KEY_I);
+      bool isInsertOperation = IsKeyReleased(KEY_INSERT) || IsKeyReleased(KEY_I);
       bool isAssociationContext = IsKeyDown(KEY_LEFT_SHIFT);
       if (isInsertOperation)
       {
@@ -173,17 +173,17 @@ void MainWindow::processInput()
             openNewTopicDialog();
          }
       }
-      if (IsKeyPressed(KEY_O))
+      if (IsKeyReleased(KEY_O))
       {
          openNewOccurrenceDialog();
       }
 
-      if (IsKeyPressed(KEY_L))
+      if (IsKeyReleased(KEY_L))
       {
          inputRequestHandler.linkSelection();
       }
 
-      if (IsKeyPressed(KEY_DELETE))
+      if (IsKeyReleased(KEY_DELETE))
       {
          inputRequestHandler.deleteSelection();
       }
