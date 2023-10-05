@@ -33,6 +33,14 @@ public:
     * @return a Filter instance that matches all topics with a least one occurrence in given list.
     */
    static std::unique_ptr<contomap::model::Filter<contomap::model::Topic>> thatOccurAs(contomap::model::Identifiers const &occurrences);
+
+   /**
+    * Factory function for creating a Filter for topics.
+    *
+    * @param searchValue the content to look for.
+    * @return a Filter instance that matches all topics with a name that matches the given value.
+    */
+   static std::unique_ptr<contomap::model::Filter<contomap::model::Topic>> withANameLike(std::string const &searchValue);
 };
 
 }
