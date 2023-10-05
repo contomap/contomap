@@ -28,7 +28,18 @@ Identifier Editor::newTopicRequested(TopicNameValue name, SpacialCoordinate loca
    return topic.getId();
 }
 
-Identifier Editor::newAssociationRequested(contomap::model::SpacialCoordinate location)
+void Editor::newOccurrenceRequested(Identifier topicId, SpacialCoordinate location)
+{
+   auto topic = map.findTopic(topicId);
+   if (!topic.has_value())
+   {
+      return;
+   }
+   auto &occurrence = topic.value().get().newOccurrence(viewScope, location);
+   selection.setSole(SelectedType::Occurrence, occurrence.getId());
+}
+
+Identifier Editor::newAssociationRequested(SpacialCoordinate location)
 {
    auto &association = map.newAssociation(viewScope, location);
    selection.setSole(SelectedType::Association, association.getId());

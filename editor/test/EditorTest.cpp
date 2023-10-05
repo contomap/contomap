@@ -89,6 +89,46 @@ public:
       TopicNameValue name;
       SpacialCoordinate position;
    };
+   class NewOccurrenceRequest
+   {
+   public:
+      explicit NewOccurrenceRequest(NewOccurrenceRequest const &) = delete;
+      explicit NewOccurrenceRequest(NewOccurrenceRequest &&) = delete;
+      explicit NewOccurrenceRequest(InputRequestHandler &handler, Identifier topicId)
+         : handler(handler)
+         , topicId(topicId)
+         , position(someSpacialCoordinate())
+      {
+      }
+      ~NewOccurrenceRequest()
+      {
+         resolve();
+      }
+
+      NewOccurrenceRequest &operator=(NewOccurrenceRequest const &) = delete;
+      NewOccurrenceRequest &operator=(NewOccurrenceRequest &&) = delete;
+
+      NewOccurrenceRequest &at(SpacialCoordinate value)
+      {
+         position = value;
+         return *this;
+      }
+
+   private:
+      void resolve()
+      {
+         if (!resolved)
+         {
+            handler.newOccurrenceRequested(topicId, position);
+            resolved = true;
+         }
+      }
+
+      InputRequestHandler &handler;
+      Identifier topicId;
+      bool resolved = false;
+      SpacialCoordinate position;
+   };
 
    class NewAssociationRequest
    {
@@ -137,7 +177,7 @@ public:
    class UserFixture
    {
    public:
-      explicit UserFixture(contomap::editor::InputRequestHandler &handler)
+      explicit UserFixture(InputRequestHandler &handler)
          : handler(handler)
       {
       }
@@ -145,6 +185,11 @@ public:
       NewTopicRequest requestsANewTopic()
       {
          return NewTopicRequest(handler);
+      }
+
+      NewOccurrenceRequest requestsANewOccurrence(Identifier id)
+      {
+         return NewOccurrenceRequest(handler, id);
       }
 
       NewAssociationRequest requestsANewAssociation()
@@ -271,6 +316,17 @@ TEST_F(EditorTest, newTopicsKeepTheirProperties)
       std::ranges::copy(topic.occurrencesIn(viewScope()) | std::views::transform([](Occurrence const &o) { return o.getLocation().getSpacial(); }),
          std::back_inserter(coordinates));
       EXPECT_THAT(coordinates, testing::ElementsAre(isCloseTo(position)));
+   });
+}
+
+TEST_F(EditorTest, topicsCanReceiveNewOccurrences)
+{
+   Identifier id = given().user().requestsANewTopic();
+   when().user().requestsANewOccurrence(id);
+   then().view().ofMap().shouldHaveTopicThat(id, [this](Topic const &topic) {
+      auto occurrencesView = std::ranges::common_view(topic.occurrencesIn(viewScope()));
+      std::vector<std::reference_wrapper<Occurrence const>> occurrences(occurrencesView.begin(), occurrencesView.end());
+      EXPECT_THAT(occurrences, testing::SizeIs(2));
    });
 }
 

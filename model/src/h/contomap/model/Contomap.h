@@ -77,6 +77,13 @@ public:
     */
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Topic> find(std::shared_ptr<contomap::model::Filter<contomap::model::Topic>> filter);
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Topic const>> findTopic(contomap::model::Identifier id) const override;
+   /**
+    * Find a topic with a specific identifier, for potential modification.
+    *
+    * @param id the identifier to search for.
+    * @return a reference to the matching topic, if existing.
+    */
+   [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Topic>> findTopic(contomap::model::Identifier id);
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Association const> find(
       std::shared_ptr<contomap::model::Filter<contomap::model::Association>> filter) const override;
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Association const>> findAssociation(contomap::model::Identifier id) const override;
