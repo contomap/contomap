@@ -36,13 +36,22 @@ private:
    public:
       TopicList() = default;
 
+      void reset();
       [[nodiscard]] std::optional<contomap::model::Identifier> draw(Rectangle bounds, contomap::infrastructure::Search<contomap::model::Topic const> topics);
 
    private:
+      enum class SelectionOffset
+      {
+         Previous,
+         Next
+      };
+
       void guiDrawRectangle(Rectangle rec, int borderWidth, Color borderColor, Color color);
       float guiStyleFloat(int control, int property);
+      void offsetSelection(SelectionOffset offset, size_t visibleCount);
 
       size_t scrollIndex = 0;
+      std::optional<size_t> selectedIndex;
       std::optional<contomap::model::Identifier> selectedTopicId;
       std::optional<contomap::model::Identifier> focusedTopicId;
    };
