@@ -33,6 +33,7 @@ function help() {
   echo "generate     Generate all the build files. Required at least once before a 'compile'."
   echo "compile      Builds the binaries."
   echo "test         Executes all tests (of default compilation)."
+  echo "valgrind     Executes all tests (of default compilation) with valgrind."
   echo "lint         Check the source for any errors. Recommended to be done in clean state."
   echo "doc          Creates documentation."
   echo ""
@@ -115,8 +116,8 @@ function compile() {
 }
 
 function execTest() {
-  log "Running test '$1'"
-  if ! $1 --gtest_shuffle;
+  log "Running test '$2'"
+  if ! $1 $2 --gtest_shuffle;
   then
     return 1
   fi
@@ -126,10 +127,11 @@ function execTest() {
 function testDefault() {
   local total=0
   local failed=0
-  for testFile in "${buildBaseDir}"/default-"${buildTypeSuffix}"/*-test* ; do
+  local testRunner=$1
+  for testFile in "${buildBaseDir}"/default-"${buildTypeSuffix}"/*-test ; do
     if [ -f "${testFile}" ]; then
       total=$(( total + 1 ))
-      if ! execTest "${testFile}"; then
+      if ! execTest "${testRunner}" "${testFile}"; then
         failed=$(( failed + 1 ))
       fi
     fi
@@ -207,7 +209,10 @@ function main {
         compile
       ;;
       "test")
-        testDefault
+        testDefault ""
+      ;;
+      "valgrind")
+        testDefault "valgrind --error-exitcode=2 --show-error-list=yes"
       ;;
       "lint")
         lint

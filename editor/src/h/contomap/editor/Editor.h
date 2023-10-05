@@ -1,7 +1,10 @@
 #pragma once
 
 #include "contomap/editor/InputRequestHandler.h"
-#include "contomap/editor/ViewModel.h"
+#include "contomap/editor/Selection.h"
+#include "contomap/editor/View.h"
+#include "contomap/model/Contomap.h"
+#include "contomap/model/Identifiers.h"
 
 namespace contomap::editor
 {
@@ -9,24 +12,26 @@ namespace contomap::editor
 /**
  * Editor is the core domain of the application. It contains the logic, regardless of external interfaces.
  */
-class Editor : public contomap::editor::InputRequestHandler
+class Editor : public contomap::editor::InputRequestHandler, public contomap::editor::View
 {
 public:
-   /**
-    * This method must be called during initialization in order to register the
-    * ViewModel that shall be used for updating the state.
-    *
-    * @param viewModel the view model that receives all updates from now on.
-    */
-   void use(contomap::editor::ViewModel &viewModel);
+   Editor();
 
-   void helpWindowShowRequested() override;
-   void helpWindowHideRequested() override;
+   contomap::model::Identifier newTopicRequested(contomap::model::TopicNameValue name, contomap::model::SpacialCoordinate location) override;
+   contomap::model::Identifier newAssociationRequested(contomap::model::SpacialCoordinate location) override;
+   void clearSelection() override;
+   void modifySelection(contomap::editor::SelectedType type, contomap::model::Identifier id, contomap::editor::SelectionAction action) override;
+   void linkSelection() override;
+   void deleteSelection() override;
+
+   [[nodiscard]] contomap::model::Identifiers const &ofViewScope() const override;
+   [[nodiscard]] contomap::model::ContomapView const &ofMap() const override;
+   [[nodiscard]] contomap::editor::Selection const &ofSelection() const override;
 
 private:
-   contomap::editor::ViewModel &viewModel();
-
-   contomap::editor::ViewModel *currentViewModel = nullptr;
+   contomap::model::Contomap map;
+   contomap::model::Identifiers viewScope;
+   contomap::editor::Selection selection;
 };
 
 } // namespace contomap::editor

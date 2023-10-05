@@ -3,9 +3,8 @@
 using contomap::application::Application;
 
 Application::Application(contomap::frontend::DisplayEnvironment &displayEnvironment)
-   : mainWindow(displayEnvironment, editor)
+   : mainWindow(displayEnvironment, editor, editor)
 {
-   editor.use(mainWindow.viewModel());
 }
 
 void Application::initWindow()
@@ -18,9 +17,9 @@ void Application::closeRequested()
    mainWindow.closeRequested();
 }
 
-void Application::drawFrame()
+void Application::nextFrame()
 {
-   mainWindow.drawFrame();
+   mainWindow.nextFrame();
 }
 
 void Application::close()

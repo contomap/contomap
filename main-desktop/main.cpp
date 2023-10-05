@@ -45,7 +45,7 @@ int main()
       {
          app.closeRequested();
       }
-      app.drawFrame();
+      app.nextFrame();
    }
    app.close();
    return 0;

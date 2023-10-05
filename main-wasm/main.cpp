@@ -36,13 +36,13 @@ public:
    }
 
    /**
-    * Request to draw a new frame.
+    * Request to process a new frame.
     */
-   static void drawFrame()
+   static void nextFrame()
    {
       if (instance != nullptr)
       {
-         instance->drawFrame();
+         instance->nextFrame();
       }
    }
 
@@ -65,16 +65,16 @@ private:
 };
 Application *WasmContext::instance = nullptr;
 
-void static drawFrame()
+static void nextFrame()
 {
-   WasmContext::drawFrame();
+   WasmContext::nextFrame();
 }
 
 static void runDrawFrameLoop()
 {
    int desiredFps = 0; // Recommended to let the browser determine rate.
    int simulateEndlessLoop = EM_TRUE; // Don't return from set_main_loop until emscripten_cancel_main_loop() is called.
-   emscripten_set_main_loop(drawFrame, desiredFps, simulateEndlessLoop);
+   emscripten_set_main_loop(nextFrame, desiredFps, simulateEndlessLoop);
 }
 
 int main()

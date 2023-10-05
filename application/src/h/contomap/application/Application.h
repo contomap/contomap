@@ -30,9 +30,9 @@ public:
    void closeRequested();
 
    /**
-    * This method is periodically called to draw the next frame.
+    * This method is periodically called to process the next frame: handle state changes and draw the next frame.
     */
-   void drawFrame();
+   void nextFrame();
 
    /**
     * Forces a shutdown of the application. This method is called last.

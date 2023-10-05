@@ -1,10 +1,16 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 #include "contomap/editor/InputRequestHandler.h"
+#include "contomap/editor/SelectionAction.h"
+#include "contomap/editor/View.h"
+#include "contomap/frontend/Dialog.h"
 #include "contomap/frontend/DisplayEnvironment.h"
-#include "contomap/frontend/ViewModelState.h"
+#include "contomap/frontend/Layout.h"
+#include "contomap/frontend/MapCamera.h"
+#include "contomap/frontend/RenderContext.h"
 
 namespace contomap::frontend
 {
@@ -84,14 +90,10 @@ public:
     * Constructor.
     *
     * @param environment the environment that the window runs in.
+    * @param view the view on the current editor state for display.
     * @param inputRequestHandler the handler for notifying input requests.
     */
-   MainWindow(DisplayEnvironment &environment, contomap::editor::InputRequestHandler &inputRequestHandler);
-
-   /**
-    * @return the ViewModel instance that is used to represent the editor state
-    */
-   contomap::editor::ViewModel &viewModel();
+   MainWindow(DisplayEnvironment &environment, contomap::editor::View &view, contomap::editor::InputRequestHandler &inputRequestHandler);
 
    /**
     * Initializes and opens the window in the display environment.
@@ -104,9 +106,9 @@ public:
    void closeRequested();
 
    /**
-    * This method is periodically called to draw the next frame.
+    * This method is periodically called to process the next frame: handle state changes and draw the next frame.
     */
-   void drawFrame();
+   void nextFrame();
 
    /**
     * Close the window in the display environment.
@@ -114,17 +116,151 @@ public:
    void close();
 
 private:
+   class FocusItem
+   {
+   public:
+      virtual ~FocusItem() = default;
+
+      [[nodiscard]] virtual bool isAssociation([[maybe_unused]] contomap::model::Identifier otherId) const
+      {
+         return false;
+      }
+      [[nodiscard]] virtual bool isRole([[maybe_unused]] contomap::model::Identifier otherId) const
+      {
+         return false;
+      }
+      [[nodiscard]] virtual bool isOccurrence([[maybe_unused]] contomap::model::Identifier otherId) const
+      {
+         return false;
+      }
+      virtual void modifySelection(contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action) const = 0;
+   };
+
+   class AssociationFocusItem : public FocusItem
+   {
+   public:
+      explicit AssociationFocusItem(contomap::model::Identifier id)
+         : id(id)
+      {
+      }
+
+      [[nodiscard]] bool isAssociation(contomap::model::Identifier otherId) const override
+      {
+         return id == otherId;
+      }
+
+      void modifySelection(contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action) const override
+      {
+         handler.modifySelection(contomap::editor::SelectedType::Association, id, action);
+      }
+
+   private:
+      contomap::model::Identifier id;
+   };
+
+   class RoleFocusItem : public FocusItem
+   {
+   public:
+      explicit RoleFocusItem(contomap::model::Identifier id)
+         : id(id)
+      {
+      }
+
+      [[nodiscard]] bool isRole(contomap::model::Identifier otherId) const override
+      {
+         return id == otherId;
+      }
+
+      void modifySelection(contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action) const override
+      {
+         handler.modifySelection(contomap::editor::SelectedType::Role, id, action);
+      }
+
+   private:
+      contomap::model::Identifier id;
+   };
+
+   class OccurrenceFocusItem : public FocusItem
+   {
+   public:
+      explicit OccurrenceFocusItem(contomap::model::Identifier id)
+         : id(id)
+      {
+      }
+
+      [[nodiscard]] bool isOccurrence(contomap::model::Identifier otherId) const override
+      {
+         return id == otherId;
+      }
+
+      void modifySelection(contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action) const override
+      {
+         handler.modifySelection(contomap::editor::SelectedType::Occurrence, id, action);
+      }
+
+   private:
+      contomap::model::Identifier id;
+   };
+
+   class Focus
+   {
+   public:
+      Focus();
+
+      void registerItem(std::shared_ptr<FocusItem> newItem, float newDistance);
+
+      [[nodiscard]] bool isAssociation(contomap::model::Identifier otherId) const
+      {
+         return (item != nullptr) && item->isAssociation(otherId);
+      }
+      [[nodiscard]] bool isRole(contomap::model::Identifier otherId) const
+      {
+         return (item != nullptr) && item->isRole(otherId);
+      }
+      [[nodiscard]] virtual bool isOccurrence(contomap::model::Identifier otherId) const
+      {
+         return (item != nullptr) && item->isOccurrence(otherId);
+      }
+
+      void modifySelection(contomap::editor::InputRequestHandler &handler, contomap::editor::SelectionAction action) const;
+
+   private:
+      std::shared_ptr<FocusItem> item;
+      float distance;
+   };
+
    static Size const DEFAULT_SIZE;
    static char const DEFAULT_TITLE[];
+   static std::vector<std::pair<int, contomap::frontend::MapCamera::ZoomFactor>> const ZOOM_LEVELS;
+
+   [[nodiscard]] static std::vector<std::pair<int, contomap::frontend::MapCamera::ZoomFactor>> generateZoomLevels();
+   [[nodiscard]] static contomap::frontend::MapCamera::ZoomOperation doubledRelative(bool nearer);
+
+   void processInput();
+   void updateState();
 
    void drawBackground();
-   void drawMap();
-   void drawUserInterface();
+   void drawMap(RenderContext const &context);
+   void drawUserInterface(contomap::frontend::RenderContext const &context);
 
-   contomap::frontend::ViewModelState viewModelState;
+   void closeDialog();
+   void openHelpDialog();
+   void openNewTopicDialog();
+
+   [[nodiscard]] contomap::model::SpacialCoordinate spacialCameraLocation();
+
+   contomap::frontend::Layout layout;
+
+   contomap::frontend::MapCamera mapCamera;
 
    contomap::frontend::DisplayEnvironment &environment;
+   contomap::editor::View &view;
    contomap::editor::InputRequestHandler &inputRequestHandler;
+
+   std::unique_ptr<contomap::frontend::Dialog> currentDialog;
+   std::unique_ptr<contomap::frontend::Dialog> pendingDialog;
+
+   Focus currentFocus;
 };
 
 } // namespace contomap::frontend

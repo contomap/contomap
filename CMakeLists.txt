@@ -69,12 +69,73 @@ endif ()
 
 add_library(all_warnings INTERFACE)
 target_compile_options(all_warnings INTERFACE
-        $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-Wall>
+        $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-Wall -Wextra -Wpedantic>
         $<$<CXX_COMPILER_ID:MSVC>:-W4>
 )
 
+if (!WIN32)
+    add_compile_options($<$<CONFIG:Debug>:-fsanitize=address>)
+    add_link_options($<$<CONFIG:Debug>:-fsanitize=address>)
+endif ()
 
 # This project
+
+file(GLOB_RECURSE LIB_INFRASTRUCTURE_SOURCES "${PROJECT_SOURCE_DIR}/infrastructure/src/cpp/*.cpp")
+add_library(contomap-infrastructure INTERFACE ${LIB_INFRASTRUCTURE_SOURCES})
+target_compile_options(contomap-infrastructure INTERFACE $<$<CXX_COMPILER_ID:GNU>:-fcoroutines>)
+target_include_directories(contomap-infrastructure INTERFACE "${PROJECT_SOURCE_DIR}/infrastructure/src/h")
+
+file(GLOB_RECURSE LIB_INFRASTRUCTURE_TEST_SUPPORT_SOURCES "${PROJECT_SOURCE_DIR}/infrastructure/test-support/cpp/*.cpp")
+add_library(contomap-infrastructure-test-support STATIC ${LIB_INFRASTRUCTURE_TEST_SUPPORT_SOURCES})
+target_include_directories(contomap-infrastructure-test-support PUBLIC "${PROJECT_SOURCE_DIR}/infrastructure/test-support/h")
+target_link_libraries(contomap-infrastructure-test-support
+        PUBLIC
+        contomap-infrastructure
+)
+
+file(GLOB_RECURSE LIB_INFRASTRUCTURE_TEST_SOURCES "${PROJECT_SOURCE_DIR}/infrastructure/test/*.cpp")
+add_executable(contomap-infrastructure-test ${LIB_INFRASTRUCTURE_TEST_SOURCES})
+target_link_libraries(contomap-infrastructure-test
+        PRIVATE
+        all_warnings
+        PUBLIC
+        contomap-infrastructure-test-support
+        GTest::gmock_main
+)
+
+
+file(GLOB_RECURSE LIB_MODEL_SOURCES "${PROJECT_SOURCE_DIR}/model/src/cpp/*.cpp")
+add_library(contomap-model STATIC ${LIB_MODEL_SOURCES})
+target_include_directories(contomap-model PUBLIC "${PROJECT_SOURCE_DIR}/model/src/h")
+target_link_libraries(contomap-model
+        PRIVATE
+        all_warnings
+        PUBLIC
+        contomap-infrastructure
+)
+
+file(GLOB_RECURSE LIB_MODEL_TEST_SUPPORT_SOURCES "${PROJECT_SOURCE_DIR}/model/test-support/cpp/*.cpp")
+add_library(contomap-model-test-support STATIC ${LIB_MODEL_TEST_SUPPORT_SOURCES})
+target_include_directories(contomap-model-test-support PUBLIC "${PROJECT_SOURCE_DIR}/model/test-support/h")
+target_link_libraries(contomap-model-test-support
+        PRIVATE
+        all_warnings
+        PUBLIC
+        contomap-model
+        contomap-infrastructure-test-support
+        GTest::gmock_main
+)
+
+file(GLOB_RECURSE LIB_MODEL_TEST_SOURCES "${PROJECT_SOURCE_DIR}/model/test/*.cpp")
+add_executable(contomap-model-test ${LIB_MODEL_TEST_SOURCES})
+target_link_libraries(contomap-model-test
+        PRIVATE
+        all_warnings
+        PUBLIC
+        contomap-model-test-support
+        GTest::gmock_main
+)
+
 
 configure_file("${PROJECT_SOURCE_DIR}/editor/src/cpp/VersionInfoGlobal.cpp.in" "VersionInfoGlobal.cpp" USE_SOURCE_PERMISSIONS @ONLY)
 file(GLOB_RECURSE LIB_EDITOR_SOURCES "${PROJECT_SOURCE_DIR}/editor/src/cpp/*.cpp")
@@ -83,6 +144,8 @@ target_include_directories(contomap-editor PUBLIC "${PROJECT_SOURCE_DIR}/editor/
 target_link_libraries(contomap-editor
         PRIVATE
         all_warnings
+        PUBLIC
+        contomap-model
 )
 
 file(GLOB_RECURSE LIB_EDITOR_TEST_SOURCES "${PROJECT_SOURCE_DIR}/editor/test/*.cpp")
@@ -92,6 +155,8 @@ target_link_libraries(contomap-editor-test
         all_warnings
         PUBLIC
         contomap-editor
+        contomap-model-test-support
+        contomap-infrastructure-test-support
         GTest::gmock_main
 )
 
@@ -115,6 +180,7 @@ target_link_libraries(contomap-frontend-test
         all_warnings
         PUBLIC
         contomap-frontend
+        contomap-infrastructure-test-support
         GTest::gmock_main
 )
 
