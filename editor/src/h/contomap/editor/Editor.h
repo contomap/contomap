@@ -30,6 +30,8 @@ public:
    [[nodiscard]] contomap::editor::Selection const &ofSelection() const override;
 
 private:
+   void createAndSelectOccurrence(contomap::model::Topic &topic, contomap::model::SpacialCoordinate location);
+
    contomap::model::Contomap map;
    contomap::model::Identifiers viewScope;
    contomap::editor::Selection selection;

@@ -23,8 +23,7 @@ Identifier Editor::newTopicRequested(TopicNameValue name, SpacialCoordinate loca
 {
    auto &topic = map.newTopic();
    static_cast<void>(topic.newName(std::move(name)));
-   auto &occurrence = topic.newOccurrence(viewScope, location);
-   selection.setSole(SelectedType::Occurrence, occurrence.getId());
+   createAndSelectOccurrence(topic, location);
    return topic.getId();
 }
 
@@ -35,8 +34,7 @@ void Editor::newOccurrenceRequested(Identifier topicId, SpacialCoordinate locati
    {
       return;
    }
-   auto &occurrence = topic.value().get().newOccurrence(viewScope, location);
-   selection.setSole(SelectedType::Occurrence, occurrence.getId());
+   createAndSelectOccurrence(topic.value(), location);
 }
 
 Identifier Editor::newAssociationRequested(SpacialCoordinate location)
@@ -124,4 +122,10 @@ contomap::model::ContomapView const &Editor::ofMap() const
 contomap::editor::Selection const &Editor::ofSelection() const
 {
    return selection;
+}
+
+void Editor::createAndSelectOccurrence(contomap::model::Topic &topic, contomap::model::SpacialCoordinate location)
+{
+   auto &occurrence = topic.newOccurrence(viewScope, location);
+   selection.setSole(SelectedType::Occurrence, occurrence.getId());
 }
