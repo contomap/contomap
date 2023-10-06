@@ -121,8 +121,8 @@ void Editor::setViewScopeFromSelection()
    if (!newViewScope.empty())
    {
       viewScope = newViewScope;
+      selection.clear();
    }
-   selection.clear();
 }
 
 contomap::model::Identifiers const &Editor::ofViewScope() const
