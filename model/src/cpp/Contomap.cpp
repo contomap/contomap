@@ -178,7 +178,6 @@ void Contomap::deleteTopicsCascading(Identifiers toDelete)
 
 void Contomap::deleting(Identifiers &toDelete, Topic &topic)
 {
-   // This is not the best algorithm, to try out all the associations, instead of iterating over the existing roles.
    for (auto &[_, association] : associations)
    {
       topic.removeRolesOf(association);
