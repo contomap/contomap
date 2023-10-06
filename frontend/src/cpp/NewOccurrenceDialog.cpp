@@ -18,10 +18,12 @@ void NewOccurrenceDialog::TopicList::guiDrawRectangle(Rectangle rec, int borderW
    }
    if (borderWidth > 0)
    {
-      DrawRectangle((int)rec.x, (int)rec.y, (int)rec.width, borderWidth, borderColor);
-      DrawRectangle((int)rec.x, (int)rec.y + borderWidth, borderWidth, (int)rec.height - 2 * borderWidth, borderColor);
-      DrawRectangle((int)rec.x + (int)rec.width - borderWidth, (int)rec.y + borderWidth, borderWidth, (int)rec.height - 2 * borderWidth, borderColor);
-      DrawRectangle((int)rec.x, (int)rec.y + (int)rec.height - borderWidth, (int)rec.width, borderWidth, borderColor);
+      DrawRectangle(static_cast<int>(rec.x), static_cast<int>(rec.y), static_cast<int>(rec.width), borderWidth, borderColor);
+      DrawRectangle(static_cast<int>(rec.x), static_cast<int>(rec.y) + borderWidth, borderWidth, static_cast<int>(rec.height) - 2 * borderWidth, borderColor);
+      DrawRectangle(static_cast<int>(rec.x) + static_cast<int>(rec.width) - borderWidth, static_cast<int>(rec.y) + borderWidth, borderWidth,
+         static_cast<int>(rec.height) - 2 * borderWidth, borderColor);
+      DrawRectangle(
+         static_cast<int>(rec.x), static_cast<int>(rec.y) + static_cast<int>(rec.height) - borderWidth, static_cast<int>(rec.width), borderWidth, borderColor);
    }
 }
 
@@ -83,13 +85,13 @@ std::optional<Identifier> NewOccurrenceDialog::TopicList::draw(Rectangle bounds,
          {
             selectedTopicId = topic.getId();
          }
-         if (nameIndex < scrollIndex)
+         if (bool isNotYetVisible = nameIndex < scrollIndex; isNotYetVisible)
          {
             nameIndex++;
             continue;
          }
          nameIndex++;
-         if ((itemBounds.y + itemBounds.height) > (bounds.y + bounds.height))
+         if (bool isBeyondVisibleArea = (itemBounds.y + itemBounds.height) > (bounds.y + bounds.height); isBeyondVisibleArea)
          {
             continue;
          }
@@ -114,8 +116,7 @@ std::optional<Identifier> NewOccurrenceDialog::TopicList::draw(Rectangle bounds,
             guiDrawRectangle(itemBounds, GuiGetStyle(LISTVIEW, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(LISTVIEW, BORDER_COLOR_FOCUSED)), 1.0f),
                Fade(GetColor(GuiGetStyle(LISTVIEW, BASE_COLOR_FOCUSED)), 1.0f));
          }
-         std::string nameText(name.getValue().raw());
-         GuiLabel(itemBounds, nameText.c_str());
+         GuiLabel(itemBounds, name.getValue().raw().c_str());
 
          itemBounds.y += itemIntervalHeight;
       }
