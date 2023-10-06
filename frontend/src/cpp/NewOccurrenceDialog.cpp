@@ -197,7 +197,6 @@ void NewOccurrenceDialog::TopicList::offsetSelection(SelectionOffset offset, siz
       if (selectedIndex.has_value())
       {
          selectedIndex = selectedIndex.value() + 1;
-         selectedTopicId.reset();
 
          bool isAbove = selectedIndex.value() < scrollIndex;
          bool isBelow = selectedIndex.value() >= (scrollIndex + visibleCount);
