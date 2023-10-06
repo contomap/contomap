@@ -251,7 +251,8 @@ bool NewOccurrenceDialog::draw(RenderContext const &context)
       .height = height,
    };
    auto previousData = searchInput;
-   bool accept = GuiTextBox(inputBounds, searchInput.data(), static_cast<int>(searchInput.size()), true);
+   GuiTextBox(inputBounds, searchInput.data(), static_cast<int>(searchInput.size()), true);
+   bool accept = IsKeyReleased(KEY_ENTER);
    if (previousData != searchInput)
    {
       topicList.reset();
