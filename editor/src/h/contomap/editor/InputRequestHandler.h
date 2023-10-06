@@ -67,6 +67,11 @@ public:
     * Called to request to delete all the selected items.
     */
    virtual void deleteSelection() = 0;
+
+   /**
+    * Sets the view scope from the current selection
+    */
+   virtual void setViewScopeFromSelection() = 0;
 };
 
 } // namespace contomap::editor

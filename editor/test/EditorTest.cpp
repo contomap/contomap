@@ -207,6 +207,11 @@ public:
          handler.deleteSelection();
       }
 
+      void setsTheViewScopeFromSelection()
+      {
+         handler.setViewScopeFromSelection();
+      }
+
       void selects(SelectedType type, Identifier id)
       {
          handler.modifySelection(type, id, SelectionAction::Set);
@@ -478,4 +483,23 @@ TEST_F(EditorTest, deletingRoleRemovesIt)
    });
    asWellAs().view().ofSelection().should(
       [](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Role), testing::Eq(Identifiers {})) << "Role is still selected"; });
+}
+
+TEST_F(EditorTest, setViewScopeFromSelectionClearsSelection)
+{
+   Identifier topicId = given().user().requestsANewTopic();
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(topicId).getId());
+   when().user().setsTheViewScopeFromSelection();
+   then().view().ofSelection().should(
+      [](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers {})) << "Occurrence is still selected"; });
+}
+
+TEST_F(EditorTest, newOccurrencesAreInNewViewScope)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(scopeTopicId).getId());
+   given().user().setsTheViewScopeFromSelection();
+   Identifier topicId = when().user().requestsANewTopic();
+   then().view().ofMap().shouldHaveTopicThat(
+      topicId, [this](Topic const &topic) { EXPECT_TRUE(topic.isIn(viewScope())) << "Topic has no occurrence in this new scope"; });
 }

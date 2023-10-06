@@ -7,6 +7,7 @@ using contomap::editor::SelectionAction;
 using contomap::model::Association;
 using contomap::model::Contomap;
 using contomap::model::Identifier;
+using contomap::model::Identifiers;
 using contomap::model::Occurrence;
 using contomap::model::SpacialCoordinate;
 using contomap::model::Topic;
@@ -106,6 +107,21 @@ void Editor::deleteSelection()
    map.deleteRoles(selection.of(SelectedType::Role));
    map.deleteAssociations(selection.of(SelectedType::Association));
    map.deleteOccurrences(selection.of(SelectedType::Occurrence));
+   selection.clear();
+}
+
+void Editor::setViewScopeFromSelection()
+{
+   auto &occurrenceIds = selection.of(SelectedType::Occurrence);
+   Identifiers newViewScope;
+   for (Topic &topic : map.find(Topics::thatOccurAs(occurrenceIds)))
+   {
+      newViewScope.add(topic.getId());
+   }
+   if (!newViewScope.empty())
+   {
+      viewScope = newViewScope;
+   }
    selection.clear();
 }
 
