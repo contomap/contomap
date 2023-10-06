@@ -115,3 +115,18 @@ Search<Role const> Topic::rolesAssociatedWith(Identifiers associations) const //
       }
    }
 }
+
+void Topic::removeTopicReferences(Identifier topicId)
+{
+   for (auto it = occurrences.begin(); it != occurrences.end();)
+   {
+      if (it->second.scopeContains(topicId))
+      {
+         it = occurrences.erase(it);
+      }
+      else
+      {
+         ++it;
+      }
+   }
+}

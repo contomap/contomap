@@ -102,8 +102,9 @@ private:
    void deleteRole(contomap::model::Identifier id);
    void deleteAssociation(contomap::model::Identifier id);
    void deleteOccurrence(contomap::model::Identifier id);
+   void deleteTopicsCascading(contomap::model::Identifiers toDelete);
    bool topicShouldBeRemoved(Topic const &topic);
-   void deleting(contomap::model::Topic &topic);
+   void deleting(contomap::model::Identifiers &toDelete, contomap::model::Topic &topic);
 
    std::map<contomap::model::Identifier, contomap::model::Topic> topics;
    std::map<contomap::model::Identifier, contomap::model::Association> associations;

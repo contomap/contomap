@@ -104,10 +104,8 @@ TEST_F(ContomapTest, deletingFinalOccurrenceOfDefaultViewScopeDoesNotDeleteIt)
    view().shouldHaveTopicThat(topicId, [](Topic const &foundTopic) { EXPECT_TRUE(foundTopic.isWithoutOccurrences()); });
 }
 
-TEST_F(ContomapTest, DISABLED_removingAScopeTopicCascadesIntoFurtherRemovalOfOtherTopics)
+TEST_F(ContomapTest, removingAScopeTopicCascadesIntoFurtherRemovalOfOtherTopics)
 {
-   // WIP: this potentially requires a rework on how the map stores data internally.
-
    auto &topicA = map.newTopic();
    auto &topicB = map.newTopic();
    auto topicIdA = topicA.getId();

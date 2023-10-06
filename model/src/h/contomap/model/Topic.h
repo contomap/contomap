@@ -120,6 +120,8 @@ public:
     */
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role const> rolesAssociatedWith(contomap::model::Identifiers associations) const;
 
+   void removeTopicReferences(contomap::model::Identifier topicId);
+
 private:
    contomap::model::Identifier id;
 

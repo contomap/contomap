@@ -25,3 +25,8 @@ bool Occurrence::isIn(Identifiers const &thatScope) const
 {
    return thatScope.contains(scope);
 }
+
+bool Occurrence::scopeContains(contomap::model::Identifier thatId) const
+{
+   return scope.contains(thatId);
+}

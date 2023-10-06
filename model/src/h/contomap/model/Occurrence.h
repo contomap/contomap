@@ -41,6 +41,14 @@ public:
     */
    [[nodiscard]] bool isIn(contomap::model::Identifiers const &thatScope) const;
 
+   /**
+    * Return true if the scope contains the given identifier.
+    *
+    * @param thatId the identifier to check .
+    * @return true in case the identifier is part of the scope.
+    */
+   [[nodiscard]] bool scopeContains(contomap::model::Identifier thatId) const;
+
 private:
    contomap::model::Identifier id;
    contomap::model::Identifiers scope;
