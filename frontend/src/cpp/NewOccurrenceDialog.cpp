@@ -158,6 +158,14 @@ std::optional<Identifier> NewOccurrenceDialog::TopicList::draw(Rectangle bounds,
 
 void NewOccurrenceDialog::TopicList::offsetSelection(SelectionOffset offset, size_t visibleCount)
 {
+   auto offsetScrollIndex = [this](size_t add, size_t deduct) {
+      scrollIndex = selectedIndex.value() + add;
+      scrollIndex = (scrollIndex > deduct) ? scrollIndex - deduct : 0;
+   };
+   auto selectAndScrollToFirst = [this]() {
+      selectedIndex = 0;
+      scrollIndex = 0;
+   };
    selectedTopicId.reset();
    switch (offset)
    {
@@ -171,7 +179,7 @@ void NewOccurrenceDialog::TopicList::offsetSelection(SelectionOffset offset, siz
          bool isBelow = selectedIndex.value() >= (scrollIndex + visibleCount);
          if (isAbove || isBelow)
          {
-            scrollIndex = selectedIndex.value() - 2;
+            offsetScrollIndex(0, 2);
          }
          else if (selectedIndex.value() < (scrollIndex + 2) && (scrollIndex > 0))
          {
@@ -180,8 +188,7 @@ void NewOccurrenceDialog::TopicList::offsetSelection(SelectionOffset offset, siz
       }
       else
       {
-         selectedIndex = 0;
-         scrollIndex = 0;
+         selectAndScrollToFirst();
       }
       break;
    }
@@ -196,7 +203,7 @@ void NewOccurrenceDialog::TopicList::offsetSelection(SelectionOffset offset, siz
          bool isBelow = selectedIndex.value() >= (scrollIndex + visibleCount);
          if (isAbove || isBelow)
          {
-            scrollIndex = selectedIndex.value() - (visibleCount - 3);
+            offsetScrollIndex(3, visibleCount);
          }
          else if (selectedIndex.value() > (scrollIndex + visibleCount - 3))
          {
@@ -205,8 +212,7 @@ void NewOccurrenceDialog::TopicList::offsetSelection(SelectionOffset offset, siz
       }
       else
       {
-         selectedIndex = 0;
-         scrollIndex = 0;
+         selectAndScrollToFirst();
       }
       break;
    }
