@@ -10,6 +10,7 @@
 
 #include "contomap/frontend/HelpDialog.h"
 #include "contomap/frontend/MainWindow.h"
+#include "contomap/frontend/NewOccurrenceDialog.h"
 #include "contomap/frontend/NewTopicDialog.h"
 #include "contomap/model/Associations.h"
 #include "contomap/model/Topics.h"
@@ -159,7 +160,7 @@ void MainWindow::processInput()
          mapCamera.panTo(MapCamera::HOME_POSITION);
       }
 
-      bool isInsertOperation = IsKeyPressed(KEY_INSERT) || IsKeyPressed(KEY_I);
+      bool isInsertOperation = IsKeyReleased(KEY_INSERT) || IsKeyReleased(KEY_I);
       bool isAssociationContext = IsKeyDown(KEY_LEFT_SHIFT);
       if (isInsertOperation)
       {
@@ -172,13 +173,17 @@ void MainWindow::processInput()
             openNewTopicDialog();
          }
       }
+      if (IsKeyReleased(KEY_O))
+      {
+         openNewOccurrenceDialog();
+      }
 
-      if (IsKeyPressed(KEY_L))
+      if (IsKeyReleased(KEY_L))
       {
          inputRequestHandler.linkSelection();
       }
 
-      if (IsKeyPressed(KEY_DELETE))
+      if (IsKeyReleased(KEY_DELETE))
       {
          inputRequestHandler.deleteSelection();
       }
@@ -421,6 +426,11 @@ void MainWindow::openHelpDialog()
 void MainWindow::openNewTopicDialog()
 {
    pendingDialog = std::make_unique<contomap::frontend::NewTopicDialog>(inputRequestHandler, layout, spacialCameraLocation());
+}
+
+void MainWindow::openNewOccurrenceDialog()
+{
+   pendingDialog = std::make_unique<contomap::frontend::NewOccurrenceDialog>(inputRequestHandler, view.ofMap(), layout, spacialCameraLocation());
 }
 
 SpacialCoordinate MainWindow::spacialCameraLocation()

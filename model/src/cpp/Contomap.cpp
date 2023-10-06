@@ -81,6 +81,12 @@ std::optional<std::reference_wrapper<Topic const>> Contomap::findTopic(Identifie
    return (it != topics.end()) ? std::optional<std::reference_wrapper<Topic const>>(it->second) : std::optional<std::reference_wrapper<Topic const>>();
 }
 
+std::optional<std::reference_wrapper<Topic>> Contomap::findTopic(Identifier id)
+{
+   auto it = topics.find(id);
+   return (it != topics.end()) ? std::optional<std::reference_wrapper<Topic>>(it->second) : std::optional<std::reference_wrapper<Topic>>();
+}
+
 contomap::infrastructure::Search<contomap::model::Association const> Contomap::find( // NOLINT
    std::shared_ptr<contomap::model::Filter<contomap::model::Association>> filter) const
 {
@@ -154,7 +160,7 @@ void Contomap::deleteOccurrence(Identifier id)
 
 bool Contomap::topicShouldBeRemoved(Topic const &topic)
 {
-   return topic.isWithoutOccurrences();
+   return topic.isWithoutOccurrences() && (topic.getId() != defaultScope);
 }
 
 void Contomap::deleting(Topic &topic)

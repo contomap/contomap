@@ -23,12 +23,21 @@ Identifier Editor::newTopicRequested(TopicNameValue name, SpacialCoordinate loca
 {
    auto &topic = map.newTopic();
    static_cast<void>(topic.newName(std::move(name)));
-   auto &occurrence = topic.newOccurrence(viewScope, location);
-   selection.setSole(SelectedType::Occurrence, occurrence.getId());
+   createAndSelectOccurrence(topic, location);
    return topic.getId();
 }
 
-Identifier Editor::newAssociationRequested(contomap::model::SpacialCoordinate location)
+void Editor::newOccurrenceRequested(Identifier topicId, SpacialCoordinate location)
+{
+   auto topic = map.findTopic(topicId);
+   if (!topic.has_value())
+   {
+      return;
+   }
+   createAndSelectOccurrence(topic.value(), location);
+}
+
+Identifier Editor::newAssociationRequested(SpacialCoordinate location)
 {
    auto &association = map.newAssociation(viewScope, location);
    selection.setSole(SelectedType::Association, association.getId());
@@ -84,8 +93,8 @@ void Editor::linkSelection()
             auto occurrenceLocation = occurrence.getLocation().getSpacial().getAbsoluteReference();
             x += occurrenceLocation.X();
             y += occurrenceLocation.Y();
+            count++;
          }
-         count++;
       }
       association.moveTo(SpacialCoordinate::absoluteAt(x / static_cast<float>(count), y / static_cast<float>(count)));
       selection.setSole(SelectedType::Association, association.getId());
@@ -113,4 +122,10 @@ contomap::model::ContomapView const &Editor::ofMap() const
 contomap::editor::Selection const &Editor::ofSelection() const
 {
    return selection;
+}
+
+void Editor::createAndSelectOccurrence(contomap::model::Topic &topic, contomap::model::SpacialCoordinate location)
+{
+   auto &occurrence = topic.newOccurrence(viewScope, location);
+   selection.setSole(SelectedType::Occurrence, occurrence.getId());
 }

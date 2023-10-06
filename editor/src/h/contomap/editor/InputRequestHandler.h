@@ -21,10 +21,18 @@ public:
     * Called when a new topic shall be created.
     *
     * @param name how the new topic shall be named.
-    * @param location the point at which the topic shall be put at.
+    * @param location the point at which the first occurrence shall be put at.
     * @return identifier of the created topic.
     */
    virtual contomap::model::Identifier newTopicRequested(contomap::model::TopicNameValue name, contomap::model::SpacialCoordinate location) = 0;
+
+   /**
+    * Called when a topic shall receive a further occurrence in the current view scope.
+    *
+    * @param topicId the identifier of the topic.
+    * @param location the point at which the new occurrence shall be put at.
+    */
+   virtual void newOccurrenceRequested(contomap::model::Identifier topicId, contomap::model::SpacialCoordinate location) = 0;
 
    /**
     * Called when a new association shall be created.

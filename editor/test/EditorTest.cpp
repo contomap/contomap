@@ -89,6 +89,46 @@ public:
       TopicNameValue name;
       SpacialCoordinate position;
    };
+   class NewOccurrenceRequest
+   {
+   public:
+      explicit NewOccurrenceRequest(NewOccurrenceRequest const &) = delete;
+      explicit NewOccurrenceRequest(NewOccurrenceRequest &&) = delete;
+      explicit NewOccurrenceRequest(InputRequestHandler &handler, Identifier topicId)
+         : handler(handler)
+         , topicId(topicId)
+         , position(someSpacialCoordinate())
+      {
+      }
+      ~NewOccurrenceRequest()
+      {
+         resolve();
+      }
+
+      NewOccurrenceRequest &operator=(NewOccurrenceRequest const &) = delete;
+      NewOccurrenceRequest &operator=(NewOccurrenceRequest &&) = delete;
+
+      NewOccurrenceRequest &at(SpacialCoordinate value)
+      {
+         position = value;
+         return *this;
+      }
+
+   private:
+      void resolve()
+      {
+         if (!resolved)
+         {
+            handler.newOccurrenceRequested(topicId, position);
+            resolved = true;
+         }
+      }
+
+      InputRequestHandler &handler;
+      Identifier topicId;
+      bool resolved = false;
+      SpacialCoordinate position;
+   };
 
    class NewAssociationRequest
    {
@@ -137,7 +177,7 @@ public:
    class UserFixture
    {
    public:
-      explicit UserFixture(contomap::editor::InputRequestHandler &handler)
+      explicit UserFixture(InputRequestHandler &handler)
          : handler(handler)
       {
       }
@@ -145,6 +185,11 @@ public:
       NewTopicRequest requestsANewTopic()
       {
          return NewTopicRequest(handler);
+      }
+
+      NewOccurrenceRequest requestsANewOccurrence(Identifier id)
+      {
+         return NewOccurrenceRequest(handler, id);
       }
 
       NewAssociationRequest requestsANewAssociation()
@@ -274,6 +319,17 @@ TEST_F(EditorTest, newTopicsKeepTheirProperties)
    });
 }
 
+TEST_F(EditorTest, topicsCanReceiveNewOccurrences)
+{
+   Identifier id = given().user().requestsANewTopic();
+   when().user().requestsANewOccurrence(id);
+   then().view().ofMap().shouldHaveTopicThat(id, [this](Topic const &topic) {
+      auto occurrencesView = std::ranges::common_view(topic.occurrencesIn(viewScope()));
+      std::vector<std::reference_wrapper<Occurrence const>> occurrences(occurrencesView.begin(), occurrencesView.end());
+      EXPECT_THAT(occurrences, testing::SizeIs(2));
+   });
+}
+
 TEST_F(EditorTest, newAssociationsKeepTheirProperties)
 {
    auto position = someSpacialCoordinate();
@@ -328,6 +384,17 @@ TEST_F(EditorTest, newAssociationsCreatedByLinkingThroughSelectionIsCentredBetwe
    given().user().togglesSelectionOf(SelectedType::Occurrence, occurrenceOf(topicId2).getId());
    when().user().linksTheSelection();
    then().view().ofMap().shouldHaveOneAssociationNear(SpacialCoordinate::absoluteAt(-2.5f, 15.0f));
+}
+
+TEST_F(EditorTest, newAssociationsCreatedByLinkingThroughSelectionIsCentredBetweenAllOccurrences)
+{
+   Identifier topicId1 = given().user().requestsANewTopic().at(SpacialCoordinate::absoluteAt(-5.0f, 10.0f));
+   Identifier topicId2 = given().user().requestsANewTopic().at(SpacialCoordinate::absoluteAt(0.0f, 20.0f));
+   given().user().requestsANewOccurrence(topicId1).at(SpacialCoordinate::absoluteAt(-10.0f, 3.0f));
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(topicId1).getId());
+   given().user().togglesSelectionOf(SelectedType::Occurrence, occurrenceOf(topicId2).getId());
+   when().user().linksTheSelection();
+   then().view().ofMap().shouldHaveOneAssociationNear(SpacialCoordinate::absoluteAt(-5.0f, 11.0f));
 }
 
 TEST_F(EditorTest, newTopicHasItsOccurrenceSelected)
