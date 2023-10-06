@@ -386,6 +386,17 @@ TEST_F(EditorTest, newAssociationsCreatedByLinkingThroughSelectionIsCentredBetwe
    then().view().ofMap().shouldHaveOneAssociationNear(SpacialCoordinate::absoluteAt(-2.5f, 15.0f));
 }
 
+TEST_F(EditorTest, newAssociationsCreatedByLinkingThroughSelectionIsCentredBetweenAllOccurrences)
+{
+   Identifier topicId1 = given().user().requestsANewTopic().at(SpacialCoordinate::absoluteAt(-5.0f, 10.0f));
+   Identifier topicId2 = given().user().requestsANewTopic().at(SpacialCoordinate::absoluteAt(0.0f, 20.0f));
+   given().user().requestsANewOccurrence(topicId1).at(SpacialCoordinate::absoluteAt(-10.0f, 3.0f));
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(topicId1).getId());
+   given().user().togglesSelectionOf(SelectedType::Occurrence, occurrenceOf(topicId2).getId());
+   when().user().linksTheSelection();
+   then().view().ofMap().shouldHaveOneAssociationNear(SpacialCoordinate::absoluteAt(-5.0f, 11.0f));
+}
+
 TEST_F(EditorTest, newTopicHasItsOccurrenceSelected)
 {
    when().user().requestsANewTopic();

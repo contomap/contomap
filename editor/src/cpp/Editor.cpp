@@ -93,8 +93,8 @@ void Editor::linkSelection()
             auto occurrenceLocation = occurrence.getLocation().getSpacial().getAbsoluteReference();
             x += occurrenceLocation.X();
             y += occurrenceLocation.Y();
+            count++;
          }
-         count++;
       }
       association.moveTo(SpacialCoordinate::absoluteAt(x / static_cast<float>(count), y / static_cast<float>(count)));
       selection.setSole(SelectedType::Association, association.getId());
