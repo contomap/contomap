@@ -104,6 +104,23 @@ TEST_F(ContomapTest, deletingFinalOccurrenceOfDefaultViewScopeDoesNotDeleteIt)
    view().shouldHaveTopicThat(topicId, [](Topic const &foundTopic) { EXPECT_TRUE(foundTopic.isWithoutOccurrences()); });
 }
 
+TEST_F(ContomapTest, DISABLED_removingAScopeTopicCascadesIntoFurtherRemovalOfOtherTopics)
+{
+   // WIP: this potentially requires a rework on how the map stores data internally.
+
+   auto &topicA = map.newTopic();
+   auto &topicB = map.newTopic();
+   auto topicIdA = topicA.getId();
+   auto topicIdB = topicB.getId();
+   static_cast<void>(topicA.newOccurrence(Identifiers::ofSingle(topicIdB), someSpacialCoordinate()).getId());
+   auto occurrenceId = topicB.newOccurrence(Identifiers::ofSingle(map.getDefaultScope()), someSpacialCoordinate()).getId();
+
+   map.deleteOccurrences(Identifiers::ofSingle(occurrenceId));
+
+   view().shouldNotHaveTopic(topicIdA);
+   view().shouldNotHaveTopic(topicIdB);
+}
+
 TEST_F(ContomapTest, rolesOfRemovedTopicAreAlsoRemoved)
 {
    auto &topic = map.newTopic();
