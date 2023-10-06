@@ -119,6 +119,25 @@ TEST_F(ContomapTest, removingAScopeTopicCascadesIntoFurtherRemovalOfOtherTopics)
    view().shouldNotHaveTopic(topicIdB);
 }
 
+TEST_F(ContomapTest, removingACyclicDependencyWorks)
+{
+   auto &topicA = map.newTopic();
+   auto &topicB = map.newTopic();
+   auto &topicC = map.newTopic();
+   auto topicIdA = topicA.getId();
+   auto topicIdB = topicB.getId();
+   auto topicIdC = topicC.getId();
+   static_cast<void>(topicA.newOccurrence(Identifiers::ofSingle(topicIdB), someSpacialCoordinate()).getId());
+   static_cast<void>(topicB.newOccurrence(Identifiers::ofSingle(topicIdC), someSpacialCoordinate()).getId());
+   auto occurrenceId = topicC.newOccurrence(Identifiers::ofSingle(topicIdA), someSpacialCoordinate()).getId();
+
+   map.deleteOccurrences(Identifiers::ofSingle(occurrenceId));
+
+   view().shouldNotHaveTopic(topicIdA);
+   view().shouldNotHaveTopic(topicIdB);
+   view().shouldNotHaveTopic(topicIdC);
+}
+
 TEST_F(ContomapTest, rolesOfRemovedTopicAreAlsoRemoved)
 {
    auto &topic = map.newTopic();
