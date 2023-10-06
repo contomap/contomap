@@ -160,7 +160,7 @@ void NewOccurrenceDialog::TopicList::offsetSelection(SelectionOffset offset, siz
 {
    auto offsetScrollIndex = [this](size_t add, size_t deduct) {
       scrollIndex = selectedIndex.value() + add;
-      scrollIndex = (scrollIndex > deduct) ? scrollIndex - deduct : 0;
+      scrollIndex -= std::min(scrollIndex, deduct);
    };
    auto selectAndScrollToFirst = [this]() {
       selectedIndex = 0;
