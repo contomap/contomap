@@ -120,9 +120,13 @@ void Editor::setViewScopeFromSelection()
    }
    if (!newViewScope.empty())
    {
-      viewScope = newViewScope;
-      selection.clear();
+      setViewScopeTo(newViewScope);
    }
+}
+
+void Editor::setViewScopeToDefault()
+{
+   setViewScopeTo(Identifiers::ofSingle(map.getDefaultScope()));
 }
 
 contomap::model::Identifiers const &Editor::ofViewScope() const
@@ -144,4 +148,10 @@ void Editor::createAndSelectOccurrence(contomap::model::Topic &topic, contomap::
 {
    auto &occurrence = topic.newOccurrence(viewScope, location);
    selection.setSole(SelectedType::Occurrence, occurrence.getId());
+}
+
+void Editor::setViewScopeTo(contomap::model::Identifiers const &ids)
+{
+   viewScope = ids;
+   selection.clear();
 }

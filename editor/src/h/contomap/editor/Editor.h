@@ -25,6 +25,7 @@ public:
    void linkSelection() override;
    void deleteSelection() override;
    void setViewScopeFromSelection() override;
+   void setViewScopeToDefault() override;
 
    [[nodiscard]] contomap::model::Identifiers const &ofViewScope() const override;
    [[nodiscard]] contomap::model::ContomapView const &ofMap() const override;
@@ -32,6 +33,7 @@ public:
 
 private:
    void createAndSelectOccurrence(contomap::model::Topic &topic, contomap::model::SpacialCoordinate location);
+   void setViewScopeTo(contomap::model::Identifiers const &ids);
 
    contomap::model::Contomap map;
    contomap::model::Identifiers viewScope;

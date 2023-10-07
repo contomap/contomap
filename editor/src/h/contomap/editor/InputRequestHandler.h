@@ -69,9 +69,14 @@ public:
    virtual void deleteSelection() = 0;
 
    /**
-    * Sets the view scope from the current selection
+    * Sets the view scope from the current selection.
     */
    virtual void setViewScopeFromSelection() = 0;
+
+   /**
+    * Sets the view scope to the default.
+    */
+   virtual void setViewScopeToDefault() = 0;
 };
 
 } // namespace contomap::editor

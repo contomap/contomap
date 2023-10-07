@@ -157,6 +157,10 @@ void MainWindow::processInput()
 
       if (IsKeyPressed(KEY_HOME))
       {
+         if (IsKeyDown(KEY_LEFT_CONTROL))
+         {
+            inputRequestHandler.setViewScopeToDefault();
+         }
          mapCamera.panTo(MapCamera::HOME_POSITION);
       }
 
@@ -188,7 +192,7 @@ void MainWindow::processInput()
          inputRequestHandler.deleteSelection();
       }
 
-      if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+      if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && (static_cast<float>(GetMouseY()) > (layout.buttonHeight() + layout.padding() * 2.0f)))
       {
          auto action = IsKeyDown(KEY_LEFT_CONTROL) ? SelectionAction::Toggle : SelectionAction::Set;
          currentFocus.modifySelection(inputRequestHandler, action);
@@ -395,10 +399,26 @@ void MainWindow::drawUserInterface(RenderContext const &context)
    Vector2 toolbarSize { .x = contentSize.x, .y = iconSize + (padding * 2.0f) };
    GuiPanel(Rectangle { toolbarPosition.x, toolbarPosition.y, toolbarSize.x, toolbarSize.y }, nullptr);
    GuiSetTooltip("Show help window");
-   if (GuiButton(Rectangle { toolbarPosition.x + toolbarSize.x - (padding + iconSize), toolbarPosition.y + padding, iconSize, iconSize },
+   if (GuiButton(
+          Rectangle { .x = toolbarPosition.x + toolbarSize.x - (padding + iconSize), .y = toolbarPosition.y + padding, .width = iconSize, .height = iconSize },
           GuiIconText(ICON_HELP, nullptr)))
    {
       openHelpDialog();
+   }
+   GuiSetTooltip("Set home view scope");
+   if (GuiButton(Rectangle { .x = toolbarPosition.x + padding, .y = toolbarPosition.y + padding, .width = iconSize, .height = iconSize },
+          GuiIconText(ICON_HOUSE, nullptr)))
+   {
+      inputRequestHandler.setViewScopeToDefault();
+      mapCamera.panTo(MapCamera::HOME_POSITION);
+   }
+   GuiSetTooltip("Set view scope to selected");
+   if (GuiButton(
+          Rectangle { .x = toolbarPosition.x + padding + (iconSize + padding) * 1, .y = toolbarPosition.y + padding, .width = iconSize, .height = iconSize },
+          GuiIconText(ICON_BOX_DOTS_BIG, nullptr)))
+   {
+      inputRequestHandler.setViewScopeFromSelection();
+      mapCamera.panTo(MapCamera::HOME_POSITION);
    }
 
    if (currentDialog != nullptr)
