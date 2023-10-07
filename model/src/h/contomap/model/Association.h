@@ -50,6 +50,11 @@ public:
    [[nodiscard]] bool isIn(contomap::model::Identifiers const &thatScope) const;
 
    /**
+    * @return true if the association is nowhere presented.
+    */
+   [[nodiscard]] bool isWithoutScope() const;
+
+   /**
     * Adds a new role to the association.
     *
     * @return the created role details. Use the result as a template for storing the concrete instance somewhere.
@@ -74,6 +79,8 @@ public:
     * @return true if the association has at least one role.
     */
    [[nodiscard]] bool hasRoles() const;
+
+   void removeTopicReferences(contomap::model::Identifier topicId);
 
 private:
    contomap::model::Identifier id;

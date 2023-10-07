@@ -178,10 +178,17 @@ void Contomap::deleteTopicsCascading(Identifiers toDelete)
 
 void Contomap::deleting(Identifiers &toDelete, Topic &topic)
 {
+   Identifiers associationsToDelete;
    for (auto &[_, association] : associations)
    {
       topic.removeRolesOf(association);
+      association.removeTopicReferences(topic.getId());
+      if (association.isWithoutScope())
+      {
+         associationsToDelete.add(association.getId());
+      }
    }
+   deleteAssociations(associationsToDelete);
 
    for (auto &[_, otherTopic] : topics)
    {

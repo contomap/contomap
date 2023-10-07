@@ -44,6 +44,11 @@ void ContomapViewFixture::shouldHaveAssociationCountOf(size_t expected) const
    EXPECT_EQ(expected, count) << "Wrong number of associations";
 }
 
+void ContomapViewFixture::shouldNotHaveAssociation(Identifier id) const
+{
+   EXPECT_FALSE(view.findAssociation(id).has_value()) << "Association found although shouldn't be present";
+}
+
 void ContomapViewFixture::shouldHaveAssociationThat(Identifier id, std::function<void(Association const &)> const &asserter) const
 {
    auto association = view.findAssociation(id);
