@@ -212,6 +212,11 @@ public:
          handler.setViewScopeFromSelection();
       }
 
+      void setsTheViewScopeToDefault()
+      {
+         handler.setViewScopeToDefault();
+      }
+
       void selects(SelectedType type, Identifier id)
       {
          handler.modifySelection(type, id, SelectionAction::Set);
@@ -502,4 +507,17 @@ TEST_F(EditorTest, newOccurrencesAreInNewViewScope)
    Identifier topicId = when().user().requestsANewTopic();
    then().view().ofMap().shouldHaveTopicThat(
       topicId, [this](Topic const &topic) { EXPECT_TRUE(topic.isIn(viewScope())) << "Topic has no occurrence in this new scope"; });
+}
+
+TEST_F(EditorTest, DISABLED_deletingTopicOfCurrentViewScopeResetsToDefaultViewScope)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   Identifier firstOccurrenceIdOfScopeTopic = occurrenceOf(scopeTopicId).getId();
+   given().user().selects(SelectedType::Occurrence, firstOccurrenceIdOfScopeTopic);
+   given().user().setsTheViewScopeFromSelection();
+   given().user().requestsANewOccurrence(scopeTopicId);
+   given().user().setsTheViewScopeToDefault();
+   given().user().selects(SelectedType::Occurrence, firstOccurrenceIdOfScopeTopic);
+   given().user().deletesTheSelection();
+   // ...currently not possible: Needs explicit entering of a view scope.
 }
