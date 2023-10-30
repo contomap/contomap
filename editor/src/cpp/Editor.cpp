@@ -108,6 +108,7 @@ void Editor::deleteSelection()
    map.deleteAssociations(selection.of(SelectedType::Association));
    map.deleteOccurrences(selection.of(SelectedType::Occurrence));
    selection.clear();
+   verifyViewScopeIsStable();
 }
 
 void Editor::setViewScopeFromSelection()
@@ -129,16 +130,16 @@ void Editor::setViewScopeToDefault()
    setViewScopeTo(Identifiers::ofSingle(map.getDefaultScope()));
 }
 
-void Editor::setViewScopeTo(contomap::model::Identifier id)
+void Editor::setViewScopeTo(Identifier id)
 {
    if (!map.findTopic(id).has_value())
    {
       return;
    }
-   viewScope = Identifiers::ofSingle(id);
+   setViewScopeTo(Identifiers::ofSingle(id));
 }
 
-void Editor::addToViewScope(contomap::model::Identifier id)
+void Editor::addToViewScope(Identifier id)
 {
    if (!map.findTopic(id).has_value())
    {
@@ -147,13 +148,17 @@ void Editor::addToViewScope(contomap::model::Identifier id)
    viewScope.add(id);
 }
 
-void Editor::removeFromViewScope(contomap::model::Identifier id)
+void Editor::removeFromViewScope(Identifier id)
 {
-   viewScope.remove(id);
+   if (!viewScope.remove(id))
+   {
+      return;
+   }
    if (viewScope.empty())
    {
-      viewScope = Identifiers::ofSingle(map.getDefaultScope());
+      viewScope.add(map.getDefaultScope());
    }
+   selection.clear();
 }
 
 contomap::model::Identifiers const &Editor::ofViewScope() const
@@ -181,4 +186,21 @@ void Editor::setViewScopeTo(contomap::model::Identifiers const &ids)
 {
    viewScope = ids;
    selection.clear();
+}
+
+void Editor::verifyViewScopeIsStable()
+{
+   Identifiers unknownIds;
+
+   for (auto id : viewScope)
+   {
+      if (!map.findTopic(id).has_value())
+      {
+         unknownIds.add(id);
+      }
+   }
+   for (auto id : unknownIds)
+   {
+      removeFromViewScope(id);
+   }
 }

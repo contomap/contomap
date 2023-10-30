@@ -37,6 +37,7 @@ public:
 private:
    void createAndSelectOccurrence(contomap::model::Topic &topic, contomap::model::SpacialCoordinate location);
    void setViewScopeTo(contomap::model::Identifiers const &ids);
+   void verifyViewScopeIsStable();
 
    contomap::model::Contomap map;
    contomap::model::Identifiers viewScope;

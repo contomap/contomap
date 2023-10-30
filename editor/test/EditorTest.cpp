@@ -538,19 +538,6 @@ TEST_F(EditorTest, newOccurrencesAreInNewViewScope)
       topicId, [this](Topic const &topic) { EXPECT_TRUE(topic.isIn(viewScope())) << "Topic has no occurrence in this new scope"; });
 }
 
-TEST_F(EditorTest, DISABLED_deletingTopicOfCurrentViewScopeResetsToDefaultViewScope)
-{
-   Identifier scopeTopicId = given().user().requestsANewTopic();
-   Identifier firstOccurrenceIdOfScopeTopic = occurrenceOf(scopeTopicId).getId();
-   given().user().selects(SelectedType::Occurrence, firstOccurrenceIdOfScopeTopic);
-   given().user().setsTheViewScopeFromSelection();
-   given().user().requestsANewOccurrence(scopeTopicId);
-   given().user().setsTheViewScopeToDefault();
-   given().user().selects(SelectedType::Occurrence, firstOccurrenceIdOfScopeTopic);
-   given().user().deletesTheSelection();
-   // ...currently not possible: Needs explicit entering of a view scope.
-}
-
 TEST_F(EditorTest, setViewScopeToSingleTopic)
 {
    Identifier scopeTopicId = given().user().requestsANewTopic();
@@ -596,5 +583,20 @@ TEST_F(EditorTest, removingLastTopicFromViewScopeResetsToDefault)
    given().user().addsToTheViewScope(scopeTopicId);
    given().user().removesFromTheViewScope(defaultViewScope());
    when().user().removesFromTheViewScope(scopeTopicId);
+   then().view().ofViewScope().shouldBe(Identifiers::ofSingle(defaultViewScope()));
+}
+
+TEST_F(EditorTest, deletingTopicOfCurrentViewScopeRemovesItFromViewScope)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   Identifier firstOccurrenceIdOfScopeTopic = occurrenceOf(scopeTopicId).getId();
+   given().user().setsTheViewScopeToBe(scopeTopicId);
+   given().user().requestsANewOccurrence(scopeTopicId);
+   given().user().setsTheViewScopeToDefault();
+   given().user().selects(SelectedType::Occurrence, firstOccurrenceIdOfScopeTopic);
+   given().user().deletesTheSelection();
+   given().user().setsTheViewScopeToBe(scopeTopicId);
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(scopeTopicId).getId());
+   when().user().deletesTheSelection();
    then().view().ofViewScope().shouldBe(Identifiers::ofSingle(defaultViewScope()));
 }
