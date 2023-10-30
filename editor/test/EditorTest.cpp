@@ -11,6 +11,7 @@
 #include "contomap/test/Steps.h"
 
 #include "SelectionFixture.h"
+#include "ViewScopeFixture.h"
 
 using contomap::editor::Editor;
 using contomap::editor::InputRequestHandler;
@@ -30,6 +31,7 @@ using contomap::model::TopicNameValue;
 
 using contomap::test::fixtures::ContomapViewFixture;
 using contomap::test::fixtures::SelectionFixture;
+using contomap::test::fixtures::ViewScopeFixture;
 using contomap::test::matchers::hasName;
 using contomap::test::matchers::isCloseTo;
 using contomap::test::samples::someNameValue;
@@ -227,6 +229,21 @@ public:
          handler.modifySelection(type, id, SelectionAction::Toggle);
       }
 
+      void setsTheViewScopeToBe(Identifier id)
+      {
+         handler.setViewScopeTo(id);
+      }
+
+      void addsToTheViewScope(Identifier id)
+      {
+         handler.addToViewScope(id);
+      }
+
+      void removesFromTheViewScope(Identifier id)
+      {
+         handler.removeFromViewScope(id);
+      }
+
    private:
       InputRequestHandler &handler;
    };
@@ -237,6 +254,7 @@ public:
       explicit ViewFixture(contomap::editor::View &view)
          : mapViewFixture(view.ofMap())
          , selectionFixture(view.ofSelection())
+         , viewScopeFixture(view.ofViewScope())
       {
       }
 
@@ -250,9 +268,15 @@ public:
          return selectionFixture;
       }
 
+      ViewScopeFixture &ofViewScope()
+      {
+         return viewScopeFixture;
+      }
+
    private:
       ContomapViewFixture mapViewFixture;
       SelectionFixture selectionFixture;
+      ViewScopeFixture viewScopeFixture;
    };
 
    EditorTest()
@@ -269,6 +293,11 @@ public:
    ViewFixture &view()
    {
       return viewFixture;
+   }
+
+   Identifier defaultViewScope()
+   {
+      return instance.ofMap().getDefaultScope();
    }
 
    Identifiers viewScope()
@@ -520,4 +549,52 @@ TEST_F(EditorTest, DISABLED_deletingTopicOfCurrentViewScopeResetsToDefaultViewSc
    given().user().selects(SelectedType::Occurrence, firstOccurrenceIdOfScopeTopic);
    given().user().deletesTheSelection();
    // ...currently not possible: Needs explicit entering of a view scope.
+}
+
+TEST_F(EditorTest, setViewScopeToSingleTopic)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   when().user().setsTheViewScopeToBe(scopeTopicId);
+   then().view().ofViewScope().shouldBe(Identifiers::ofSingle(scopeTopicId));
+}
+
+TEST_F(EditorTest, unknownTopicsCanNotBeSetToBeTheViewScope)
+{
+   Identifiers originalScope = viewScope();
+   Identifier unknownId = Identifier::random();
+   when().user().setsTheViewScopeToBe(unknownId);
+   then().view().ofViewScope().shouldBe(originalScope);
+}
+
+TEST_F(EditorTest, addViewScopeOfSingleTopic)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   when().user().addsToTheViewScope(scopeTopicId);
+   then().view().ofViewScope().shouldContain(scopeTopicId);
+   asWellAs().view().ofViewScope().shouldContain(defaultViewScope());
+}
+
+TEST_F(EditorTest, unknownTopicsCanNotBeAddedToTheViewScope)
+{
+   Identifiers originalScope = viewScope();
+   Identifier unknownId = Identifier::random();
+   when().user().addsToTheViewScope(unknownId);
+   then().view().ofViewScope().shouldBe(originalScope);
+}
+
+TEST_F(EditorTest, removeSingleTopicFromViewScope)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   given().user().addsToTheViewScope(scopeTopicId);
+   when().user().removesFromTheViewScope(defaultViewScope());
+   then().view().ofViewScope().shouldBe(Identifiers::ofSingle(scopeTopicId));
+}
+
+TEST_F(EditorTest, removingLastTopicFromViewScopeResetsToDefault)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   given().user().addsToTheViewScope(scopeTopicId);
+   given().user().removesFromTheViewScope(defaultViewScope());
+   when().user().removesFromTheViewScope(scopeTopicId);
+   then().view().ofViewScope().shouldBe(Identifiers::ofSingle(defaultViewScope()));
 }

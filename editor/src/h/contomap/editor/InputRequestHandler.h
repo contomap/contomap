@@ -77,6 +77,29 @@ public:
     * Sets the view scope to the default.
     */
    virtual void setViewScopeToDefault() = 0;
+
+   /**
+    * Sets the view scope to be only the identified topic.
+    *
+    * @param id identifier of the topic to be the new view scope.
+    */
+   virtual void setViewScopeTo(contomap::model::Identifier id) = 0;
+
+   /**
+    * Adds the given topic identifier to the current view scope.
+    *
+    * @param id identifier of the topic to be added to the view scope.
+    */
+   virtual void addToViewScope(contomap::model::Identifier id) = 0;
+
+   /**
+    * Removes the given topic identifier from the current view scope.
+    * If the remaining view scope becomes empty, the current view scope will be based on the default one.
+    * Removing an identifier that is not in the current view scope does nothing.
+    *
+    * @param id the identifier of the topic to be removed from the view scope.
+    */
+   virtual void removeFromViewScope(contomap::model::Identifier id) = 0;
 };
 
 } // namespace contomap::editor

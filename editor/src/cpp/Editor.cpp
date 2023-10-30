@@ -129,6 +129,33 @@ void Editor::setViewScopeToDefault()
    setViewScopeTo(Identifiers::ofSingle(map.getDefaultScope()));
 }
 
+void Editor::setViewScopeTo(contomap::model::Identifier id)
+{
+   if (!map.findTopic(id).has_value())
+   {
+      return;
+   }
+   viewScope = Identifiers::ofSingle(id);
+}
+
+void Editor::addToViewScope(contomap::model::Identifier id)
+{
+   if (!map.findTopic(id).has_value())
+   {
+      return;
+   }
+   viewScope.add(id);
+}
+
+void Editor::removeFromViewScope(contomap::model::Identifier id)
+{
+   viewScope.remove(id);
+   if (viewScope.empty())
+   {
+      viewScope = Identifiers::ofSingle(map.getDefaultScope());
+   }
+}
+
 contomap::model::Identifiers const &Editor::ofViewScope() const
 {
    return viewScope;

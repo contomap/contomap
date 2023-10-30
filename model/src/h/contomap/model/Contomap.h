@@ -22,10 +22,7 @@ public:
     */
    static Contomap newMap();
 
-   /**
-    * @return the identifier of the default topic scope.
-    */
-   [[nodiscard]] contomap::model::Identifier getDefaultScope() const;
+   [[nodiscard]] contomap::model::Identifier getDefaultScope() const override;
 
    /**
     * Creates a new topic and adds it to the map.
