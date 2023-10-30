@@ -1,4 +1,5 @@
 #include <cmath>
+#include <sstream>
 
 #include <raygui/raygui.h>
 
@@ -192,6 +193,7 @@ void MainWindow::processInput()
          inputRequestHandler.deleteSelection();
       }
 
+      // TODO: avoid map interaction click when on view scope bar.
       if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && (static_cast<float>(GetMouseY()) > (layout.buttonHeight() + layout.padding() * 2.0f)))
       {
          auto action = IsKeyDown(KEY_LEFT_CONTROL) ? SelectionAction::Toggle : SelectionAction::Set;
@@ -287,14 +289,7 @@ void MainWindow::drawMap(RenderContext const &context)
    auto visibleTopics = map.find(Topics::thatAreIn(viewScope));
    for (Topic const &visibleTopic : visibleTopics)
    {
-      std::string nameText;
-      auto allNames = visibleTopic.allNames();
-      for (TopicName const &name : allNames)
-      {
-         // TODO: filter if in scope, calculate full name plate
-         nameText = name.getValue().raw();
-      }
-
+      std::string nameText = bestTitleFor(visibleTopic, viewScope);
       std::vector<std::reference_wrapper<Role const>> roles;
       for (Role const &role : visibleTopic.rolesAssociatedWith(associationIds))
       {
@@ -395,30 +390,65 @@ void MainWindow::drawUserInterface(RenderContext const &context)
    auto contentSize = context.getContentSize();
    auto iconSize = layout.buttonHeight();
    auto padding = layout.padding();
-   Vector2 toolbarPosition { .x = 0, .y = 0 };
-   Vector2 toolbarSize { .x = contentSize.x, .y = iconSize + (padding * 2.0f) };
-   GuiPanel(Rectangle { toolbarPosition.x, toolbarPosition.y, toolbarSize.x, toolbarSize.y }, nullptr);
-   GuiSetTooltip("Show help window");
-   if (GuiButton(
-          Rectangle { .x = toolbarPosition.x + toolbarSize.x - (padding + iconSize), .y = toolbarPosition.y + padding, .width = iconSize, .height = iconSize },
-          GuiIconText(ICON_HELP, nullptr)))
    {
-      openHelpDialog();
+      Vector2 toolbarPosition { .x = 0, .y = 0 };
+      Vector2 toolbarSize { .x = contentSize.x, .y = iconSize + (padding * 2.0f) };
+      GuiPanel(Rectangle { toolbarPosition.x, toolbarPosition.y, toolbarSize.x, toolbarSize.y }, nullptr);
+      GuiSetTooltip("Show help window");
+      if (GuiButton(
+             Rectangle {
+                .x = toolbarPosition.x + toolbarSize.x - (padding + iconSize), .y = toolbarPosition.y + padding, .width = iconSize, .height = iconSize },
+             GuiIconText(ICON_HELP, nullptr)))
+      {
+         openHelpDialog();
+      }
+      GuiSetTooltip("Set home view scope");
+      if (GuiButton(Rectangle { .x = toolbarPosition.x + padding, .y = toolbarPosition.y + padding, .width = iconSize, .height = iconSize },
+             GuiIconText(ICON_HOUSE, nullptr)))
+      {
+         inputRequestHandler.setViewScopeToDefault();
+         mapCamera.panTo(MapCamera::HOME_POSITION);
+      }
+      GuiSetTooltip("Set view scope to selected");
+      if (GuiButton(
+             Rectangle { .x = toolbarPosition.x + padding + (iconSize + padding) * 1, .y = toolbarPosition.y + padding, .width = iconSize, .height = iconSize },
+             GuiIconText(ICON_BOX_DOTS_BIG, nullptr)))
+      {
+         inputRequestHandler.setViewScopeFromSelection();
+         mapCamera.panTo(MapCamera::HOME_POSITION);
+      }
    }
-   GuiSetTooltip("Set home view scope");
-   if (GuiButton(Rectangle { .x = toolbarPosition.x + padding, .y = toolbarPosition.y + padding, .width = iconSize, .height = iconSize },
-          GuiIconText(ICON_HOUSE, nullptr)))
+
    {
-      inputRequestHandler.setViewScopeToDefault();
-      mapCamera.panTo(MapCamera::HOME_POSITION);
-   }
-   GuiSetTooltip("Set view scope to selected");
-   if (GuiButton(
-          Rectangle { .x = toolbarPosition.x + padding + (iconSize + padding) * 1, .y = toolbarPosition.y + padding, .width = iconSize, .height = iconSize },
-          GuiIconText(ICON_BOX_DOTS_BIG, nullptr)))
-   {
-      inputRequestHandler.setViewScopeFromSelection();
-      mapCamera.panTo(MapCamera::HOME_POSITION);
+      Vector2 viewScopeSize { .x = contentSize.x, .y = iconSize + (padding * 2.0f) };
+      Vector2 viewScopePosition { .x = 0, .y = contentSize.y - viewScopeSize.y };
+      Rectangle viewScopeBounds { .x = viewScopePosition.x, .y = viewScopePosition.y, .width = viewScopeSize.x, .height = viewScopeSize.y };
+      GuiPanel(viewScopeBounds, nullptr);
+
+      auto viewScope = view.ofViewScope();
+      std::ostringstream buf;
+      auto add = [&buf](std::string const &name) {
+         bool hasPrevious = buf.tellp() != std::streampos(0);
+         if (hasPrevious)
+         {
+            buf << " | ";
+         }
+         buf << name;
+      };
+
+      for (auto id : viewScope)
+      {
+         auto const &topic = view.ofMap().findTopic(id);
+         if (!topic.has_value())
+         {
+            add("???");
+         }
+         else
+         {
+            add(bestTitleFor(topic.value(), viewScope));
+         }
+      }
+      GuiLabel(viewScopeBounds, buf.str().c_str());
    }
 
    if (currentDialog != nullptr)
@@ -485,4 +515,16 @@ MapCamera::ZoomOperation MainWindow::doubledRelative(bool nearer)
          return (it != ZOOM_LEVELS.rend()) ? it->second : ZOOM_LEVELS[0].second;
       }
    };
+}
+
+std::string MainWindow::bestTitleFor(Topic const &topic, Identifiers const &)
+{
+   auto allNames = topic.allNames();
+   std::string result("---");
+   for (TopicName const &name : allNames)
+   {
+      // TODO: filter if in scope, calculate full name plate
+      result = name.getValue().raw();
+   }
+   return result;
 }

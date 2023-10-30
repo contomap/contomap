@@ -235,6 +235,7 @@ private:
 
    [[nodiscard]] static std::vector<std::pair<int, contomap::frontend::MapCamera::ZoomFactor>> generateZoomLevels();
    [[nodiscard]] static contomap::frontend::MapCamera::ZoomOperation doubledRelative(bool nearer);
+   [[nodiscard]] static std::string bestTitleFor(contomap::model::Topic const &topic, contomap::model::Identifiers const &viewScope);
 
    void processInput();
    void updateState();
