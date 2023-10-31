@@ -424,31 +424,72 @@ void MainWindow::drawUserInterface(RenderContext const &context)
       Vector2 viewScopePosition { .x = 0, .y = contentSize.y - viewScopeSize.y };
       Rectangle viewScopeBounds { .x = viewScopePosition.x, .y = viewScopePosition.y, .width = viewScopeSize.x, .height = viewScopeSize.y };
       GuiPanel(viewScopeBounds, nullptr);
+      float buttonStartX = viewScopePosition.x + padding;
 
       auto viewScope = view.ofViewScope();
-      std::ostringstream buf;
-      auto add = [&buf](std::string const &name) {
-         bool hasPrevious = buf.tellp() != std::streampos(0);
-         if (hasPrevious)
-         {
-            buf << " | ";
-         }
-         buf << name;
-      };
-
-      for (auto id : viewScope)
+      if (lastViewScope != viewScope)
       {
-         auto const &topic = view.ofMap().findTopic(id);
-         if (!topic.has_value())
+         viewScopeListStartIndex = 0;
+         lastViewScope = viewScope;
+      }
+
+      GuiSetTooltip("Scroll view scope left");
+      if (viewScopeListStartIndex == 0)
+      {
+         GuiSetState(STATE_DISABLED);
+      }
+      if (GuiButton(
+             Rectangle { .x = buttonStartX, .y = viewScopePosition.y + padding, .width = iconSize, .height = iconSize }, GuiIconText(ICON_ARROW_LEFT, nullptr)))
+      {
+         if (viewScopeListStartIndex > 0)
          {
-            add("???");
-         }
-         else
-         {
-            add(bestTitleFor(topic.value(), viewScope));
+            viewScopeListStartIndex--;
          }
       }
-      GuiLabel(viewScopeBounds, buf.str().c_str());
+      GuiSetState(STATE_NORMAL);
+      buttonStartX += iconSize + padding;
+      GuiSetTooltip("Scroll view scope right");
+      if ((viewScopeListStartIndex + 1) >= viewScope.size())
+      {
+         viewScopeListStartIndex = viewScope.size() - 1;
+         GuiSetState(STATE_DISABLED);
+      }
+      if (GuiButton(
+             Rectangle {
+                .x = viewScopePosition.x + padding + (iconSize + padding) * 1, .y = viewScopePosition.y + padding, .width = iconSize, .height = iconSize },
+             GuiIconText(ICON_ARROW_RIGHT, nullptr)))
+      {
+         viewScopeListStartIndex++;
+      }
+      GuiSetState(STATE_NORMAL);
+      buttonStartX += iconSize + padding;
+
+      auto add = [this, &buttonStartX, viewScopePosition, padding, iconSize](Identifier id, std::string const &name) {
+         Font font = GuiGetFont();
+         auto fontSize = static_cast<float>(GuiGetStyle(DEFAULT, TEXT_SIZE));
+         auto spacing = static_cast<float>(GuiGetStyle(DEFAULT, TEXT_SPACING));
+         auto textPadding = static_cast<float>(GuiGetStyle(CHECKBOX, TEXT_PADDING));
+         auto textSize = MeasureTextEx(font, name.c_str(), fontSize, spacing);
+
+         float labelWidth = textSize.x + textPadding * 2;
+         if (!GuiToggle(Rectangle { .x = buttonStartX, .y = viewScopePosition.y + padding, .width = labelWidth, .height = iconSize }, name.c_str(), true))
+         {
+            inputRequestHandler.removeFromViewScope(id);
+         }
+         buttonStartX += labelWidth + padding;
+      };
+
+      size_t scopeIndex = 0;
+      for (auto id : viewScope)
+      {
+         scopeIndex++;
+         if (scopeIndex <= viewScopeListStartIndex)
+         {
+            continue;
+         }
+         auto const &topic = view.ofMap().findTopic(id);
+         add(id, topic.has_value() ? bestTitleFor(topic.value(), viewScope) : "???");
+      }
    }
 
    if (currentDialog != nullptr)

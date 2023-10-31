@@ -259,6 +259,9 @@ private:
    contomap::editor::View &view;
    contomap::editor::InputRequestHandler &inputRequestHandler;
 
+   contomap::model::Identifiers lastViewScope;
+   size_t viewScopeListStartIndex = 0;
+
    std::unique_ptr<contomap::frontend::Dialog> currentDialog;
    std::unique_ptr<contomap::frontend::Dialog> pendingDialog;
 
