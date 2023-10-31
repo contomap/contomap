@@ -10,8 +10,8 @@
 #pragma GCC diagnostic pop
 
 #include "contomap/frontend/HelpDialog.h"
+#include "contomap/frontend/LocateTopicAndActDialog.h"
 #include "contomap/frontend/MainWindow.h"
-#include "contomap/frontend/NewOccurrenceDialog.h"
 #include "contomap/frontend/NewTopicDialog.h"
 #include "contomap/model/Associations.h"
 #include "contomap/model/Topics.h"
@@ -19,6 +19,7 @@
 using contomap::editor::InputRequestHandler;
 using contomap::editor::SelectedType;
 using contomap::editor::SelectionAction;
+using contomap::frontend::LocateTopicAndActDialog;
 using contomap::frontend::MainWindow;
 using contomap::frontend::MapCamera;
 using contomap::frontend::RenderContext;
@@ -181,6 +182,10 @@ void MainWindow::processInput()
       if (IsKeyReleased(KEY_O))
       {
          openNewOccurrenceDialog();
+      }
+      if (IsKeyReleased(KEY_T))
+      {
+         openNewLocateTopicAndActDialog();
       }
 
       if (IsKeyReleased(KEY_L))
@@ -436,7 +441,7 @@ void MainWindow::drawUserInterface(RenderContext const &context)
       GuiSetTooltip("Scroll view scope left");
       if (viewScopeListStartIndex == 0)
       {
-         GuiSetState(STATE_DISABLED);
+         GuiDisable();
       }
       if (GuiButton(
              Rectangle { .x = buttonStartX, .y = viewScopePosition.y + padding, .width = iconSize, .height = iconSize }, GuiIconText(ICON_ARROW_LEFT, nullptr)))
@@ -446,13 +451,13 @@ void MainWindow::drawUserInterface(RenderContext const &context)
             viewScopeListStartIndex--;
          }
       }
-      GuiSetState(STATE_NORMAL);
+      GuiEnable();
       buttonStartX += iconSize + padding;
       GuiSetTooltip("Scroll view scope right");
       if ((viewScopeListStartIndex + 1) >= viewScope.size())
       {
          viewScopeListStartIndex = viewScope.size() - 1;
-         GuiSetState(STATE_DISABLED);
+         GuiDisable();
       }
       if (GuiButton(
              Rectangle {
@@ -461,7 +466,7 @@ void MainWindow::drawUserInterface(RenderContext const &context)
       {
          viewScopeListStartIndex++;
       }
-      GuiSetState(STATE_NORMAL);
+      GuiEnable();
       buttonStartX += iconSize + padding;
 
       auto add = [this, &buttonStartX, viewScopePosition, padding, iconSize](Identifier id, std::string const &name) {
@@ -521,7 +526,18 @@ void MainWindow::openNewTopicDialog()
 
 void MainWindow::openNewOccurrenceDialog()
 {
-   pendingDialog = std::make_unique<contomap::frontend::NewOccurrenceDialog>(inputRequestHandler, view.ofMap(), layout, spacialCameraLocation());
+   std::vector<LocateTopicAndActDialog::TitledAction> actions { LocateTopicAndActDialog::newOccurrence(spacialCameraLocation()) };
+   pendingDialog = std::make_unique<LocateTopicAndActDialog>(inputRequestHandler, view.ofMap(), layout, actions);
+}
+
+void MainWindow::openNewLocateTopicAndActDialog()
+{
+   std::vector<LocateTopicAndActDialog::TitledAction> actions {
+      LocateTopicAndActDialog::setViewScope(),
+      LocateTopicAndActDialog::addToViewScope(),
+      LocateTopicAndActDialog::newOccurrence(spacialCameraLocation()),
+   };
+   pendingDialog = std::make_unique<LocateTopicAndActDialog>(inputRequestHandler, view.ofMap(), layout, actions);
 }
 
 SpacialCoordinate MainWindow::spacialCameraLocation()

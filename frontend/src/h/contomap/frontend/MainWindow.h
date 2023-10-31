@@ -248,6 +248,7 @@ private:
    void openHelpDialog();
    void openNewTopicDialog();
    void openNewOccurrenceDialog();
+   void openNewLocateTopicAndActDialog();
 
    [[nodiscard]] contomap::model::SpacialCoordinate spacialCameraLocation();
 
