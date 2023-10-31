@@ -48,6 +48,11 @@ public:
    [[nodiscard]] CollectionType::const_iterator end() const;
 
    /**
+    * @return the number of identifiers in the set.
+    */
+   size_t size() const;
+
+   /**
     * Adds the given identifier to the collection. If the identifier is already contained, nothing happens.
     *
     * @param id the identifier to add.
