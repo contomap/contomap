@@ -125,6 +125,16 @@ void Editor::setViewScopeFromSelection()
    }
 }
 
+void Editor::addToViewScopeFromSelection()
+{
+   auto &occurrenceIds = selection.of(SelectedType::Occurrence);
+   Identifiers newViewScope;
+   for (Topic &topic : map.find(Topics::thatOccurAs(occurrenceIds)))
+   {
+      addToViewScope(topic.getId());
+   }
+}
+
 void Editor::setViewScopeToDefault()
 {
    setViewScopeTo(Identifiers::ofSingle(map.getDefaultScope()));

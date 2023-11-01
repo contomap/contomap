@@ -422,6 +422,13 @@ void MainWindow::drawUserInterface(RenderContext const &context)
          inputRequestHandler.setViewScopeFromSelection();
          mapCamera.panTo(MapCamera::HOME_POSITION);
       }
+      GuiSetTooltip("Add selected to view scope");
+      if (GuiButton(
+             Rectangle { .x = toolbarPosition.x + padding + (iconSize + padding) * 2, .y = toolbarPosition.y + padding, .width = iconSize, .height = iconSize },
+             "+v"))
+      {
+         inputRequestHandler.addToViewScopeFromSelection();
+      }
    }
 
    {

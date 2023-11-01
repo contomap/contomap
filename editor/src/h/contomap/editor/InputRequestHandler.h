@@ -74,6 +74,11 @@ public:
    virtual void setViewScopeFromSelection() = 0;
 
    /**
+    * Adds to the view scope from the current selection.
+    */
+   virtual void addToViewScopeFromSelection() = 0;
+
+   /**
     * Sets the view scope to the default.
     */
    virtual void setViewScopeToDefault() = 0;

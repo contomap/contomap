@@ -25,6 +25,7 @@ public:
    void linkSelection() override;
    void deleteSelection() override;
    void setViewScopeFromSelection() override;
+   void addToViewScopeFromSelection() override;
    void setViewScopeToDefault() override;
    void setViewScopeTo(contomap::model::Identifier id) override;
    void addToViewScope(contomap::model::Identifier id) override;
