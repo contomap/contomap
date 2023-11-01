@@ -12,6 +12,7 @@
 #include "contomap/frontend/HelpDialog.h"
 #include "contomap/frontend/LocateTopicAndActDialog.h"
 #include "contomap/frontend/MainWindow.h"
+#include "contomap/frontend/Names.h"
 #include "contomap/frontend/NewTopicDialog.h"
 #include "contomap/model/Associations.h"
 #include "contomap/model/Topics.h"
@@ -22,6 +23,7 @@ using contomap::editor::SelectionAction;
 using contomap::frontend::LocateTopicAndActDialog;
 using contomap::frontend::MainWindow;
 using contomap::frontend::MapCamera;
+using contomap::frontend::Names;
 using contomap::frontend::RenderContext;
 using contomap::model::Association;
 using contomap::model::Associations;
@@ -294,7 +296,7 @@ void MainWindow::drawMap(RenderContext const &context)
    auto visibleTopics = map.find(Topics::thatAreIn(viewScope));
    for (Topic const &visibleTopic : visibleTopics)
    {
-      std::string nameText = bestTitleFor(visibleTopic, viewScope);
+      std::string nameText = bestTitleFor(visibleTopic);
       std::vector<std::reference_wrapper<Role const>> roles;
       for (Role const &role : visibleTopic.rolesAssociatedWith(associationIds))
       {
@@ -500,7 +502,7 @@ void MainWindow::drawUserInterface(RenderContext const &context)
             continue;
          }
          auto const &topic = view.ofMap().findTopic(id);
-         add(id, topic.has_value() ? bestTitleFor(topic.value(), viewScope) : "???");
+         add(id, topic.has_value() ? bestTitleFor(topic.value()) : "???");
       }
    }
 
@@ -581,14 +583,7 @@ MapCamera::ZoomOperation MainWindow::doubledRelative(bool nearer)
    };
 }
 
-std::string MainWindow::bestTitleFor(Topic const &topic, Identifiers const &)
+std::string MainWindow::bestTitleFor(Topic const &topic)
 {
-   auto allNames = topic.allNames();
-   std::string result("---");
-   for (TopicName const &name : allNames)
-   {
-      // TODO: filter if in scope, calculate full name plate
-      result = name.getValue().raw();
-   }
-   return result;
+   return Names::forDisplay(topic, view.ofMap().getDefaultScope())[0];
 }

@@ -31,8 +31,11 @@ std::unique_ptr<Filter<Topic>> Topics::withANameLike(std::string const &searchVa
       }
       return ::strstr(nameValue.c_str(), lowerSearchValue.c_str()) != nullptr;
    };
-   return Filter<Topic>::of([nameMatcher](Topic const &topic, ContomapView const &) {
+   return Filter<Topic>::of([nameMatcher, searchIsEmpty = searchValue.empty()](Topic const &topic, ContomapView const &) {
       auto names = std::ranges::common_view(topic.allNames());
-      return std::any_of(names.begin(), names.end(), nameMatcher);
+      auto begin = names.begin();
+      auto end = names.end();
+      bool matchesUnnamed = (begin == end) && searchIsEmpty;
+      return matchesUnnamed || std::any_of(begin, end, nameMatcher);
    });
 }

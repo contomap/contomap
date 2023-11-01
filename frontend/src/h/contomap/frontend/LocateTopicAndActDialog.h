@@ -94,7 +94,7 @@ private:
    class TopicList
    {
    public:
-      TopicList() = default;
+      explicit TopicList(contomap::model::ContomapView const &view);
 
       void reset();
       [[nodiscard]] std::optional<contomap::model::Identifier> draw(Rectangle bounds, contomap::infrastructure::Search<contomap::model::Topic const> topics);
@@ -110,6 +110,8 @@ private:
       float guiStyleFloat(int control, int property);
       void offsetSelection(SelectionOffset offset, size_t visibleCount);
 
+      contomap::model::ContomapView const &view;
+      
       size_t scrollIndex = 0;
       std::optional<size_t> selectedIndex;
       std::optional<contomap::model::Identifier> selectedTopicId;

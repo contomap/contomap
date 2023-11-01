@@ -1,16 +1,24 @@
 #include <raygui/raygui.h>
 
 #include "contomap/frontend/LocateTopicAndActDialog.h"
+#include "contomap/frontend/Names.h"
 #include "contomap/model/Topics.h"
 
 using contomap::editor::InputRequestHandler;
 using contomap::frontend::LocateTopicAndActDialog;
+using contomap::frontend::Names;
 using contomap::frontend::RenderContext;
+using contomap::model::ContomapView;
 using contomap::model::Identifier;
 using contomap::model::SpacialCoordinate;
 using contomap::model::Topic;
 using contomap::model::TopicName;
 using contomap::model::Topics;
+
+LocateTopicAndActDialog::TopicList::TopicList(ContomapView const &view)
+   : view(view)
+{
+}
 
 void LocateTopicAndActDialog::TopicList::guiDrawRectangle(Rectangle rec, int borderWidth, Color borderColor, Color color)
 {
@@ -80,7 +88,7 @@ std::optional<Identifier> LocateTopicAndActDialog::TopicList::draw(Rectangle bou
    bool somethingFocused = false;
    for (Topic const &topic : topics)
    {
-      for (TopicName const &name : topic.allNames())
+      for (std::string const &name : Names::forDisplay(topic, view.getDefaultScope()))
       {
          totalCount++;
          if (!selectedTopicId.has_value() && selectedIndex.has_value() && (selectedIndex.value() == nameIndex))
@@ -118,7 +126,7 @@ std::optional<Identifier> LocateTopicAndActDialog::TopicList::draw(Rectangle bou
             guiDrawRectangle(itemBounds, GuiGetStyle(LISTVIEW, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(LISTVIEW, BORDER_COLOR_FOCUSED)), 1.0f),
                Fade(GetColor(GuiGetStyle(LISTVIEW, BASE_COLOR_FOCUSED)), 1.0f));
          }
-         GuiLabel(itemBounds, name.getValue().raw().c_str());
+         GuiLabel(itemBounds, name.c_str());
 
          itemBounds.y += itemIntervalHeight;
       }
@@ -220,12 +228,13 @@ void LocateTopicAndActDialog::TopicList::offsetSelection(SelectionOffset offset,
    }
 }
 
-LocateTopicAndActDialog::LocateTopicAndActDialog(contomap::editor::InputRequestHandler &inputRequestHandler, contomap::model::ContomapView const &view,
+LocateTopicAndActDialog::LocateTopicAndActDialog(contomap::editor::InputRequestHandler &inputRequestHandler, ContomapView const &view,
    contomap::frontend::Layout const &layout, std::vector<TitledAction> actions)
    : inputRequestHandler(inputRequestHandler)
    , view(view)
    , layout(layout)
    , actions(std::move(actions))
+   , topicList(view)
 {
    searchInput.fill(0x00);
 }
