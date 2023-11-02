@@ -244,9 +244,14 @@ public:
          handler.removeFromViewScope(id);
       }
 
-      void cyclesTheSelectedOccurrence()
+      void cyclesTheSelectedOccurrenceForward()
       {
-         handler.cycleSelectedOccurrence();
+         handler.cycleSelectedOccurrenceForward();
+      }
+
+      void cyclesTheSelectedOccurrenceReverse()
+      {
+         handler.cycleSelectedOccurrenceReverse();
       }
 
    private:
@@ -606,26 +611,51 @@ TEST_F(EditorTest, deletingTopicOfCurrentViewScopeRemovesItFromViewScope)
    then().view().ofViewScope().shouldBe(Identifiers::ofSingle(defaultViewScope()));
 }
 
-TEST_F(EditorTest, cyclingThroughOccurrencesSingle)
+TEST_F(EditorTest, cyclingThroughOccurrencesSingleForward)
 {
    Identifier topicId = given().user().requestsANewTopic();
    Identifier occurrenceId = occurrenceOf(topicId).getId();
    given().user().selects(SelectedType::Occurrence, occurrenceId);
-   when().user().cyclesTheSelectedOccurrence();
+   when().user().cyclesTheSelectedOccurrenceForward();
    then().view().ofSelection().should(
       [occurrenceId](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers::ofSingle(occurrenceId))); });
 }
 
-TEST_F(EditorTest, cyclingThroughOccurrencesToSecondInSameScope)
+TEST_F(EditorTest, cyclingThroughOccurrencesSingleReverse)
+{
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier occurrenceId = occurrenceOf(topicId).getId();
+   given().user().selects(SelectedType::Occurrence, occurrenceId);
+   when().user().cyclesTheSelectedOccurrenceReverse();
+   then().view().ofSelection().should(
+      [occurrenceId](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers::ofSingle(occurrenceId))); });
+}
+
+TEST_F(EditorTest, cyclingThroughOccurrencesToSecondInSameScopeForward)
 {
    Identifier topicId = given().user().requestsANewTopic();
    Identifier occurrenceId = occurrenceOf(topicId).getId();
    given().user().requestsANewOccurrence(topicId);
    given().user().selects(SelectedType::Occurrence, occurrenceId);
-   when().user().cyclesTheSelectedOccurrence();
+   when().user().cyclesTheSelectedOccurrenceForward();
    then().view().ofSelection().should([occurrenceId](Selection const &selection) {
       EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::SizeIs(1));
       EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Not(testing::Eq(Identifiers::ofSingle(occurrenceId))));
+   });
+}
+
+TEST_F(EditorTest, cyclingThroughOccurrencesToSecondInSameScopeReverse)
+{
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier occurrenceId = occurrenceOf(topicId).getId();
+   given().user().requestsANewOccurrence(topicId);
+   given().user().requestsANewOccurrence(topicId);
+   given().user().selects(SelectedType::Occurrence, occurrenceId);
+   given().user().cyclesTheSelectedOccurrenceForward();
+   given().user().cyclesTheSelectedOccurrenceReverse();
+   then().view().ofSelection().should([occurrenceId](Selection const &selection) {
+      EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::SizeIs(1));
+      EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers::ofSingle(occurrenceId)));
    });
 }
 
@@ -635,8 +665,8 @@ TEST_F(EditorTest, cyclingThroughOccurrencesBackToOriginalInSameScope)
    Identifier occurrenceId = occurrenceOf(topicId).getId();
    given().user().requestsANewOccurrence(topicId);
    given().user().selects(SelectedType::Occurrence, occurrenceId);
-   given().user().cyclesTheSelectedOccurrence();
-   when().user().cyclesTheSelectedOccurrence();
+   given().user().cyclesTheSelectedOccurrenceForward();
+   when().user().cyclesTheSelectedOccurrenceForward();
    then().view().ofSelection().should(
       [occurrenceId](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers::ofSingle(occurrenceId))); });
 }
@@ -650,7 +680,7 @@ TEST_F(EditorTest, cyclingThroughOccurrencesIsIgnoredIfMoreThanOneOccurrenceSele
    Identifier occurrenceId2 = occurrenceOf(topicId2).getId();
    given().user().selects(SelectedType::Occurrence, occurrenceId1);
    given().user().togglesSelectionOf(SelectedType::Occurrence, occurrenceId2);
-   when().user().cyclesTheSelectedOccurrence();
+   when().user().cyclesTheSelectedOccurrenceForward();
    then().view().ofSelection().should([](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::SizeIs(2)); });
 }
 
@@ -663,7 +693,7 @@ TEST_F(EditorTest, cyclingThroughOccurrencesToSecondInOtherScope)
    given().user().requestsANewOccurrence(topicId);
    given().user().setsTheViewScopeToDefault();
    given().user().selects(SelectedType::Occurrence, occurrenceId);
-   when().user().cyclesTheSelectedOccurrence();
+   when().user().cyclesTheSelectedOccurrenceForward();
    then().view().ofSelection().should([occurrenceId](Selection const &selection) {
       EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::SizeIs(1));
       EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Not(testing::Eq(Identifiers::ofSingle(occurrenceId))));

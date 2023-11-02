@@ -116,6 +116,17 @@ Occurrence const &Topic::nextOccurrenceAfter(Identifier reference) const
    return (it != occurrences.end()) ? it->second : occurrences.begin()->second;
 }
 
+Occurrence const &Topic::previousOccurrenceBefore(Identifier reference) const
+{
+   auto it = occurrences.find(reference);
+   if (it == occurrences.end())
+   {
+      throw std::runtime_error("unknown occurrence requested");
+   }
+   it--;
+   return (it != occurrences.end()) ? it->second : occurrences.rbegin()->second;
+}
+
 Search<Role const> Topic::rolesAssociatedWith(Identifiers associations) const // NOLINT
 {
    for (auto const &[_, role] : roles)

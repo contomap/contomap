@@ -171,7 +171,17 @@ void Editor::removeFromViewScope(Identifier id)
    selection.clear();
 }
 
-void Editor::cycleSelectedOccurrence()
+void Editor::cycleSelectedOccurrenceForward()
+{
+   cycleSelectedOccurrence(true);
+}
+
+void Editor::cycleSelectedOccurrenceReverse()
+{
+   cycleSelectedOccurrence(false);
+}
+
+void Editor::cycleSelectedOccurrence(bool forward)
 {
    if (!selection.hasSoleEntryFor(SelectedType::Occurrence))
    {
@@ -180,7 +190,7 @@ void Editor::cycleSelectedOccurrence()
    Identifier originalOccurrenceId = *selection.of(SelectedType::Occurrence).begin();
    for (Topic &topic : map.find(Topics::thatOccurAs(Identifiers::ofSingle(originalOccurrenceId))))
    {
-      auto const &nextOccurrence = topic.nextOccurrenceAfter(originalOccurrenceId);
+      auto const &nextOccurrence = forward ? topic.nextOccurrenceAfter(originalOccurrenceId) : topic.previousOccurrenceBefore(originalOccurrenceId);
       viewScope = nextOccurrence.getScope();
       selection.setSole(SelectedType::Occurrence, nextOccurrence.getId());
    }

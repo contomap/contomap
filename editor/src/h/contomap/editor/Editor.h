@@ -30,7 +30,8 @@ public:
    void setViewScopeTo(contomap::model::Identifier id) override;
    void addToViewScope(contomap::model::Identifier id) override;
    void removeFromViewScope(contomap::model::Identifier id) override;
-   void cycleSelectedOccurrence() override;
+   void cycleSelectedOccurrenceForward() override;
+   void cycleSelectedOccurrenceReverse() override;
 
    [[nodiscard]] contomap::model::Identifiers const &ofViewScope() const override;
    [[nodiscard]] contomap::model::ContomapView const &ofMap() const override;
@@ -38,6 +39,7 @@ public:
 
 private:
    void createAndSelectOccurrence(contomap::model::Topic &topic, contomap::model::SpacialCoordinate location);
+   void cycleSelectedOccurrence(bool forward);
    void setViewScopeTo(contomap::model::Identifiers const &ids);
    void verifyViewScopeIsStable();
 

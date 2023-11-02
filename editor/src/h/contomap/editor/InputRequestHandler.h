@@ -110,7 +110,13 @@ public:
     * With a single occurrence selected, this operation selects the next occurrence of the topic
     * and sets the view scope to that of the new occurrence.
     */
-   virtual void cycleSelectedOccurrence() = 0;
+   virtual void cycleSelectedOccurrenceForward() = 0;
+
+   /**
+    * With a single occurrence selected, this operation selects the previous occurrence of the topic
+    * and sets the view scope to that of the new occurrence.
+    */
+   virtual void cycleSelectedOccurrenceReverse() = 0;
 };
 
 } // namespace contomap::editor
