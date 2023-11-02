@@ -90,8 +90,12 @@ std::optional<Identifier> LocateTopicAndActDialog::TopicList::draw(Rectangle bou
    {
       for (std::string const &name : Names::forDisplay(topic, view.getDefaultScope()))
       {
+         if (!selectedIndex.has_value())
+         {
+            selectedIndex = totalCount;
+         }
          totalCount++;
-         if (!selectedTopicId.has_value() && selectedIndex.has_value() && (selectedIndex.value() == nameIndex))
+         if (!selectedTopicId.has_value() && (selectedIndex.value() == nameIndex))
          {
             selectedTopicId = topic.getId();
          }
