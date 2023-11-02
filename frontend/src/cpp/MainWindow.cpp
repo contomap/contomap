@@ -219,7 +219,6 @@ void MainWindow::updateState()
 
 void MainWindow::cycleSelectedOccurrence(bool forward)
 {
-   auto originalOccurrence = Selections::firstOccurrenceFrom(view.ofSelection(), view.ofMap());
    if (forward)
    {
       inputRequestHandler.cycleSelectedOccurrenceForward();
@@ -230,12 +229,10 @@ void MainWindow::cycleSelectedOccurrence(bool forward)
    }
    auto newOccurrence = Selections::firstOccurrenceFrom(view.ofSelection(), view.ofMap());
 
-   if (originalOccurrence.has_value() && newOccurrence.has_value())
+   if (newOccurrence.has_value())
    {
-      auto originalLocation = originalOccurrence.value().get().getLocation().getSpacial().getAbsoluteReference();
       auto newLocation = newOccurrence.value().get().getLocation().getSpacial().getAbsoluteReference();
-      Vector2 distance { .x = newLocation.X() - originalLocation.X(), .y = newLocation.Y() - originalLocation.Y() };
-      mapCamera.relocateRelative(distance);
+      mapCamera.panTo(Vector2 { .x = newLocation.X(), .y = newLocation.Y() });
    }
 }
 
