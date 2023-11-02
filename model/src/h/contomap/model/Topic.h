@@ -128,6 +128,11 @@ public:
     */
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role const> rolesAssociatedWith(contomap::model::Identifiers associations) const;
 
+   /**
+    * Removes any reference to the given identified topic.
+    *
+    * @param topicId the identifier of the topic that shall no longer be referenced.
+    */
    void removeTopicReferences(contomap::model::Identifier topicId);
 
 private:
