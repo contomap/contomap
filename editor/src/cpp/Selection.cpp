@@ -14,11 +14,10 @@ void Selection::clear()
 
 bool Selection::hasSoleEntryFor(SelectedType type) const
 {
-   return std::all_of(
-      identifiers.begin(), identifiers.end(), [type](std::map<contomap::editor::SelectedType, contomap::model::Identifiers>::value_type const &kvp) {
-         auto const &[otherType, specific] = kvp;
-         return ((otherType == type) && (specific.size() == 1)) || ((otherType != type) && specific.empty());
-      });
+   return identifiers.contains(type) && std::all_of(identifiers.begin(), identifiers.end(), [type](std::map<SelectedType, Identifiers>::value_type const &kvp) {
+      auto const &[otherType, specific] = kvp;
+      return ((otherType == type) && (specific.size() == 1)) || ((otherType != type) && specific.empty());
+   });
 }
 
 void Selection::setSole(SelectedType type, Identifier id)
