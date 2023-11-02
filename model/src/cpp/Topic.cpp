@@ -123,8 +123,12 @@ Occurrence const &Topic::previousOccurrenceBefore(Identifier reference) const
    {
       throw std::runtime_error("unknown occurrence requested");
    }
+   if (it == occurrences.begin())
+   {
+      return occurrences.rbegin()->second;
+   }
    it--;
-   return (it != occurrences.end()) ? it->second : occurrences.rbegin()->second;
+   return it->second;
 }
 
 std::optional<std::reference_wrapper<Occurrence const>> Topic::getOccurrence(contomap::model::Identifier occurrenceId) const
