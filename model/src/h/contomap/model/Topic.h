@@ -113,6 +113,14 @@ public:
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence const> occurrencesIn(contomap::model::Identifiers scope) const;
 
    /**
+    * Determines the occurrence that follows after the given one.
+    *
+    * @param reference the identifier of the occurrence to determine.
+    * @return reference to an occurrence.
+    */
+   [[nodiscard]] contomap::model::Occurrence const &nextOccurrenceAfter(contomap::model::Identifier reference) const;
+
+   /**
     * Return a Search for all roles that are related to given associations.
     *
     * @param associations the associations to look for.

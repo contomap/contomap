@@ -171,6 +171,21 @@ void Editor::removeFromViewScope(Identifier id)
    selection.clear();
 }
 
+void Editor::cycleSelectedOccurrence()
+{
+   if (!selection.hasSoleEntryFor(SelectedType::Occurrence))
+   {
+      return;
+   }
+   Identifier originalOccurrenceId = *selection.of(SelectedType::Occurrence).begin();
+   for (Topic &topic : map.find(Topics::thatOccurAs(Identifiers::ofSingle(originalOccurrenceId))))
+   {
+      auto const &nextOccurrence = topic.nextOccurrenceAfter(originalOccurrenceId);
+      viewScope = nextOccurrence.getScope();
+      selection.setSole(SelectedType::Occurrence, nextOccurrence.getId());
+   }
+}
+
 contomap::model::Identifiers const &Editor::ofViewScope() const
 {
    return viewScope;

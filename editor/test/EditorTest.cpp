@@ -244,6 +244,11 @@ public:
          handler.removeFromViewScope(id);
       }
 
+      void cyclesTheSelectedOccurrence()
+      {
+         handler.cycleSelectedOccurrence();
+      }
+
    private:
       InputRequestHandler &handler;
    };
@@ -599,4 +604,69 @@ TEST_F(EditorTest, deletingTopicOfCurrentViewScopeRemovesItFromViewScope)
    given().user().selects(SelectedType::Occurrence, occurrenceOf(scopeTopicId).getId());
    when().user().deletesTheSelection();
    then().view().ofViewScope().shouldBe(Identifiers::ofSingle(defaultViewScope()));
+}
+
+TEST_F(EditorTest, cyclingThroughOccurrencesSingle)
+{
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier occurrenceId = occurrenceOf(topicId).getId();
+   given().user().selects(SelectedType::Occurrence, occurrenceId);
+   when().user().cyclesTheSelectedOccurrence();
+   then().view().ofSelection().should(
+      [occurrenceId](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers::ofSingle(occurrenceId))); });
+}
+
+TEST_F(EditorTest, cyclingThroughOccurrencesToSecondInSameScope)
+{
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier occurrenceId = occurrenceOf(topicId).getId();
+   given().user().requestsANewOccurrence(topicId);
+   given().user().selects(SelectedType::Occurrence, occurrenceId);
+   when().user().cyclesTheSelectedOccurrence();
+   then().view().ofSelection().should([occurrenceId](Selection const &selection) {
+      EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::SizeIs(1));
+      EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Not(testing::Eq(Identifiers::ofSingle(occurrenceId))));
+   });
+}
+
+TEST_F(EditorTest, cyclingThroughOccurrencesBackToOriginalInSameScope)
+{
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier occurrenceId = occurrenceOf(topicId).getId();
+   given().user().requestsANewOccurrence(topicId);
+   given().user().selects(SelectedType::Occurrence, occurrenceId);
+   given().user().cyclesTheSelectedOccurrence();
+   when().user().cyclesTheSelectedOccurrence();
+   then().view().ofSelection().should(
+      [occurrenceId](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers::ofSingle(occurrenceId))); });
+}
+
+TEST_F(EditorTest, cyclingThroughOccurrencesIsIgnoredIfMoreThanOneOccurrenceSelected)
+{
+   Identifier topicId1 = given().user().requestsANewTopic();
+   Identifier occurrenceId1 = occurrenceOf(topicId1).getId();
+   given().user().requestsANewOccurrence(topicId1);
+   Identifier topicId2 = given().user().requestsANewTopic();
+   Identifier occurrenceId2 = occurrenceOf(topicId2).getId();
+   given().user().selects(SelectedType::Occurrence, occurrenceId1);
+   given().user().togglesSelectionOf(SelectedType::Occurrence, occurrenceId2);
+   when().user().cyclesTheSelectedOccurrence();
+   then().view().ofSelection().should([](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::SizeIs(2)); });
+}
+
+TEST_F(EditorTest, cyclingThroughOccurrencesToSecondInOtherScope)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier occurrenceId = occurrenceOf(topicId).getId();
+   given().user().setsTheViewScopeToBe(scopeTopicId);
+   given().user().requestsANewOccurrence(topicId);
+   given().user().setsTheViewScopeToDefault();
+   given().user().selects(SelectedType::Occurrence, occurrenceId);
+   when().user().cyclesTheSelectedOccurrence();
+   then().view().ofSelection().should([occurrenceId](Selection const &selection) {
+      EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::SizeIs(1));
+      EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Not(testing::Eq(Identifiers::ofSingle(occurrenceId))));
+   });
+   asWellAs().view().ofViewScope().shouldBe(Identifiers::ofSingle(scopeTopicId));
 }

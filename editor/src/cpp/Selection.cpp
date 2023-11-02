@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include "contomap/editor/Selection.h"
 
 using contomap::editor::SelectedType;
@@ -8,6 +10,15 @@ using contomap::model::Identifiers;
 void Selection::clear()
 {
    identifiers.clear();
+}
+
+bool Selection::hasSoleEntryFor(SelectedType type) const
+{
+   return std::all_of(
+      identifiers.begin(), identifiers.end(), [type](std::map<contomap::editor::SelectedType, contomap::model::Identifiers>::value_type const &kvp) {
+         auto const &[otherType, specific] = kvp;
+         return ((otherType == type) && (specific.size() == 1)) || ((otherType != type) && specific.empty());
+      });
 }
 
 void Selection::setSole(SelectedType type, Identifier id)

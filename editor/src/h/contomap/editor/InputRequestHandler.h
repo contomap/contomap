@@ -105,6 +105,12 @@ public:
     * @param id the identifier of the topic to be removed from the view scope.
     */
    virtual void removeFromViewScope(contomap::model::Identifier id) = 0;
+
+   /**
+    * With a single occurrence selected, this operation selects the next occurrence of the topic
+    * and sets the view scope to that of the new occurrence.
+    */
+   virtual void cycleSelectedOccurrence() = 0;
 };
 
 } // namespace contomap::editor

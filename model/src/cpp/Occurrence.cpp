@@ -16,6 +16,11 @@ Identifier Occurrence::getId() const
    return id;
 }
 
+Identifiers const &Occurrence::getScope() const
+{
+   return scope;
+}
+
 contomap::model::Coordinates const &Occurrence::getLocation() const
 {
    return location;

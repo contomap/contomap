@@ -30,6 +30,7 @@ public:
    void setViewScopeTo(contomap::model::Identifier id) override;
    void addToViewScope(contomap::model::Identifier id) override;
    void removeFromViewScope(contomap::model::Identifier id) override;
+   void cycleSelectedOccurrence() override;
 
    [[nodiscard]] contomap::model::Identifiers const &ofViewScope() const override;
    [[nodiscard]] contomap::model::ContomapView const &ofMap() const override;

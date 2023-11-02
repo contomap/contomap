@@ -29,6 +29,11 @@ public:
    [[nodiscard]] contomap::model::Identifier getId() const;
 
    /**
+    * @return the scope of this occurrence.
+    */
+   [[nodiscard]] contomap::model::Identifiers const &getScope() const;
+
+   /**
     * @return the location of this occurrence
     */
    [[nodiscard]] contomap::model::Coordinates const &getLocation() const;

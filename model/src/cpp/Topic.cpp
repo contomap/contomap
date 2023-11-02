@@ -105,6 +105,17 @@ Search<Occurrence const> Topic::occurrencesIn(contomap::model::Identifiers scope
    }
 }
 
+Occurrence const &Topic::nextOccurrenceAfter(Identifier reference) const
+{
+   auto it = occurrences.find(reference);
+   if (it == occurrences.end())
+   {
+      throw std::runtime_error("unknown occurrence requested");
+   }
+   it++;
+   return (it != occurrences.end()) ? it->second : occurrences.begin()->second;
+}
+
 Search<Role const> Topic::rolesAssociatedWith(Identifiers associations) const // NOLINT
 {
    for (auto const &[_, role] : roles)
