@@ -129,6 +129,14 @@ public:
    [[nodiscard]] contomap::model::Occurrence const &previousOccurrenceBefore(contomap::model::Identifier reference) const;
 
    /**
+    * Resolve the occurrence with given identifier.
+    *
+    * @param occurrenceId the identifier of the occurrence to retrieve.
+    * @return the associated occurrence.
+    */
+   [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Occurrence const>> getOccurrence(contomap::model::Identifier occurrenceId) const;
+
+   /**
     * Return a Search for all roles that are related to given associations.
     *
     * @param associations the associations to look for.

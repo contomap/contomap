@@ -9,6 +9,7 @@
 #include <raymath.h>
 #pragma GCC diagnostic pop
 
+#include "contomap/editor/Selections.h"
 #include "contomap/frontend/HelpDialog.h"
 #include "contomap/frontend/LocateTopicAndActDialog.h"
 #include "contomap/frontend/MainWindow.h"
@@ -20,6 +21,7 @@
 using contomap::editor::InputRequestHandler;
 using contomap::editor::SelectedType;
 using contomap::editor::SelectionAction;
+using contomap::editor::Selections;
 using contomap::frontend::LocateTopicAndActDialog;
 using contomap::frontend::MainWindow;
 using contomap::frontend::MapCamera;
@@ -213,6 +215,28 @@ void MainWindow::updateState()
 {
    auto frameTime = contomap::frontend::FrameTime::fromLastFrame();
    mapCamera.timePassed(frameTime);
+}
+
+void MainWindow::cycleSelectedOccurrence(bool forward)
+{
+   auto originalOccurrence = Selections::firstOccurrenceFrom(view.ofSelection(), view.ofMap());
+   if (forward)
+   {
+      inputRequestHandler.cycleSelectedOccurrenceForward();
+   }
+   else
+   {
+      inputRequestHandler.cycleSelectedOccurrenceReverse();
+   }
+   auto newOccurrence = Selections::firstOccurrenceFrom(view.ofSelection(), view.ofMap());
+
+   if (originalOccurrence.has_value() && newOccurrence.has_value())
+   {
+      auto originalLocation = originalOccurrence.value().get().getLocation().getSpacial().getAbsoluteReference();
+      auto newLocation = newOccurrence.value().get().getLocation().getSpacial().getAbsoluteReference();
+      Vector2 distance { .x = newLocation.X() - originalLocation.X(), .y = newLocation.Y() - originalLocation.Y() };
+      mapCamera.relocateRelative(distance);
+   }
 }
 
 void MainWindow::drawBackground()
@@ -431,6 +455,25 @@ void MainWindow::drawUserInterface(RenderContext const &context)
       {
          inputRequestHandler.addToViewScopeFromSelection();
       }
+      GuiSetTooltip("Cycle to previous occurrence");
+      if (!view.ofSelection().hasSoleEntryFor(SelectedType::Occurrence))
+      {
+         GuiDisable();
+      }
+      if (GuiButton(
+             Rectangle { .x = toolbarPosition.x + padding + (iconSize + padding) * 3, .y = toolbarPosition.y + padding, .width = iconSize, .height = iconSize },
+             GuiIconText(ICON_ARROW_LEFT_FILL, nullptr)))
+      {
+         cycleSelectedOccurrence(false);
+      }
+      GuiSetTooltip("Cycle to next occurrence");
+      if (GuiButton(
+             Rectangle { .x = toolbarPosition.x + padding + (iconSize + padding) * 4, .y = toolbarPosition.y + padding, .width = iconSize, .height = iconSize },
+             GuiIconText(ICON_ARROW_RIGHT_FILL, nullptr)))
+      {
+         cycleSelectedOccurrence(true);
+      }
+      GuiEnable();
    }
 
    {

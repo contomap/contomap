@@ -118,6 +118,13 @@ public:
        * @param down pan down.
        */
       virtual void pan(bool left, bool up, bool right, bool down) = 0;
+
+      /**
+       * Relocates the camera without interrupting any panning operation.
+       *
+       * @param distance the distance to apply to the current position.
+       */
+      virtual void relocateRelative(Vector2 distance) = 0;
    };
 
    /**
@@ -140,6 +147,7 @@ public:
       [[nodiscard]] Vector2 getCurrentPosition() const override;
       void panTo(Vector2 target) override;
       void pan(bool left, bool up, bool right, bool down) override;
+      void relocateRelative(Vector2 distance) override;
 
    private:
       Vector2 position;
@@ -246,6 +254,13 @@ public:
     * @param down pan down.
     */
    void pan(bool left, bool up, bool right, bool down);
+
+   /**
+    * Relocates the camera without interrupting any panning operation.
+    *
+    * @param distance the distance to apply to the current position.
+    */
+   void relocateRelative(Vector2 distance);
 
    /**
     * @return the current position as per gearbox movement.

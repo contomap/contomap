@@ -81,6 +81,11 @@ void MapCamera::ImmediateGearbox::pan(bool left, bool up, bool right, bool down)
    panningDown = down;
 }
 
+void MapCamera::ImmediateGearbox::relocateRelative(Vector2 distance)
+{
+   position = Vector2Add(position, distance);
+}
+
 contomap::frontend::MapCamera::Projection::Projection(MapCamera::Projection &&other) noexcept
 {
    moveFrom(std::move(other));
@@ -149,6 +154,11 @@ void MapCamera::panTo(Vector2 target)
 void MapCamera::pan(bool left, bool up, bool right, bool down)
 {
    gearbox->pan(left, up, right, down);
+}
+
+void MapCamera::relocateRelative(Vector2 distance)
+{
+   gearbox->relocateRelative(distance);
 }
 
 MapCamera::Projection MapCamera::beginProjection(Vector2 viewportSize)

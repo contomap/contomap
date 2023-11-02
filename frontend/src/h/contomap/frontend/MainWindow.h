@@ -238,6 +238,7 @@ private:
 
    void processInput();
    void updateState();
+   void cycleSelectedOccurrence(bool forward);
 
    void drawBackground();
    void drawMap(RenderContext const &context);

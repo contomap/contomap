@@ -1,4 +1,5 @@
 #include "contomap/editor/Editor.h"
+#include "contomap/editor/Selections.h"
 #include "contomap/model/Topics.h"
 
 using contomap::editor::Editor;

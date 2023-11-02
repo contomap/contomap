@@ -127,6 +127,13 @@ Occurrence const &Topic::previousOccurrenceBefore(Identifier reference) const
    return (it != occurrences.end()) ? it->second : occurrences.rbegin()->second;
 }
 
+std::optional<std::reference_wrapper<Occurrence const>> Topic::getOccurrence(contomap::model::Identifier occurrenceId) const
+{
+   auto it = occurrences.find(occurrenceId);
+   return (it != occurrences.end()) ? std::make_optional<std::reference_wrapper<Occurrence const>>(it->second)
+                                    : std::optional<std::reference_wrapper<Occurrence const>> {};
+}
+
 Search<Role const> Topic::rolesAssociatedWith(Identifiers associations) const // NOLINT
 {
    for (auto const &[_, role] : roles)
