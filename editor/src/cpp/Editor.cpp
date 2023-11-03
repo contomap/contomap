@@ -24,7 +24,7 @@ Editor::Editor()
 Identifier Editor::newTopicRequested(TopicNameValue name, SpacialCoordinate location)
 {
    auto &topic = map.newTopic();
-   static_cast<void>(topic.newName(std::move(name)));
+   static_cast<void>(topic.newName({}, name));
    createAndSelectOccurrence(topic, location);
    return topic.getId();
 }

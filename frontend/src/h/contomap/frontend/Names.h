@@ -20,6 +20,17 @@ public:
     * @return a list of strings, ordered by priority. Always contains at least one element.
     */
    static std::vector<std::string> forDisplay(contomap::model::Topic const &topic, contomap::model::Identifier defaultScope);
+
+   /**
+    * Return a strings that is the best candidate for a scoped display.
+    *
+    * @param topic the topic for which to determine the name
+    * @param scope the current scope to consider.
+    * @param defaultScope the topic identifier that refers to the default scope.
+    * @return a list of strings, ordered by priority. Always contains at least one element.
+    */
+   static std::vector<std::string> forScopedDisplay(
+      contomap::model::Topic const &topic, contomap::model::Identifiers const &scope, contomap::model::Identifier defaultScope);
 };
 
 } // namespace contomap::frontend

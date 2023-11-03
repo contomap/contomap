@@ -19,10 +19,10 @@ Identifier Topic::getId() const
    return id;
 }
 
-TopicName &Topic::newName(contomap::model::TopicNameValue value)
+TopicName &Topic::newName(Identifiers scope, contomap::model::TopicNameValue const &value)
 {
    auto nameId = Identifier::random();
-   auto it = names.emplace(nameId, TopicName(nameId, std::move(value)));
+   auto it = names.emplace(nameId, TopicName(nameId, std::move(scope), value));
    return it.first->second;
 }
 

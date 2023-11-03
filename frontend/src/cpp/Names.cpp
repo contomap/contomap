@@ -25,3 +25,39 @@ std::vector<std::string> Names::forDisplay(Topic const &topic, Identifier defaul
 
    return result;
 }
+
+std::vector<std::string> Names::forScopedDisplay(Topic const &topic, Identifiers const &scope, Identifier defaultScope)
+{
+   std::vector<std::string> result;
+
+   if (topic.getId() == defaultScope)
+   {
+      result.emplace_back("---");
+   }
+   std::vector<std::reference_wrapper<TopicName const>> namesInScope;
+   for (TopicName const &name : topic.allNames())
+   {
+      if (name.isIn(scope))
+      {
+         namesInScope.emplace_back(name);
+      }
+   }
+   if (!namesInScope.empty())
+   {
+      std::sort(namesInScope.begin(), namesInScope.end(), [](TopicName const &a, TopicName const &b) { return a.hasNarrowerScopeThan(b); });
+      TopicName const &referenceName = namesInScope[0];
+      for (TopicName const &name : namesInScope)
+      {
+         if (name.hasSameScopeSizeAs(referenceName))
+         {
+            result.emplace_back(name.getValue().raw());
+         }
+      }
+   }
+   else
+   {
+      result.emplace_back("???");
+   }
+
+   return result;
+}

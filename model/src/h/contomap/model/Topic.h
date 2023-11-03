@@ -33,10 +33,11 @@ public:
    /**
     * Adds a new name to the topic.
     *
+    * @param scope the scope within which the name is valid.
     * @param value the value of the name to add.
     * @return the created instance.
     */
-   [[nodiscard]] contomap::model::TopicName &newName(contomap::model::TopicNameValue value);
+   [[nodiscard]] contomap::model::TopicName &newName(contomap::model::Identifiers scope, contomap::model::TopicNameValue const &value);
 
    /**
     * Adds a new occurrence to the topic.

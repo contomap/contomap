@@ -625,5 +625,5 @@ MapCamera::ZoomOperation MainWindow::doubledRelative(bool nearer)
 
 std::string MainWindow::bestTitleFor(Topic const &topic)
 {
-   return Names::forDisplay(topic, view.ofMap().getDefaultScope())[0];
+   return Names::forScopedDisplay(topic, view.ofViewScope(), view.ofMap().getDefaultScope())[0];
 }
