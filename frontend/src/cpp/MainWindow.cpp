@@ -549,7 +549,8 @@ void MainWindow::drawUserInterface(RenderContext const &context)
          auto textSize = MeasureTextEx(font, name.c_str(), fontSize, spacing);
 
          float labelWidth = textSize.x + textPadding * 2;
-         if (!GuiToggle(Rectangle { .x = buttonStartX, .y = viewScopePosition.y + padding, .width = labelWidth, .height = iconSize }, name.c_str(), true))
+         bool isActive = true;
+         if (!GuiToggle(Rectangle { .x = buttonStartX, .y = viewScopePosition.y + padding, .width = labelWidth, .height = iconSize }, name.c_str(), &isActive))
          {
             inputRequestHandler.removeFromViewScope(id);
          }
