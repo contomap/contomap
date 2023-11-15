@@ -24,9 +24,39 @@ Editor::Editor()
 Identifier Editor::newTopicRequested(TopicNameValue name, SpacialCoordinate location)
 {
    auto &topic = map.newTopic();
-   static_cast<void>(topic.newName({}, name));
+   static_cast<void>(topic.newName(scopeForTopicDefaultName(), name));
    createAndSelectOccurrence(topic, location);
    return topic.getId();
+}
+
+void Editor::setTopicNameDefault(Identifier topicId, TopicNameValue value)
+{
+   setTopicNameInScope(topicId, scopeForTopicDefaultName(), std::move(value));
+}
+
+void Editor::setTopicNameInScope(Identifier topicId, TopicNameValue value)
+{
+   setTopicNameInScope(topicId, viewScope, std::move(value));
+}
+
+void Editor::setTopicNameInScope(Identifier topicId, Identifiers const &scope, TopicNameValue value)
+{
+   auto topic = map.findTopic(topicId);
+   if (!topic.has_value())
+   {
+      return;
+   }
+   topic.value().get().setNameInScope(scope, std::move(value));
+}
+
+void Editor::removeTopicNameInScope(Identifier topicId)
+{
+   auto topic = map.findTopic(topicId);
+   if (!topic.has_value())
+   {
+      return;
+   }
+   topic.value().get().removeNameInScope(viewScope);
 }
 
 void Editor::newOccurrenceRequested(Identifier topicId, SpacialCoordinate location)
@@ -239,4 +269,10 @@ void Editor::verifyViewScopeIsStable()
    {
       removeFromViewScope(id);
    }
+}
+
+Identifiers Editor::scopeForTopicDefaultName()
+{
+   static Identifiers const empty;
+   return empty;
 }

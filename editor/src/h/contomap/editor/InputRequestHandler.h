@@ -20,11 +20,34 @@ public:
    /**
     * Called when a new topic shall be created.
     *
-    * @param name how the new topic shall be named.
+    * @param name how the new topic shall be named by default.
     * @param location the point at which the first occurrence shall be put at.
     * @return identifier of the created topic.
     */
    virtual contomap::model::Identifier newTopicRequested(contomap::model::TopicNameValue name, contomap::model::SpacialCoordinate location) = 0;
+
+   /**
+    * Called when the default name of a topic shall be changed.
+    *
+    * @param topicId the identifier of the topic.
+    * @param value the new default name of the topic.
+    */
+   virtual void setTopicNameDefault(contomap::model::Identifier topicId, contomap::model::TopicNameValue value) = 0;
+
+   /**
+    * Called when the scoped name of a topic shall be set.
+    *
+    * @param topicId the identifier of the topic.
+    * @param value the name of the topic in the current view scope.
+    */
+   virtual void setTopicNameInScope(contomap::model::Identifier topicId, contomap::model::TopicNameValue value) = 0;
+
+   /**
+    * Called when the scoped name of a topic shall be removed.
+    *
+    * @param topicId the identifier of the topic.
+    */
+   virtual void removeTopicNameInScope(contomap::model::Identifier topicId) = 0;
 
    /**
     * Called when a topic shall receive a further occurrence in the current view scope.

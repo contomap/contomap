@@ -14,6 +14,16 @@ TopicName::TopicName(Identifier id, Identifiers scope, TopicNameValue value)
 {
 }
 
+Identifier TopicName::getId() const
+{
+   return id;
+}
+
+void TopicName::setValue(TopicNameValue newValue)
+{
+   value = std::move(newValue);
+}
+
 TopicNameValue TopicName::getValue() const
 {
    return value;
@@ -27,6 +37,11 @@ bool TopicName::isIn(Identifiers const &thatScope) const
 bool TopicName::scopeContains(contomap::model::Identifier thatId) const
 {
    return scope.contains(thatId);
+}
+
+bool TopicName::scopeEquals(Identifiers const &thatScope) const
+{
+   return scope == thatScope;
 }
 
 bool TopicName::hasNarrowerScopeThan(TopicName const &other) const

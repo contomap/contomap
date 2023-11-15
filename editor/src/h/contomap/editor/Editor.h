@@ -18,6 +18,10 @@ public:
    Editor();
 
    contomap::model::Identifier newTopicRequested(contomap::model::TopicNameValue name, contomap::model::SpacialCoordinate location) override;
+   void setTopicNameDefault(contomap::model::Identifier topicId, contomap::model::TopicNameValue value) override;
+   void setTopicNameInScope(contomap::model::Identifier topicId, contomap::model::TopicNameValue value) override;
+   void removeTopicNameInScope(contomap::model::Identifier topicId) override;
+
    void newOccurrenceRequested(contomap::model::Identifier topicId, contomap::model::SpacialCoordinate location) override;
    contomap::model::Identifier newAssociationRequested(contomap::model::SpacialCoordinate location) override;
    void clearSelection() override;
@@ -37,7 +41,13 @@ public:
    [[nodiscard]] contomap::model::ContomapView const &ofMap() const override;
    [[nodiscard]] contomap::editor::Selection const &ofSelection() const override;
 
+   /**
+    * @return the scope used for the default names of topics.
+    */
+   [[nodiscard]] static contomap::model::Identifiers scopeForTopicDefaultName();
+
 private:
+   void setTopicNameInScope(contomap::model::Identifier topicId, contomap::model::Identifiers const &scope, contomap::model::TopicNameValue value);
    void createAndSelectOccurrence(contomap::model::Topic &topic, contomap::model::SpacialCoordinate location);
    void cycleSelectedOccurrence(bool forward);
    void setViewScopeTo(contomap::model::Identifiers const &ids);

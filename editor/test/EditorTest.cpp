@@ -32,7 +32,10 @@ using contomap::model::TopicNameValue;
 using contomap::test::fixtures::ContomapViewFixture;
 using contomap::test::fixtures::SelectionFixture;
 using contomap::test::fixtures::ViewScopeFixture;
+using contomap::test::matchers::hasDefaultName;
 using contomap::test::matchers::hasName;
+using contomap::test::matchers::hasNameCountOf;
+using contomap::test::matchers::hasScopedName;
 using contomap::test::matchers::isCloseTo;
 using contomap::test::samples::someNameValue;
 using contomap::test::samples::someSpacialCoordinate;
@@ -91,6 +94,7 @@ public:
       TopicNameValue name;
       SpacialCoordinate position;
    };
+
    class NewOccurrenceRequest
    {
    public:
@@ -187,6 +191,21 @@ public:
       NewTopicRequest requestsANewTopic()
       {
          return NewTopicRequest(handler);
+      }
+
+      void setsTopicNameDefaultTo(Identifier topicId, TopicNameValue const &value)
+      {
+         handler.setTopicNameDefault(topicId, value);
+      }
+
+      void setsTopicNameInScopeTo(Identifier topicId, TopicNameValue const &value)
+      {
+         handler.setTopicNameInScope(topicId, value);
+      }
+
+      void removesTopicNameInScopeOf(Identifier topicId)
+      {
+         handler.removeTopicNameInScope(topicId);
       }
 
       NewOccurrenceRequest requestsANewOccurrence(Identifier id)
@@ -699,4 +718,59 @@ TEST_F(EditorTest, cyclingThroughOccurrencesToSecondInOtherScope)
       EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Not(testing::Eq(Identifiers::ofSingle(occurrenceId))));
    });
    asWellAs().view().ofViewScope().shouldBe(Identifiers::ofSingle(scopeTopicId));
+}
+
+TEST_F(EditorTest, defaultTopicNameCanBeChanged)
+{
+   Identifier topicId = given().user().requestsANewTopic();
+   auto newName = someNameValue();
+   when().user().setsTopicNameDefaultTo(topicId, newName);
+   then().view().ofMap().shouldHaveTopicThat(topicId, [newName](Topic const &topic) {
+      EXPECT_THAT(topic, hasNameCountOf(1));
+      EXPECT_THAT(topic, hasDefaultName(newName.raw()));
+   });
+}
+
+TEST_F(EditorTest, scopedTopicNameCanBeSet)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   Identifier topicId = given().user().requestsANewTopic();
+   given().user().setsTheViewScopeToBe(scopeTopicId);
+   given().user().requestsANewOccurrence(topicId);
+   auto newName = someNameValue();
+   when().user().setsTopicNameInScopeTo(topicId, newName);
+   then().view().ofMap().shouldHaveTopicThat(topicId, [scopeTopicId, newName](Topic const &topic) {
+      EXPECT_THAT(topic, hasNameCountOf(2));
+      EXPECT_THAT(topic, hasScopedName(Identifiers::ofSingle(scopeTopicId), newName.raw()));
+   });
+}
+
+TEST_F(EditorTest, scopedTopicNameCanBeChanged)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   Identifier topicId = given().user().requestsANewTopic();
+   given().user().setsTheViewScopeToBe(scopeTopicId);
+   given().user().requestsANewOccurrence(topicId);
+   given().user().setsTopicNameInScopeTo(topicId, someNameValue());
+   auto newName = someNameValue();
+   when().user().setsTopicNameInScopeTo(topicId, newName);
+   then().view().ofMap().shouldHaveTopicThat(topicId, [scopeTopicId, newName](Topic const &topic) {
+      EXPECT_THAT(topic, hasNameCountOf(2));
+      EXPECT_THAT(topic, hasScopedName(Identifiers::ofSingle(scopeTopicId), newName.raw()));
+   });
+}
+
+TEST_F(EditorTest, scopedTopicNameCanBeRemoved)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   std::string defaultName("defaultName");
+   Identifier topicId = given().user().requestsANewTopic().withName(defaultName);
+   given().user().setsTheViewScopeToBe(scopeTopicId);
+   given().user().requestsANewOccurrence(topicId);
+   given().user().setsTopicNameInScopeTo(topicId, someNameValue());
+   when().user().removesTopicNameInScopeOf(topicId);
+   then().view().ofMap().shouldHaveTopicThat(topicId, [defaultName](Topic const &topic) {
+      EXPECT_THAT(topic, hasNameCountOf(1));
+      EXPECT_THAT(topic, hasDefaultName(defaultName));
+   });
 }

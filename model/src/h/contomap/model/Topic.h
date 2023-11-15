@@ -85,6 +85,21 @@ public:
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::TopicName const> allNames() const;
 
    /**
+    * Set the name of the topic in given scope.
+    *
+    * @param scope the scope in which the new name shall be set.
+    * @param value the new value.
+    */
+   void setNameInScope(contomap::model::Identifiers const &scope, contomap::model::TopicNameValue value);
+
+   /**
+    * Remove the name within given scope.
+    *
+    * @param scope the scope from which the name shall be removed.
+    */
+   void removeNameInScope(contomap::model::Identifiers const &scope);
+
+   /**
     * Return true if this instance has at least one occurrence that is in given scope.
     *
     * @param scope the scope to look for.
@@ -153,6 +168,8 @@ public:
    void removeTopicReferences(contomap::model::Identifier topicId);
 
 private:
+   [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::TopicName>> findNameByScope(contomap::model::Identifiers const &scope);
+
    contomap::model::Identifier id;
 
    contomap::model::OptionalIdentifier reified;

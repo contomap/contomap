@@ -34,6 +34,29 @@ Search<TopicName const> Topic::allNames() const // NOLINT
    }
 }
 
+void Topic::setNameInScope(Identifiers const &scope, TopicNameValue value)
+{
+   auto existingName = findNameByScope(scope);
+   if (existingName.has_value())
+   {
+      existingName.value().get().setValue(std::move(value));
+   }
+   else
+   {
+      static_cast<void>(newName(scope, value));
+   }
+}
+
+void Topic::removeNameInScope(Identifiers const &scope)
+{
+   auto existingName = findNameByScope(scope);
+   if (!existingName.has_value())
+   {
+      return;
+   }
+   names.erase(existingName.value().get().getId());
+}
+
 Occurrence &Topic::newOccurrence(Identifiers scope, SpacialCoordinate location)
 {
    auto occurrenceId = Identifier::random();
@@ -162,4 +185,16 @@ void Topic::removeTopicReferences(Identifier topicId)
          ++it;
       }
    }
+}
+
+std::optional<std::reference_wrapper<TopicName>> Topic::findNameByScope(Identifiers const &scope)
+{
+   for (auto &[_, name] : names)
+   {
+      if (name.scopeEquals(scope))
+      {
+         return { name };
+      }
+   }
+   return {};
 }

@@ -24,6 +24,18 @@ public:
    TopicName(contomap::model::Identifier id, contomap::model::Identifiers scope, contomap::model::TopicNameValue value);
 
    /**
+    * @return the unique identifier of this name.
+    */
+   [[nodiscard]] contomap::model::Identifier getId() const;
+
+   /**
+    * Sets the new value of the name.
+    *
+    * @param newValue the human readable name.
+    */
+   void setValue(contomap::model::TopicNameValue newValue);
+
+   /**
     * @return the current value of this name.
     */
    [[nodiscard]] contomap::model::TopicNameValue getValue() const;
@@ -43,6 +55,14 @@ public:
     * @return true in case the identifier is part of the scope.
     */
    [[nodiscard]] bool scopeContains(contomap::model::Identifier thatId) const;
+
+   /**
+    * Return true if the scope equals the given one.
+    *
+    * @param thatScope the scope to test for.
+    * @return true in case the two scope values are equal.
+    */
+   [[nodiscard]] bool scopeEquals(contomap::model::Identifiers const &thatScope) const;
 
    /**
     * Use this method to sort names according to scope.
