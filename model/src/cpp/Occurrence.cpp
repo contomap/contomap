@@ -4,8 +4,9 @@ using contomap::model::Identifier;
 using contomap::model::Identifiers;
 using contomap::model::Occurrence;
 
-Occurrence::Occurrence(Identifier id, Identifiers scope, SpacialCoordinate spacial)
+Occurrence::Occurrence(Identifier id, Identifier topicId, Identifiers scope, SpacialCoordinate spacial)
    : id(id)
+   , topicId(topicId)
    , scope(std::move(scope))
    , location(spacial)
 {
@@ -14,6 +15,11 @@ Occurrence::Occurrence(Identifier id, Identifiers scope, SpacialCoordinate spaci
 Identifier Occurrence::getId() const
 {
    return id;
+}
+
+Identifier Occurrence::getTopicId() const
+{
+   return topicId;
 }
 
 Identifiers const &Occurrence::getScope() const

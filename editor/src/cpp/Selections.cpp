@@ -28,3 +28,21 @@ std::optional<std::reference_wrapper<Occurrence const>> Selections::firstOccurre
    }
    return (*firstTopic).get().getOccurrence(occurrenceId);
 }
+
+std::optional<std::reference_wrapper<Topic const>> Selections::topicOfFirstOccurrenceFrom(Selection const &selection, ContomapView const &view)
+{
+   auto const &occurrences = selection.of(SelectedType::Occurrence);
+   auto first = occurrences.begin();
+   if (first == occurrences.end())
+   {
+      return {};
+   }
+   Identifier occurrenceId = *first;
+   auto topics = view.find(Topics::thatOccurAs(Identifiers::ofSingle(occurrenceId)));
+   auto firstTopic = topics.begin();
+   if (firstTopic == topics.end())
+   {
+      return {};
+   }
+   return { (*firstTopic).get() };
+}

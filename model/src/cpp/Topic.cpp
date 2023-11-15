@@ -60,7 +60,7 @@ void Topic::removeNameInScope(Identifiers const &scope)
 Occurrence &Topic::newOccurrence(Identifiers scope, SpacialCoordinate location)
 {
    auto occurrenceId = Identifier::random();
-   auto it = occurrences.emplace(occurrenceId, Occurrence(occurrenceId, std::move(scope), location));
+   auto it = occurrences.emplace(occurrenceId, Occurrence(occurrenceId, id, std::move(scope), location));
    return it.first->second;
 }
 

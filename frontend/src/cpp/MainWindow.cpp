@@ -15,6 +15,7 @@
 #include "contomap/frontend/MainWindow.h"
 #include "contomap/frontend/Names.h"
 #include "contomap/frontend/NewTopicDialog.h"
+#include "contomap/frontend/RenameTopicDialog.h"
 #include "contomap/model/Associations.h"
 #include "contomap/model/Topics.h"
 
@@ -26,6 +27,7 @@ using contomap::frontend::LocateTopicAndActDialog;
 using contomap::frontend::MainWindow;
 using contomap::frontend::MapCamera;
 using contomap::frontend::Names;
+using contomap::frontend::RenameTopicDialog;
 using contomap::frontend::RenderContext;
 using contomap::model::Association;
 using contomap::model::Associations;
@@ -430,47 +432,68 @@ void MainWindow::drawUserInterface(RenderContext const &context)
       {
          openHelpDialog();
       }
+
+      Rectangle leftIconButtonsBounds {
+         .x = toolbarPosition.x + padding,
+         .y = toolbarPosition.y + padding,
+         .width = iconSize,
+         .height = iconSize,
+      };
       GuiSetTooltip("Set home view scope");
-      if (GuiButton(Rectangle { .x = toolbarPosition.x + padding, .y = toolbarPosition.y + padding, .width = iconSize, .height = iconSize },
-             GuiIconText(ICON_HOUSE, nullptr)))
+      if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_HOUSE, nullptr)))
       {
          inputRequestHandler.setViewScopeToDefault();
          mapCamera.panTo(MapCamera::HOME_POSITION);
       }
+      leftIconButtonsBounds.x += (iconSize + padding);
       GuiSetTooltip("Set view scope to selected");
-      if (GuiButton(
-             Rectangle { .x = toolbarPosition.x + padding + (iconSize + padding) * 1, .y = toolbarPosition.y + padding, .width = iconSize, .height = iconSize },
-             GuiIconText(ICON_BOX_DOTS_BIG, nullptr)))
+      if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_BOX_DOTS_BIG, nullptr)))
       {
          inputRequestHandler.setViewScopeFromSelection();
          mapCamera.panTo(MapCamera::HOME_POSITION);
       }
+      leftIconButtonsBounds.x += (iconSize + padding);
       GuiSetTooltip("Add selected to view scope");
-      if (GuiButton(
-             Rectangle { .x = toolbarPosition.x + padding + (iconSize + padding) * 2, .y = toolbarPosition.y + padding, .width = iconSize, .height = iconSize },
-             "+v"))
+      if (GuiButton(leftIconButtonsBounds, "+v"))
       {
          inputRequestHandler.addToViewScopeFromSelection();
       }
+      leftIconButtonsBounds.x += (iconSize + padding);
       GuiSetTooltip("Cycle to previous occurrence");
       if (!view.ofSelection().hasSoleEntryFor(SelectedType::Occurrence))
       {
          GuiDisable();
       }
-      if (GuiButton(
-             Rectangle { .x = toolbarPosition.x + padding + (iconSize + padding) * 3, .y = toolbarPosition.y + padding, .width = iconSize, .height = iconSize },
-             GuiIconText(ICON_ARROW_LEFT_FILL, nullptr)))
+      if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_ARROW_LEFT_FILL, nullptr)))
       {
          cycleSelectedOccurrence(false);
       }
+      leftIconButtonsBounds.x += (iconSize + padding);
       GuiSetTooltip("Cycle to next occurrence");
-      if (GuiButton(
-             Rectangle { .x = toolbarPosition.x + padding + (iconSize + padding) * 4, .y = toolbarPosition.y + padding, .width = iconSize, .height = iconSize },
-             GuiIconText(ICON_ARROW_RIGHT_FILL, nullptr)))
+      if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_ARROW_RIGHT_FILL, nullptr)))
       {
          cycleSelectedOccurrence(true);
       }
       GuiEnable();
+
+      leftIconButtonsBounds.x += (iconSize + padding) * 2;
+      if (!view.ofSelection().hasSoleEntryFor(SelectedType::Occurrence))
+      {
+         GuiDisable();
+      }
+      GuiSetTooltip("Set topic default name");
+      if (GuiButton(leftIconButtonsBounds, "N"))
+      {
+         openSetTopicNameDefaultDialog();
+      }
+      leftIconButtonsBounds.x += (iconSize + padding);
+      GuiSetTooltip("Set topic scoped name");
+      if (GuiButton(leftIconButtonsBounds, "[N]"))
+      {
+         openSetTopicNameInScopeDialog();
+      }
+      GuiEnable();
+      leftIconButtonsBounds.x += (iconSize + padding);
    }
 
    {
@@ -587,6 +610,28 @@ void MainWindow::openNewLocateTopicAndActDialog()
       LocateTopicAndActDialog::newOccurrence(spacialCameraLocation()),
    };
    pendingDialog = std::make_unique<LocateTopicAndActDialog>(inputRequestHandler, view.ofMap(), layout, actions);
+}
+
+void MainWindow::openSetTopicNameDefaultDialog()
+{
+   auto topic = Selections::topicOfFirstOccurrenceFrom(view.ofSelection(), view.ofMap());
+   if (!topic.has_value())
+   {
+      return;
+   }
+
+   pendingDialog = RenameTopicDialog::forDefaultName(inputRequestHandler, layout, topic.value().get().getId());
+}
+
+void MainWindow::openSetTopicNameInScopeDialog()
+{
+   auto topic = Selections::topicOfFirstOccurrenceFrom(view.ofSelection(), view.ofMap());
+   if (!topic.has_value())
+   {
+      return;
+   }
+
+   pendingDialog = RenameTopicDialog::forScopedName(inputRequestHandler, layout, topic.value().get().getId());
 }
 
 SpacialCoordinate MainWindow::spacialCameraLocation()

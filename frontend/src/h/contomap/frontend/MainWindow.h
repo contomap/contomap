@@ -249,6 +249,8 @@ private:
    void openNewTopicDialog();
    void openNewOccurrenceDialog();
    void openNewLocateTopicAndActDialog();
+   void openSetTopicNameDefaultDialog();
+   void openSetTopicNameInScopeDialog();
 
    [[nodiscard]] contomap::model::SpacialCoordinate spacialCameraLocation();
    [[nodiscard]] std::string bestTitleFor(contomap::model::Topic const &topic);
