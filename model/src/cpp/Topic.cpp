@@ -174,17 +174,14 @@ Search<Role const> Topic::rolesAssociatedWith(Identifiers associations) const //
 
 void Topic::removeTopicReferences(Identifier topicId)
 {
-   for (auto it = occurrences.begin(); it != occurrences.end();)
-   {
-      if (it->second.scopeContains(topicId))
-      {
-         it = occurrences.erase(it);
-      }
-      else
-      {
-         ++it;
-      }
-   }
+   std::erase_if(occurrences, [&topicId](auto const &kvp) {
+      auto const &[_, occurrence] = kvp;
+      return occurrence.scopeContains(topicId);
+   });
+   std::erase_if(names, [&topicId](auto const &kvp) {
+      auto const &[_, name] = kvp;
+      return name.scopeContains(topicId);
+   });
 }
 
 std::optional<std::reference_wrapper<TopicName>> Topic::findNameByScope(Identifiers const &scope)

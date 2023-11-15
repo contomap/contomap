@@ -736,7 +736,6 @@ TEST_F(EditorTest, scopedTopicNameCanBeSet)
    Identifier scopeTopicId = given().user().requestsANewTopic();
    Identifier topicId = given().user().requestsANewTopic();
    given().user().setsTheViewScopeToBe(scopeTopicId);
-   given().user().requestsANewOccurrence(topicId);
    auto newName = someNameValue();
    when().user().setsTopicNameInScopeTo(topicId, newName);
    then().view().ofMap().shouldHaveTopicThat(topicId, [scopeTopicId, newName](Topic const &topic) {
@@ -750,7 +749,6 @@ TEST_F(EditorTest, scopedTopicNameCanBeChanged)
    Identifier scopeTopicId = given().user().requestsANewTopic();
    Identifier topicId = given().user().requestsANewTopic();
    given().user().setsTheViewScopeToBe(scopeTopicId);
-   given().user().requestsANewOccurrence(topicId);
    given().user().setsTopicNameInScopeTo(topicId, someNameValue());
    auto newName = someNameValue();
    when().user().setsTopicNameInScopeTo(topicId, newName);
@@ -766,9 +764,24 @@ TEST_F(EditorTest, scopedTopicNameCanBeRemoved)
    std::string defaultName("defaultName");
    Identifier topicId = given().user().requestsANewTopic().withName(defaultName);
    given().user().setsTheViewScopeToBe(scopeTopicId);
-   given().user().requestsANewOccurrence(topicId);
    given().user().setsTopicNameInScopeTo(topicId, someNameValue());
    when().user().removesTopicNameInScopeOf(topicId);
+   then().view().ofMap().shouldHaveTopicThat(topicId, [defaultName](Topic const &topic) {
+      EXPECT_THAT(topic, hasNameCountOf(1));
+      EXPECT_THAT(topic, hasDefaultName(defaultName));
+   });
+}
+
+TEST_F(EditorTest, scopedTopicNameIsRemovedIfScopeIsDeleted)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   std::string defaultName("defaultName");
+   Identifier topicId = given().user().requestsANewTopic().withName(defaultName);
+   given().user().setsTheViewScopeToBe(scopeTopicId);
+   given().user().setsTopicNameInScopeTo(topicId, someNameValue());
+   given().user().setsTheViewScopeToDefault();
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(scopeTopicId).getId());
+   given().user().deletesTheSelection();
    then().view().ofMap().shouldHaveTopicThat(topicId, [defaultName](Topic const &topic) {
       EXPECT_THAT(topic, hasNameCountOf(1));
       EXPECT_THAT(topic, hasDefaultName(defaultName));
