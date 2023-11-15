@@ -20,8 +20,24 @@ class RenameTopicDialog : public contomap::frontend::Dialog
 public:
    ~RenameTopicDialog() override = default;
 
+   /**
+    * Create a topic that is for setting the default name. Default names can not be empty.
+    *
+    * @param inputRequestHandler the handler to call upon acceptance.
+    * @param layout the layout to use for drawing.
+    * @param topicId the identifier of the topic to rename.
+    * @return a dialog instance.
+    */
    static std::unique_ptr<RenameTopicDialog> forDefaultName(
       contomap::editor::InputRequestHandler &inputRequestHandler, contomap::frontend::Layout const &layout, contomap::model::Identifier topicId);
+   /**
+    * Create a topic that is for changing or clearing the currently scoped name.
+    *
+    * @param inputRequestHandler the handler to call upon acceptance.
+    * @param layout the layout to use for drawing.
+    * @param topicId the identifier of the topic to rename.
+    * @return a dialog instance.
+    */
    static std::unique_ptr<RenameTopicDialog> forScopedName(
       contomap::editor::InputRequestHandler &inputRequestHandler, contomap::frontend::Layout const &layout, contomap::model::Identifier topicId);
 

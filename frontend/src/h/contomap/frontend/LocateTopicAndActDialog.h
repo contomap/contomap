@@ -86,8 +86,24 @@ public:
 
    bool draw(contomap::frontend::RenderContext const &context) override;
 
+   /**
+    * Create an action for adding a new occurrence.
+    *
+    * @param location at which point the new occurrence shall be placed.
+    * @return an action for this dialog.
+    */
    static TitledAction newOccurrence(contomap::model::SpacialCoordinate location);
+   /**
+    * Create an action to set the view scope.
+    *
+    * @return an action for this dialog.
+    */
    static TitledAction setViewScope();
+   /**
+    * Create an action to add the selected topic to the current view scope.
+    *
+    * @return an action for this dialog.
+    */
    static TitledAction addToViewScope();
 
 private:
@@ -111,7 +127,7 @@ private:
       void offsetSelection(SelectionOffset offset, size_t visibleCount);
 
       contomap::model::ContomapView const &view;
-      
+
       size_t scrollIndex = 0;
       std::optional<size_t> selectedIndex;
       std::optional<contomap::model::Identifier> selectedTopicId;

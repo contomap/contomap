@@ -80,6 +80,11 @@ public:
     */
    [[nodiscard]] bool hasRoles() const;
 
+   /**
+    * Remove any references this association might haven to this topic.
+    *
+    * @param topicId the identifier of the topic to clear.
+    */
    void removeTopicReferences(contomap::model::Identifier topicId);
 
 private:
