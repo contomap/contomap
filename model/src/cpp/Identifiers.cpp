@@ -22,6 +22,11 @@ Identifiers::CollectionType::const_iterator Identifiers::end() const
    return set.end();
 }
 
+size_t Identifiers::size() const
+{
+   return set.size();
+}
+
 void Identifiers::add(Identifier id)
 {
    set.insert(id);

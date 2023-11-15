@@ -180,6 +180,7 @@ target_link_libraries(contomap-frontend-test
         all_warnings
         PUBLIC
         contomap-frontend
+        contomap-model-test-support
         contomap-infrastructure-test-support
         GTest::gmock_main
 )

@@ -238,6 +238,7 @@ private:
 
    void processInput();
    void updateState();
+   void cycleSelectedOccurrence(bool forward);
 
    void drawBackground();
    void drawMap(RenderContext const &context);
@@ -247,8 +248,12 @@ private:
    void openHelpDialog();
    void openNewTopicDialog();
    void openNewOccurrenceDialog();
+   void openNewLocateTopicAndActDialog();
+   void openSetTopicNameDefaultDialog();
+   void openSetTopicNameInScopeDialog();
 
    [[nodiscard]] contomap::model::SpacialCoordinate spacialCameraLocation();
+   [[nodiscard]] std::string bestTitleFor(contomap::model::Topic const &topic);
 
    contomap::frontend::Layout layout;
 
@@ -257,6 +262,9 @@ private:
    contomap::frontend::DisplayEnvironment &environment;
    contomap::editor::View &view;
    contomap::editor::InputRequestHandler &inputRequestHandler;
+
+   contomap::model::Identifiers lastViewScope;
+   size_t viewScopeListStartIndex = 0;
 
    std::unique_ptr<contomap::frontend::Dialog> currentDialog;
    std::unique_ptr<contomap::frontend::Dialog> pendingDialog;

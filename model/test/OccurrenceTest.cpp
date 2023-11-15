@@ -19,10 +19,12 @@ using contomap::test::samples::someSpacialCoordinate;
 TEST(OccurrenceTest, baseProperties)
 {
    auto id = Identifier::random();
+   auto topicId = Identifier::random();
    Identifiers scope = someNonEmptyScope();
    auto position = someSpacialCoordinate();
-   Occurrence a(id, scope, position);
+   Occurrence a(id, topicId, scope, position);
    EXPECT_EQ(id, a.getId());
+   EXPECT_EQ(topicId, a.getTopicId());
    EXPECT_TRUE(a.isIn(scope));
    EXPECT_FALSE(a.isIn({}));
    EXPECT_THAT(a.getLocation().getSpacial(), isCloseTo(position));

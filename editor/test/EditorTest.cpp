@@ -11,6 +11,7 @@
 #include "contomap/test/Steps.h"
 
 #include "SelectionFixture.h"
+#include "ViewScopeFixture.h"
 
 using contomap::editor::Editor;
 using contomap::editor::InputRequestHandler;
@@ -30,7 +31,11 @@ using contomap::model::TopicNameValue;
 
 using contomap::test::fixtures::ContomapViewFixture;
 using contomap::test::fixtures::SelectionFixture;
+using contomap::test::fixtures::ViewScopeFixture;
+using contomap::test::matchers::hasDefaultName;
 using contomap::test::matchers::hasName;
+using contomap::test::matchers::hasNameCountOf;
+using contomap::test::matchers::hasScopedName;
 using contomap::test::matchers::isCloseTo;
 using contomap::test::samples::someNameValue;
 using contomap::test::samples::someSpacialCoordinate;
@@ -89,6 +94,7 @@ public:
       TopicNameValue name;
       SpacialCoordinate position;
    };
+
    class NewOccurrenceRequest
    {
    public:
@@ -187,6 +193,21 @@ public:
          return NewTopicRequest(handler);
       }
 
+      void setsTopicNameDefaultTo(Identifier topicId, TopicNameValue const &value)
+      {
+         handler.setTopicNameDefault(topicId, value);
+      }
+
+      void setsTopicNameInScopeTo(Identifier topicId, TopicNameValue const &value)
+      {
+         handler.setTopicNameInScope(topicId, value);
+      }
+
+      void removesTopicNameInScopeOf(Identifier topicId)
+      {
+         handler.removeTopicNameInScope(topicId);
+      }
+
       NewOccurrenceRequest requestsANewOccurrence(Identifier id)
       {
          return NewOccurrenceRequest(handler, id);
@@ -207,6 +228,16 @@ public:
          handler.deleteSelection();
       }
 
+      void setsTheViewScopeFromSelection()
+      {
+         handler.setViewScopeFromSelection();
+      }
+
+      void setsTheViewScopeToDefault()
+      {
+         handler.setViewScopeToDefault();
+      }
+
       void selects(SelectedType type, Identifier id)
       {
          handler.modifySelection(type, id, SelectionAction::Set);
@@ -215,6 +246,31 @@ public:
       void togglesSelectionOf(SelectedType type, Identifier id)
       {
          handler.modifySelection(type, id, SelectionAction::Toggle);
+      }
+
+      void setsTheViewScopeToBe(Identifier id)
+      {
+         handler.setViewScopeTo(id);
+      }
+
+      void addsToTheViewScope(Identifier id)
+      {
+         handler.addToViewScope(id);
+      }
+
+      void removesFromTheViewScope(Identifier id)
+      {
+         handler.removeFromViewScope(id);
+      }
+
+      void cyclesTheSelectedOccurrenceForward()
+      {
+         handler.cycleSelectedOccurrenceForward();
+      }
+
+      void cyclesTheSelectedOccurrenceReverse()
+      {
+         handler.cycleSelectedOccurrenceReverse();
       }
 
    private:
@@ -227,6 +283,7 @@ public:
       explicit ViewFixture(contomap::editor::View &view)
          : mapViewFixture(view.ofMap())
          , selectionFixture(view.ofSelection())
+         , viewScopeFixture(view.ofViewScope())
       {
       }
 
@@ -240,9 +297,15 @@ public:
          return selectionFixture;
       }
 
+      ViewScopeFixture &ofViewScope()
+      {
+         return viewScopeFixture;
+      }
+
    private:
       ContomapViewFixture mapViewFixture;
       SelectionFixture selectionFixture;
+      ViewScopeFixture viewScopeFixture;
    };
 
    EditorTest()
@@ -259,6 +322,11 @@ public:
    ViewFixture &view()
    {
       return viewFixture;
+   }
+
+   Identifier defaultViewScope()
+   {
+      return instance.ofMap().getDefaultScope();
    }
 
    Identifiers viewScope()
@@ -478,4 +546,244 @@ TEST_F(EditorTest, deletingRoleRemovesIt)
    });
    asWellAs().view().ofSelection().should(
       [](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Role), testing::Eq(Identifiers {})) << "Role is still selected"; });
+}
+
+TEST_F(EditorTest, setViewScopeFromSelectionClearsSelection)
+{
+   Identifier topicId = given().user().requestsANewTopic();
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(topicId).getId());
+   when().user().setsTheViewScopeFromSelection();
+   then().view().ofSelection().should(
+      [](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers {})) << "Occurrence is still selected"; });
+}
+
+TEST_F(EditorTest, newOccurrencesAreInNewViewScope)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(scopeTopicId).getId());
+   given().user().setsTheViewScopeFromSelection();
+   Identifier topicId = when().user().requestsANewTopic();
+   then().view().ofMap().shouldHaveTopicThat(
+      topicId, [this](Topic const &topic) { EXPECT_TRUE(topic.isIn(viewScope())) << "Topic has no occurrence in this new scope"; });
+}
+
+TEST_F(EditorTest, setViewScopeToSingleTopic)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   when().user().setsTheViewScopeToBe(scopeTopicId);
+   then().view().ofViewScope().shouldBe(Identifiers::ofSingle(scopeTopicId));
+}
+
+TEST_F(EditorTest, unknownTopicsCanNotBeSetToBeTheViewScope)
+{
+   Identifiers originalScope = viewScope();
+   Identifier unknownId = Identifier::random();
+   when().user().setsTheViewScopeToBe(unknownId);
+   then().view().ofViewScope().shouldBe(originalScope);
+}
+
+TEST_F(EditorTest, addViewScopeOfSingleTopic)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   when().user().addsToTheViewScope(scopeTopicId);
+   then().view().ofViewScope().shouldContain(scopeTopicId);
+   asWellAs().view().ofViewScope().shouldContain(defaultViewScope());
+}
+
+TEST_F(EditorTest, unknownTopicsCanNotBeAddedToTheViewScope)
+{
+   Identifiers originalScope = viewScope();
+   Identifier unknownId = Identifier::random();
+   when().user().addsToTheViewScope(unknownId);
+   then().view().ofViewScope().shouldBe(originalScope);
+}
+
+TEST_F(EditorTest, removeSingleTopicFromViewScope)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   given().user().addsToTheViewScope(scopeTopicId);
+   when().user().removesFromTheViewScope(defaultViewScope());
+   then().view().ofViewScope().shouldBe(Identifiers::ofSingle(scopeTopicId));
+}
+
+TEST_F(EditorTest, removingLastTopicFromViewScopeResetsToDefault)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   given().user().addsToTheViewScope(scopeTopicId);
+   given().user().removesFromTheViewScope(defaultViewScope());
+   when().user().removesFromTheViewScope(scopeTopicId);
+   then().view().ofViewScope().shouldBe(Identifiers::ofSingle(defaultViewScope()));
+}
+
+TEST_F(EditorTest, deletingTopicOfCurrentViewScopeRemovesItFromViewScope)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   Identifier firstOccurrenceIdOfScopeTopic = occurrenceOf(scopeTopicId).getId();
+   given().user().setsTheViewScopeToBe(scopeTopicId);
+   given().user().requestsANewOccurrence(scopeTopicId);
+   given().user().setsTheViewScopeToDefault();
+   given().user().selects(SelectedType::Occurrence, firstOccurrenceIdOfScopeTopic);
+   given().user().deletesTheSelection();
+   given().user().setsTheViewScopeToBe(scopeTopicId);
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(scopeTopicId).getId());
+   when().user().deletesTheSelection();
+   then().view().ofViewScope().shouldBe(Identifiers::ofSingle(defaultViewScope()));
+}
+
+TEST_F(EditorTest, cyclingThroughOccurrencesSingleForward)
+{
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier occurrenceId = occurrenceOf(topicId).getId();
+   given().user().selects(SelectedType::Occurrence, occurrenceId);
+   when().user().cyclesTheSelectedOccurrenceForward();
+   then().view().ofSelection().should(
+      [occurrenceId](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers::ofSingle(occurrenceId))); });
+}
+
+TEST_F(EditorTest, cyclingThroughOccurrencesSingleReverse)
+{
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier occurrenceId = occurrenceOf(topicId).getId();
+   given().user().selects(SelectedType::Occurrence, occurrenceId);
+   when().user().cyclesTheSelectedOccurrenceReverse();
+   then().view().ofSelection().should(
+      [occurrenceId](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers::ofSingle(occurrenceId))); });
+}
+
+TEST_F(EditorTest, cyclingThroughOccurrencesToSecondInSameScopeForward)
+{
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier occurrenceId = occurrenceOf(topicId).getId();
+   given().user().requestsANewOccurrence(topicId);
+   given().user().selects(SelectedType::Occurrence, occurrenceId);
+   when().user().cyclesTheSelectedOccurrenceForward();
+   then().view().ofSelection().should([occurrenceId](Selection const &selection) {
+      EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::SizeIs(1));
+      EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Not(testing::Eq(Identifiers::ofSingle(occurrenceId))));
+   });
+}
+
+TEST_F(EditorTest, cyclingThroughOccurrencesToSecondInSameScopeReverse)
+{
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier occurrenceId = occurrenceOf(topicId).getId();
+   given().user().requestsANewOccurrence(topicId);
+   given().user().requestsANewOccurrence(topicId);
+   given().user().selects(SelectedType::Occurrence, occurrenceId);
+   given().user().cyclesTheSelectedOccurrenceForward();
+   given().user().cyclesTheSelectedOccurrenceReverse();
+   then().view().ofSelection().should([occurrenceId](Selection const &selection) {
+      EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::SizeIs(1));
+      EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers::ofSingle(occurrenceId)));
+   });
+}
+
+TEST_F(EditorTest, cyclingThroughOccurrencesBackToOriginalInSameScope)
+{
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier occurrenceId = occurrenceOf(topicId).getId();
+   given().user().requestsANewOccurrence(topicId);
+   given().user().selects(SelectedType::Occurrence, occurrenceId);
+   given().user().cyclesTheSelectedOccurrenceForward();
+   when().user().cyclesTheSelectedOccurrenceForward();
+   then().view().ofSelection().should(
+      [occurrenceId](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers::ofSingle(occurrenceId))); });
+}
+
+TEST_F(EditorTest, cyclingThroughOccurrencesIsIgnoredIfMoreThanOneOccurrenceSelected)
+{
+   Identifier topicId1 = given().user().requestsANewTopic();
+   Identifier occurrenceId1 = occurrenceOf(topicId1).getId();
+   given().user().requestsANewOccurrence(topicId1);
+   Identifier topicId2 = given().user().requestsANewTopic();
+   Identifier occurrenceId2 = occurrenceOf(topicId2).getId();
+   given().user().selects(SelectedType::Occurrence, occurrenceId1);
+   given().user().togglesSelectionOf(SelectedType::Occurrence, occurrenceId2);
+   when().user().cyclesTheSelectedOccurrenceForward();
+   then().view().ofSelection().should([](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::SizeIs(2)); });
+}
+
+TEST_F(EditorTest, cyclingThroughOccurrencesToSecondInOtherScope)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier occurrenceId = occurrenceOf(topicId).getId();
+   given().user().setsTheViewScopeToBe(scopeTopicId);
+   given().user().requestsANewOccurrence(topicId);
+   given().user().setsTheViewScopeToDefault();
+   given().user().selects(SelectedType::Occurrence, occurrenceId);
+   when().user().cyclesTheSelectedOccurrenceForward();
+   then().view().ofSelection().should([occurrenceId](Selection const &selection) {
+      EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::SizeIs(1));
+      EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Not(testing::Eq(Identifiers::ofSingle(occurrenceId))));
+   });
+   asWellAs().view().ofViewScope().shouldBe(Identifiers::ofSingle(scopeTopicId));
+}
+
+TEST_F(EditorTest, defaultTopicNameCanBeChanged)
+{
+   Identifier topicId = given().user().requestsANewTopic();
+   auto newName = someNameValue();
+   when().user().setsTopicNameDefaultTo(topicId, newName);
+   then().view().ofMap().shouldHaveTopicThat(topicId, [newName](Topic const &topic) {
+      EXPECT_THAT(topic, hasNameCountOf(1));
+      EXPECT_THAT(topic, hasDefaultName(newName.raw()));
+   });
+}
+
+TEST_F(EditorTest, scopedTopicNameCanBeSet)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   Identifier topicId = given().user().requestsANewTopic();
+   given().user().setsTheViewScopeToBe(scopeTopicId);
+   auto newName = someNameValue();
+   when().user().setsTopicNameInScopeTo(topicId, newName);
+   then().view().ofMap().shouldHaveTopicThat(topicId, [scopeTopicId, newName](Topic const &topic) {
+      EXPECT_THAT(topic, hasNameCountOf(2));
+      EXPECT_THAT(topic, hasScopedName(Identifiers::ofSingle(scopeTopicId), newName.raw()));
+   });
+}
+
+TEST_F(EditorTest, scopedTopicNameCanBeChanged)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   Identifier topicId = given().user().requestsANewTopic();
+   given().user().setsTheViewScopeToBe(scopeTopicId);
+   given().user().setsTopicNameInScopeTo(topicId, someNameValue());
+   auto newName = someNameValue();
+   when().user().setsTopicNameInScopeTo(topicId, newName);
+   then().view().ofMap().shouldHaveTopicThat(topicId, [scopeTopicId, newName](Topic const &topic) {
+      EXPECT_THAT(topic, hasNameCountOf(2));
+      EXPECT_THAT(topic, hasScopedName(Identifiers::ofSingle(scopeTopicId), newName.raw()));
+   });
+}
+
+TEST_F(EditorTest, scopedTopicNameCanBeRemoved)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   std::string defaultName("defaultName");
+   Identifier topicId = given().user().requestsANewTopic().withName(defaultName);
+   given().user().setsTheViewScopeToBe(scopeTopicId);
+   given().user().setsTopicNameInScopeTo(topicId, someNameValue());
+   when().user().removesTopicNameInScopeOf(topicId);
+   then().view().ofMap().shouldHaveTopicThat(topicId, [defaultName](Topic const &topic) {
+      EXPECT_THAT(topic, hasNameCountOf(1));
+      EXPECT_THAT(topic, hasDefaultName(defaultName));
+   });
+}
+
+TEST_F(EditorTest, scopedTopicNameIsRemovedIfScopeIsDeleted)
+{
+   Identifier scopeTopicId = given().user().requestsANewTopic();
+   std::string defaultName("defaultName");
+   Identifier topicId = given().user().requestsANewTopic().withName(defaultName);
+   given().user().setsTheViewScopeToBe(scopeTopicId);
+   given().user().setsTopicNameInScopeTo(topicId, someNameValue());
+   given().user().setsTheViewScopeToDefault();
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(scopeTopicId).getId());
+   given().user().deletesTheSelection();
+   then().view().ofMap().shouldHaveTopicThat(topicId, [defaultName](Topic const &topic) {
+      EXPECT_THAT(topic, hasNameCountOf(1));
+      EXPECT_THAT(topic, hasDefaultName(defaultName));
+   });
 }

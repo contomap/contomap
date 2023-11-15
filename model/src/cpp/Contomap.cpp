@@ -142,20 +142,15 @@ void Contomap::deleteAssociation(Identifier id)
 
 void Contomap::deleteOccurrence(Identifier id)
 {
-   for (auto it = topics.begin(); it != topics.end();)
+   Identifiers topicsToDelete;
+   for (auto &[_, topic] : topics)
    {
-      Topic &topic = it->second;
-
       if (topic.removeOccurrence(id) && topicShouldBeRemoved(topic))
       {
-         deleting(topic);
-         it = topics.erase(it);
-      }
-      else
-      {
-         ++it;
+         topicsToDelete.add(topic.getId());
       }
    }
+   deleteTopicsCascading(topicsToDelete);
 }
 
 bool Contomap::topicShouldBeRemoved(Topic const &topic)
@@ -163,11 +158,44 @@ bool Contomap::topicShouldBeRemoved(Topic const &topic)
    return topic.isWithoutOccurrences() && (topic.getId() != defaultScope);
 }
 
-void Contomap::deleting(Topic &topic)
+void Contomap::deleteTopicsCascading(Identifiers toDelete)
 {
-   // This is not the best algorithm, to try out all the associations, instead of iterating over the existing roles.
+   while (!toDelete.empty())
+   {
+      Identifiers localToDelete = toDelete;
+      toDelete.clear();
+      for (auto const &topicId : localToDelete)
+      {
+         auto it = topics.find(topicId);
+         if (it != topics.end())
+         {
+            deleting(toDelete, it->second);
+            topics.erase(it);
+         }
+      }
+   }
+}
+
+void Contomap::deleting(Identifiers &toDelete, Topic &topic)
+{
+   Identifiers associationsToDelete;
    for (auto &[_, association] : associations)
    {
       topic.removeRolesOf(association);
+      association.removeTopicReferences(topic.getId());
+      if (association.isWithoutScope())
+      {
+         associationsToDelete.add(association.getId());
+      }
+   }
+   deleteAssociations(associationsToDelete);
+
+   for (auto &[_, otherTopic] : topics)
+   {
+      otherTopic.removeTopicReferences(topic.getId());
+      if (topicShouldBeRemoved(otherTopic))
+      {
+         toDelete.add(otherTopic.getId());
+      }
    }
 }

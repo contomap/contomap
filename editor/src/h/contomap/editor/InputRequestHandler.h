@@ -20,11 +20,34 @@ public:
    /**
     * Called when a new topic shall be created.
     *
-    * @param name how the new topic shall be named.
+    * @param name how the new topic shall be named by default.
     * @param location the point at which the first occurrence shall be put at.
     * @return identifier of the created topic.
     */
    virtual contomap::model::Identifier newTopicRequested(contomap::model::TopicNameValue name, contomap::model::SpacialCoordinate location) = 0;
+
+   /**
+    * Called when the default name of a topic shall be changed.
+    *
+    * @param topicId the identifier of the topic.
+    * @param value the new default name of the topic.
+    */
+   virtual void setTopicNameDefault(contomap::model::Identifier topicId, contomap::model::TopicNameValue value) = 0;
+
+   /**
+    * Called when the scoped name of a topic shall be set.
+    *
+    * @param topicId the identifier of the topic.
+    * @param value the name of the topic in the current view scope.
+    */
+   virtual void setTopicNameInScope(contomap::model::Identifier topicId, contomap::model::TopicNameValue value) = 0;
+
+   /**
+    * Called when the scoped name of a topic shall be removed.
+    *
+    * @param topicId the identifier of the topic.
+    */
+   virtual void removeTopicNameInScope(contomap::model::Identifier topicId) = 0;
 
    /**
     * Called when a topic shall receive a further occurrence in the current view scope.
@@ -67,6 +90,56 @@ public:
     * Called to request to delete all the selected items.
     */
    virtual void deleteSelection() = 0;
+
+   /**
+    * Sets the view scope from the current selection.
+    */
+   virtual void setViewScopeFromSelection() = 0;
+
+   /**
+    * Adds to the view scope from the current selection.
+    */
+   virtual void addToViewScopeFromSelection() = 0;
+
+   /**
+    * Sets the view scope to the default.
+    */
+   virtual void setViewScopeToDefault() = 0;
+
+   /**
+    * Sets the view scope to be only the identified topic.
+    *
+    * @param id identifier of the topic to be the new view scope.
+    */
+   virtual void setViewScopeTo(contomap::model::Identifier id) = 0;
+
+   /**
+    * Adds the given topic identifier to the current view scope.
+    *
+    * @param id identifier of the topic to be added to the view scope.
+    */
+   virtual void addToViewScope(contomap::model::Identifier id) = 0;
+
+   /**
+    * Removes the given topic identifier from the current view scope.
+    * If the remaining view scope becomes empty, the current view scope will be based on the default one.
+    * Removing an identifier that is not in the current view scope does nothing.
+    *
+    * @param id the identifier of the topic to be removed from the view scope.
+    */
+   virtual void removeFromViewScope(contomap::model::Identifier id) = 0;
+
+   /**
+    * With a single occurrence selected, this operation selects the next occurrence of the topic
+    * and sets the view scope to that of the new occurrence.
+    */
+   virtual void cycleSelectedOccurrenceForward() = 0;
+
+   /**
+    * With a single occurrence selected, this operation selects the previous occurrence of the topic
+    * and sets the view scope to that of the new occurrence.
+    */
+   virtual void cycleSelectedOccurrenceReverse() = 0;
 };
 
 } // namespace contomap::editor

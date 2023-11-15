@@ -25,6 +25,15 @@ public:
    void clear();
 
    /**
+    * Determines whether the selection contains only a single entry of given type.
+    * This is useful for entry-specific operations.
+    *
+    * @param type the queried type.
+    * @return true if the selection has only one item selected, and it is of given type.
+    */
+   bool hasSoleEntryFor(contomap::editor::SelectedType type) const;
+
+   /**
     * Set the sole selection to be for the identified type.
     *
     * @param type the type that the identifier refers to.

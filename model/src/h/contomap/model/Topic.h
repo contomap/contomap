@@ -33,10 +33,11 @@ public:
    /**
     * Adds a new name to the topic.
     *
+    * @param scope the scope within which the name is valid.
     * @param value the value of the name to add.
     * @return the created instance.
     */
-   [[nodiscard]] contomap::model::TopicName &newName(contomap::model::TopicNameValue value);
+   [[nodiscard]] contomap::model::TopicName &newName(contomap::model::Identifiers scope, contomap::model::TopicNameValue const &value);
 
    /**
     * Adds a new occurrence to the topic.
@@ -84,6 +85,21 @@ public:
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::TopicName const> allNames() const;
 
    /**
+    * Set the name of the topic in given scope.
+    *
+    * @param scope the scope in which the new name shall be set.
+    * @param value the new value.
+    */
+   void setNameInScope(contomap::model::Identifiers const &scope, contomap::model::TopicNameValue value);
+
+   /**
+    * Remove the name within given scope.
+    *
+    * @param scope the scope from which the name shall be removed.
+    */
+   void removeNameInScope(contomap::model::Identifiers const &scope);
+
+   /**
     * Return true if this instance has at least one occurrence that is in given scope.
     *
     * @param scope the scope to look for.
@@ -113,6 +129,30 @@ public:
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence const> occurrencesIn(contomap::model::Identifiers scope) const;
 
    /**
+    * Determines the occurrence that follows the given one.
+    *
+    * @param reference the identifier of the occurrence to determine.
+    * @return reference to an occurrence.
+    */
+   [[nodiscard]] contomap::model::Occurrence const &nextOccurrenceAfter(contomap::model::Identifier reference) const;
+
+   /**
+    * Determines the occurrence that precedes the given one.
+    *
+    * @param reference the identifier of the occurrence to determine.
+    * @return reference to an occurrence.
+    */
+   [[nodiscard]] contomap::model::Occurrence const &previousOccurrenceBefore(contomap::model::Identifier reference) const;
+
+   /**
+    * Resolve the occurrence with given identifier.
+    *
+    * @param occurrenceId the identifier of the occurrence to retrieve.
+    * @return the associated occurrence.
+    */
+   [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Occurrence const>> getOccurrence(contomap::model::Identifier occurrenceId) const;
+
+   /**
     * Return a Search for all roles that are related to given associations.
     *
     * @param associations the associations to look for.
@@ -120,7 +160,16 @@ public:
     */
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role const> rolesAssociatedWith(contomap::model::Identifiers associations) const;
 
+   /**
+    * Removes any reference to the given identified topic.
+    *
+    * @param topicId the identifier of the topic that shall no longer be referenced.
+    */
+   void removeTopicReferences(contomap::model::Identifier topicId);
+
 private:
+   [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::TopicName>> findNameByScope(contomap::model::Identifiers const &scope);
+
    contomap::model::Identifier id;
 
    contomap::model::OptionalIdentifier reified;

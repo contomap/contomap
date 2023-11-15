@@ -34,6 +34,11 @@ bool Association::isIn(Identifiers const &thatScope) const
    return thatScope.contains(scope);
 }
 
+bool Association::isWithoutScope() const
+{
+   return scope.empty();
+}
+
 Role::Seed Association::addRole()
 {
    auto roleId = Identifier::random();
@@ -54,4 +59,12 @@ bool Association::hasRole(Identifier roleId) const
 bool Association::hasRoles() const
 {
    return !roles.empty();
+}
+
+void Association::removeTopicReferences(contomap::model::Identifier topicId)
+{
+   if (scope.contains(topicId))
+   {
+      scope.clear();
+   }
 }

@@ -1,4 +1,5 @@
 #include <cmath>
+#include <sstream>
 
 #include <raygui/raygui.h>
 
@@ -8,18 +9,25 @@
 #include <raymath.h>
 #pragma GCC diagnostic pop
 
+#include "contomap/editor/Selections.h"
 #include "contomap/frontend/HelpDialog.h"
+#include "contomap/frontend/LocateTopicAndActDialog.h"
 #include "contomap/frontend/MainWindow.h"
-#include "contomap/frontend/NewOccurrenceDialog.h"
+#include "contomap/frontend/Names.h"
 #include "contomap/frontend/NewTopicDialog.h"
+#include "contomap/frontend/RenameTopicDialog.h"
 #include "contomap/model/Associations.h"
 #include "contomap/model/Topics.h"
 
 using contomap::editor::InputRequestHandler;
 using contomap::editor::SelectedType;
 using contomap::editor::SelectionAction;
+using contomap::editor::Selections;
+using contomap::frontend::LocateTopicAndActDialog;
 using contomap::frontend::MainWindow;
 using contomap::frontend::MapCamera;
+using contomap::frontend::Names;
+using contomap::frontend::RenameTopicDialog;
 using contomap::frontend::RenderContext;
 using contomap::model::Association;
 using contomap::model::Associations;
@@ -157,6 +165,10 @@ void MainWindow::processInput()
 
       if (IsKeyPressed(KEY_HOME))
       {
+         if (IsKeyDown(KEY_LEFT_CONTROL))
+         {
+            inputRequestHandler.setViewScopeToDefault();
+         }
          mapCamera.panTo(MapCamera::HOME_POSITION);
       }
 
@@ -177,6 +189,10 @@ void MainWindow::processInput()
       {
          openNewOccurrenceDialog();
       }
+      if (IsKeyReleased(KEY_T))
+      {
+         openNewLocateTopicAndActDialog();
+      }
 
       if (IsKeyReleased(KEY_L))
       {
@@ -188,7 +204,8 @@ void MainWindow::processInput()
          inputRequestHandler.deleteSelection();
       }
 
-      if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+      // TODO: avoid map interaction click when on view scope bar.
+      if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && (static_cast<float>(GetMouseY()) > (layout.buttonHeight() + layout.padding() * 2.0f)))
       {
          auto action = IsKeyDown(KEY_LEFT_CONTROL) ? SelectionAction::Toggle : SelectionAction::Set;
          currentFocus.modifySelection(inputRequestHandler, action);
@@ -200,6 +217,25 @@ void MainWindow::updateState()
 {
    auto frameTime = contomap::frontend::FrameTime::fromLastFrame();
    mapCamera.timePassed(frameTime);
+}
+
+void MainWindow::cycleSelectedOccurrence(bool forward)
+{
+   if (forward)
+   {
+      inputRequestHandler.cycleSelectedOccurrenceForward();
+   }
+   else
+   {
+      inputRequestHandler.cycleSelectedOccurrenceReverse();
+   }
+   auto newOccurrence = Selections::firstOccurrenceFrom(view.ofSelection(), view.ofMap());
+
+   if (newOccurrence.has_value())
+   {
+      auto newLocation = newOccurrence.value().get().getLocation().getSpacial().getAbsoluteReference();
+      mapCamera.panTo(Vector2 { .x = newLocation.X(), .y = newLocation.Y() });
+   }
 }
 
 void MainWindow::drawBackground()
@@ -283,14 +319,7 @@ void MainWindow::drawMap(RenderContext const &context)
    auto visibleTopics = map.find(Topics::thatAreIn(viewScope));
    for (Topic const &visibleTopic : visibleTopics)
    {
-      std::string nameText;
-      auto allNames = visibleTopic.allNames();
-      for (TopicName const &name : allNames)
-      {
-         // TODO: filter if in scope, calculate full name plate
-         nameText = name.getValue().raw();
-      }
-
+      std::string nameText = bestTitleFor(visibleTopic);
       std::vector<std::reference_wrapper<Role const>> roles;
       for (Role const &role : visibleTopic.rolesAssociatedWith(associationIds))
       {
@@ -391,14 +420,153 @@ void MainWindow::drawUserInterface(RenderContext const &context)
    auto contentSize = context.getContentSize();
    auto iconSize = layout.buttonHeight();
    auto padding = layout.padding();
-   Vector2 toolbarPosition { .x = 0, .y = 0 };
-   Vector2 toolbarSize { .x = contentSize.x, .y = iconSize + (padding * 2.0f) };
-   GuiPanel(Rectangle { toolbarPosition.x, toolbarPosition.y, toolbarSize.x, toolbarSize.y }, nullptr);
-   GuiSetTooltip("Show help window");
-   if (GuiButton(Rectangle { toolbarPosition.x + toolbarSize.x - (padding + iconSize), toolbarPosition.y + padding, iconSize, iconSize },
-          GuiIconText(ICON_HELP, nullptr)))
    {
-      openHelpDialog();
+      Vector2 toolbarPosition { .x = 0, .y = 0 };
+      Vector2 toolbarSize { .x = contentSize.x, .y = iconSize + (padding * 2.0f) };
+      GuiPanel(Rectangle { toolbarPosition.x, toolbarPosition.y, toolbarSize.x, toolbarSize.y }, nullptr);
+      GuiSetTooltip("Show help window");
+      if (GuiButton(
+             Rectangle {
+                .x = toolbarPosition.x + toolbarSize.x - (padding + iconSize), .y = toolbarPosition.y + padding, .width = iconSize, .height = iconSize },
+             GuiIconText(ICON_HELP, nullptr)))
+      {
+         openHelpDialog();
+      }
+
+      Rectangle leftIconButtonsBounds {
+         .x = toolbarPosition.x + padding,
+         .y = toolbarPosition.y + padding,
+         .width = iconSize,
+         .height = iconSize,
+      };
+      GuiSetTooltip("Set home view scope");
+      if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_HOUSE, nullptr)))
+      {
+         inputRequestHandler.setViewScopeToDefault();
+         mapCamera.panTo(MapCamera::HOME_POSITION);
+      }
+      leftIconButtonsBounds.x += (iconSize + padding);
+      GuiSetTooltip("Set view scope to selected");
+      if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_BOX_DOTS_BIG, nullptr)))
+      {
+         inputRequestHandler.setViewScopeFromSelection();
+         mapCamera.panTo(MapCamera::HOME_POSITION);
+      }
+      leftIconButtonsBounds.x += (iconSize + padding);
+      GuiSetTooltip("Add selected to view scope");
+      if (GuiButton(leftIconButtonsBounds, "+v"))
+      {
+         inputRequestHandler.addToViewScopeFromSelection();
+      }
+      leftIconButtonsBounds.x += (iconSize + padding);
+      GuiSetTooltip("Cycle to previous occurrence");
+      if (!view.ofSelection().hasSoleEntryFor(SelectedType::Occurrence))
+      {
+         GuiDisable();
+      }
+      if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_ARROW_LEFT_FILL, nullptr)))
+      {
+         cycleSelectedOccurrence(false);
+      }
+      leftIconButtonsBounds.x += (iconSize + padding);
+      GuiSetTooltip("Cycle to next occurrence");
+      if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_ARROW_RIGHT_FILL, nullptr)))
+      {
+         cycleSelectedOccurrence(true);
+      }
+      GuiEnable();
+
+      leftIconButtonsBounds.x += (iconSize + padding) * 2;
+      if (!view.ofSelection().hasSoleEntryFor(SelectedType::Occurrence))
+      {
+         GuiDisable();
+      }
+      GuiSetTooltip("Set topic default name");
+      if (GuiButton(leftIconButtonsBounds, "N"))
+      {
+         openSetTopicNameDefaultDialog();
+      }
+      leftIconButtonsBounds.x += (iconSize + padding);
+      GuiSetTooltip("Set topic scoped name");
+      if (GuiButton(leftIconButtonsBounds, "[N]"))
+      {
+         openSetTopicNameInScopeDialog();
+      }
+      GuiEnable();
+      leftIconButtonsBounds.x += (iconSize + padding);
+   }
+
+   {
+      Vector2 viewScopeSize { .x = contentSize.x, .y = iconSize + (padding * 2.0f) };
+      Vector2 viewScopePosition { .x = 0, .y = contentSize.y - viewScopeSize.y };
+      Rectangle viewScopeBounds { .x = viewScopePosition.x, .y = viewScopePosition.y, .width = viewScopeSize.x, .height = viewScopeSize.y };
+      GuiPanel(viewScopeBounds, nullptr);
+      float buttonStartX = viewScopePosition.x + padding;
+
+      auto viewScope = view.ofViewScope();
+      if (lastViewScope != viewScope)
+      {
+         viewScopeListStartIndex = 0;
+         lastViewScope = viewScope;
+      }
+
+      GuiSetTooltip("Scroll view scope left");
+      if (viewScopeListStartIndex == 0)
+      {
+         GuiDisable();
+      }
+      if (GuiButton(
+             Rectangle { .x = buttonStartX, .y = viewScopePosition.y + padding, .width = iconSize, .height = iconSize }, GuiIconText(ICON_ARROW_LEFT, nullptr)))
+      {
+         if (viewScopeListStartIndex > 0)
+         {
+            viewScopeListStartIndex--;
+         }
+      }
+      GuiEnable();
+      buttonStartX += iconSize + padding;
+      GuiSetTooltip("Scroll view scope right");
+      if ((viewScopeListStartIndex + 1) >= viewScope.size())
+      {
+         viewScopeListStartIndex = viewScope.size() - 1;
+         GuiDisable();
+      }
+      if (GuiButton(
+             Rectangle {
+                .x = viewScopePosition.x + padding + (iconSize + padding) * 1, .y = viewScopePosition.y + padding, .width = iconSize, .height = iconSize },
+             GuiIconText(ICON_ARROW_RIGHT, nullptr)))
+      {
+         viewScopeListStartIndex++;
+      }
+      GuiEnable();
+      buttonStartX += iconSize + padding;
+
+      auto add = [this, &buttonStartX, viewScopePosition, padding, iconSize](Identifier id, std::string const &name) {
+         Font font = GuiGetFont();
+         auto fontSize = static_cast<float>(GuiGetStyle(DEFAULT, TEXT_SIZE));
+         auto spacing = static_cast<float>(GuiGetStyle(DEFAULT, TEXT_SPACING));
+         auto textPadding = static_cast<float>(GuiGetStyle(CHECKBOX, TEXT_PADDING));
+         auto textSize = MeasureTextEx(font, name.c_str(), fontSize, spacing);
+
+         float labelWidth = textSize.x + textPadding * 2;
+         if (!GuiToggle(Rectangle { .x = buttonStartX, .y = viewScopePosition.y + padding, .width = labelWidth, .height = iconSize }, name.c_str(), true))
+         {
+            inputRequestHandler.removeFromViewScope(id);
+         }
+         buttonStartX += labelWidth + padding;
+      };
+
+      size_t scopeIndex = 0;
+      for (auto id : viewScope)
+      {
+         scopeIndex++;
+         if (scopeIndex <= viewScopeListStartIndex)
+         {
+            continue;
+         }
+         auto const &topic = view.ofMap().findTopic(id);
+         add(id, topic.has_value() ? bestTitleFor(topic.value()) : "???");
+      }
    }
 
    if (currentDialog != nullptr)
@@ -430,7 +598,40 @@ void MainWindow::openNewTopicDialog()
 
 void MainWindow::openNewOccurrenceDialog()
 {
-   pendingDialog = std::make_unique<contomap::frontend::NewOccurrenceDialog>(inputRequestHandler, view.ofMap(), layout, spacialCameraLocation());
+   std::vector<LocateTopicAndActDialog::TitledAction> actions { LocateTopicAndActDialog::newOccurrence(spacialCameraLocation()) };
+   pendingDialog = std::make_unique<LocateTopicAndActDialog>(inputRequestHandler, view.ofMap(), layout, actions);
+}
+
+void MainWindow::openNewLocateTopicAndActDialog()
+{
+   std::vector<LocateTopicAndActDialog::TitledAction> actions {
+      LocateTopicAndActDialog::setViewScope(),
+      LocateTopicAndActDialog::addToViewScope(),
+      LocateTopicAndActDialog::newOccurrence(spacialCameraLocation()),
+   };
+   pendingDialog = std::make_unique<LocateTopicAndActDialog>(inputRequestHandler, view.ofMap(), layout, actions);
+}
+
+void MainWindow::openSetTopicNameDefaultDialog()
+{
+   auto topic = Selections::topicOfFirstOccurrenceFrom(view.ofSelection(), view.ofMap());
+   if (!topic.has_value())
+   {
+      return;
+   }
+
+   pendingDialog = RenameTopicDialog::forDefaultName(inputRequestHandler, layout, topic.value().get().getId());
+}
+
+void MainWindow::openSetTopicNameInScopeDialog()
+{
+   auto topic = Selections::topicOfFirstOccurrenceFrom(view.ofSelection(), view.ofMap());
+   if (!topic.has_value())
+   {
+      return;
+   }
+
+   pendingDialog = RenameTopicDialog::forScopedName(inputRequestHandler, layout, topic.value().get().getId());
 }
 
 SpacialCoordinate MainWindow::spacialCameraLocation()
@@ -465,4 +666,9 @@ MapCamera::ZoomOperation MainWindow::doubledRelative(bool nearer)
          return (it != ZOOM_LEVELS.rend()) ? it->second : ZOOM_LEVELS[0].second;
       }
    };
+}
+
+std::string MainWindow::bestTitleFor(Topic const &topic)
+{
+   return Names::forScopedDisplay(topic, view.ofViewScope(), view.ofMap().getDefaultScope())[0];
 }

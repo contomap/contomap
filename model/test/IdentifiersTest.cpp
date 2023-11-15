@@ -45,6 +45,18 @@ TEST(IdentifiersTest, clearing)
    EXPECT_TRUE(ids.empty());
 }
 
+TEST(IdentifiersTest, size)
+{
+   Identifiers ids;
+   EXPECT_EQ(0, ids.size());
+   ids.add(Identifier::random());
+   ids.add(Identifier::random());
+   ids.add(Identifier::random());
+   EXPECT_EQ(3, ids.size());
+   ids.clear();
+   EXPECT_EQ(0, ids.size());
+}
+
 TEST(IdentifiersTest, collectionIsASet)
 {
    Identifiers one;

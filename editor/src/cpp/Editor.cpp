@@ -1,4 +1,5 @@
 #include "contomap/editor/Editor.h"
+#include "contomap/editor/Selections.h"
 #include "contomap/model/Topics.h"
 
 using contomap::editor::Editor;
@@ -7,6 +8,7 @@ using contomap::editor::SelectionAction;
 using contomap::model::Association;
 using contomap::model::Contomap;
 using contomap::model::Identifier;
+using contomap::model::Identifiers;
 using contomap::model::Occurrence;
 using contomap::model::SpacialCoordinate;
 using contomap::model::Topic;
@@ -22,9 +24,39 @@ Editor::Editor()
 Identifier Editor::newTopicRequested(TopicNameValue name, SpacialCoordinate location)
 {
    auto &topic = map.newTopic();
-   static_cast<void>(topic.newName(std::move(name)));
+   static_cast<void>(topic.newName(scopeForTopicDefaultName(), name));
    createAndSelectOccurrence(topic, location);
    return topic.getId();
+}
+
+void Editor::setTopicNameDefault(Identifier topicId, TopicNameValue value)
+{
+   setTopicNameInScope(topicId, scopeForTopicDefaultName(), std::move(value));
+}
+
+void Editor::setTopicNameInScope(Identifier topicId, TopicNameValue value)
+{
+   setTopicNameInScope(topicId, viewScope, std::move(value));
+}
+
+void Editor::setTopicNameInScope(Identifier topicId, Identifiers const &scope, TopicNameValue value)
+{
+   auto topic = map.findTopic(topicId);
+   if (!topic.has_value())
+   {
+      return;
+   }
+   topic.value().get().setNameInScope(scope, std::move(value));
+}
+
+void Editor::removeTopicNameInScope(Identifier topicId)
+{
+   auto topic = map.findTopic(topicId);
+   if (!topic.has_value())
+   {
+      return;
+   }
+   topic.value().get().removeNameInScope(viewScope);
 }
 
 void Editor::newOccurrenceRequested(Identifier topicId, SpacialCoordinate location)
@@ -107,6 +139,92 @@ void Editor::deleteSelection()
    map.deleteAssociations(selection.of(SelectedType::Association));
    map.deleteOccurrences(selection.of(SelectedType::Occurrence));
    selection.clear();
+   verifyViewScopeIsStable();
+}
+
+void Editor::setViewScopeFromSelection()
+{
+   auto &occurrenceIds = selection.of(SelectedType::Occurrence);
+   Identifiers newViewScope;
+   for (Topic &topic : map.find(Topics::thatOccurAs(occurrenceIds)))
+   {
+      newViewScope.add(topic.getId());
+   }
+   if (!newViewScope.empty())
+   {
+      setViewScopeTo(newViewScope);
+   }
+}
+
+void Editor::addToViewScopeFromSelection()
+{
+   auto &occurrenceIds = selection.of(SelectedType::Occurrence);
+   Identifiers newViewScope;
+   for (Topic &topic : map.find(Topics::thatOccurAs(occurrenceIds)))
+   {
+      addToViewScope(topic.getId());
+   }
+}
+
+void Editor::setViewScopeToDefault()
+{
+   setViewScopeTo(Identifiers::ofSingle(map.getDefaultScope()));
+}
+
+void Editor::setViewScopeTo(Identifier id)
+{
+   if (!map.findTopic(id).has_value())
+   {
+      return;
+   }
+   setViewScopeTo(Identifiers::ofSingle(id));
+}
+
+void Editor::addToViewScope(Identifier id)
+{
+   if (!map.findTopic(id).has_value())
+   {
+      return;
+   }
+   viewScope.add(id);
+}
+
+void Editor::removeFromViewScope(Identifier id)
+{
+   if (!viewScope.remove(id))
+   {
+      return;
+   }
+   if (viewScope.empty())
+   {
+      viewScope.add(map.getDefaultScope());
+   }
+   selection.clear();
+}
+
+void Editor::cycleSelectedOccurrenceForward()
+{
+   cycleSelectedOccurrence(true);
+}
+
+void Editor::cycleSelectedOccurrenceReverse()
+{
+   cycleSelectedOccurrence(false);
+}
+
+void Editor::cycleSelectedOccurrence(bool forward)
+{
+   if (!selection.hasSoleEntryFor(SelectedType::Occurrence))
+   {
+      return;
+   }
+   Identifier originalOccurrenceId = *selection.of(SelectedType::Occurrence).begin();
+   for (Topic &topic : map.find(Topics::thatOccurAs(Identifiers::ofSingle(originalOccurrenceId))))
+   {
+      auto const &nextOccurrence = forward ? topic.nextOccurrenceAfter(originalOccurrenceId) : topic.previousOccurrenceBefore(originalOccurrenceId);
+      viewScope = nextOccurrence.getScope();
+      selection.setSole(SelectedType::Occurrence, nextOccurrence.getId());
+   }
 }
 
 contomap::model::Identifiers const &Editor::ofViewScope() const
@@ -128,4 +246,33 @@ void Editor::createAndSelectOccurrence(contomap::model::Topic &topic, contomap::
 {
    auto &occurrence = topic.newOccurrence(viewScope, location);
    selection.setSole(SelectedType::Occurrence, occurrence.getId());
+}
+
+void Editor::setViewScopeTo(contomap::model::Identifiers const &ids)
+{
+   viewScope = ids;
+   selection.clear();
+}
+
+void Editor::verifyViewScopeIsStable()
+{
+   Identifiers unknownIds;
+
+   for (auto id : viewScope)
+   {
+      if (!map.findTopic(id).has_value())
+      {
+         unknownIds.add(id);
+      }
+   }
+   for (auto id : unknownIds)
+   {
+      removeFromViewScope(id);
+   }
+}
+
+Identifiers Editor::scopeForTopicDefaultName()
+{
+   static Identifiers const empty;
+   return empty;
 }

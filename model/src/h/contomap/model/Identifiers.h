@@ -26,17 +26,12 @@ public:
    static Identifiers ofSingle(Identifier id);
 
    /**
-    * Equality operator.
-    * @param other the other identifiers to compare against.
-    * @return true if equal.
+    * Spaceship operator.
+    *
+    * @param other the other instance to compare to.
+    * @return the ordering for this type.
     */
-   bool operator==(Identifiers const &other) const = default;
-   /**
-    * Inequality operator.
-    * @param other the other identifiers to compare against.
-    * @return true if not equal.
-    */
-   bool operator!=(Identifiers const &other) const = default;
+   std::strong_ordering operator<=>(Identifiers const &other) const noexcept = default;
 
    /**
     * @return start operator for iteration.
@@ -46,6 +41,11 @@ public:
     * @return stop operator for iteration.
     */
    [[nodiscard]] CollectionType::const_iterator end() const;
+
+   /**
+    * @return the number of identifiers in the set.
+    */
+   [[nodiscard]] size_t size() const;
 
    /**
     * Adds the given identifier to the collection. If the identifier is already contained, nothing happens.

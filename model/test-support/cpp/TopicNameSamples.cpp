@@ -10,3 +10,8 @@ TopicNameValue contomap::test::samples::someNameValue()
    static std::atomic<uint32_t> nameCounter(0);
    return std::get<TopicNameValue>(TopicNameValue::from(std::string("name") + std::to_string(nameCounter++)));
 }
+
+TopicNameValue contomap::test::samples::named(std::string const &value)
+{
+   return std::get<TopicNameValue>(TopicNameValue::from(value));
+}

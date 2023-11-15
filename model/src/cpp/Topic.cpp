@@ -19,10 +19,10 @@ Identifier Topic::getId() const
    return id;
 }
 
-TopicName &Topic::newName(contomap::model::TopicNameValue value)
+TopicName &Topic::newName(Identifiers scope, contomap::model::TopicNameValue const &value)
 {
    auto nameId = Identifier::random();
-   auto it = names.emplace(nameId, TopicName(nameId, std::move(value)));
+   auto it = names.emplace(nameId, TopicName(nameId, std::move(scope), value));
    return it.first->second;
 }
 
@@ -34,10 +34,33 @@ Search<TopicName const> Topic::allNames() const // NOLINT
    }
 }
 
+void Topic::setNameInScope(Identifiers const &scope, TopicNameValue value)
+{
+   auto existingName = findNameByScope(scope);
+   if (existingName.has_value())
+   {
+      existingName.value().get().setValue(std::move(value));
+   }
+   else
+   {
+      static_cast<void>(newName(scope, value));
+   }
+}
+
+void Topic::removeNameInScope(Identifiers const &scope)
+{
+   auto existingName = findNameByScope(scope);
+   if (!existingName.has_value())
+   {
+      return;
+   }
+   names.erase(existingName.value().get().getId());
+}
+
 Occurrence &Topic::newOccurrence(Identifiers scope, SpacialCoordinate location)
 {
    auto occurrenceId = Identifier::random();
-   auto it = occurrences.emplace(occurrenceId, Occurrence(occurrenceId, std::move(scope), location));
+   auto it = occurrences.emplace(occurrenceId, Occurrence(occurrenceId, id, std::move(scope), location));
    return it.first->second;
 }
 
@@ -105,6 +128,39 @@ Search<Occurrence const> Topic::occurrencesIn(contomap::model::Identifiers scope
    }
 }
 
+Occurrence const &Topic::nextOccurrenceAfter(Identifier reference) const
+{
+   auto it = occurrences.find(reference);
+   if (it == occurrences.end())
+   {
+      throw std::runtime_error("unknown occurrence requested");
+   }
+   it++;
+   return (it != occurrences.end()) ? it->second : occurrences.begin()->second;
+}
+
+Occurrence const &Topic::previousOccurrenceBefore(Identifier reference) const
+{
+   auto it = occurrences.find(reference);
+   if (it == occurrences.end())
+   {
+      throw std::runtime_error("unknown occurrence requested");
+   }
+   if (it == occurrences.begin())
+   {
+      return occurrences.rbegin()->second;
+   }
+   it--;
+   return it->second;
+}
+
+std::optional<std::reference_wrapper<Occurrence const>> Topic::getOccurrence(contomap::model::Identifier occurrenceId) const
+{
+   auto it = occurrences.find(occurrenceId);
+   return (it != occurrences.end()) ? std::make_optional<std::reference_wrapper<Occurrence const>>(it->second)
+                                    : std::optional<std::reference_wrapper<Occurrence const>> {};
+}
+
 Search<Role const> Topic::rolesAssociatedWith(Identifiers associations) const // NOLINT
 {
    for (auto const &[_, role] : roles)
@@ -114,4 +170,28 @@ Search<Role const> Topic::rolesAssociatedWith(Identifiers associations) const //
          co_yield role;
       }
    }
+}
+
+void Topic::removeTopicReferences(Identifier topicId)
+{
+   std::erase_if(occurrences, [&topicId](auto const &kvp) {
+      auto const &[_, occurrence] = kvp;
+      return occurrence.scopeContains(topicId);
+   });
+   std::erase_if(names, [&topicId](auto const &kvp) {
+      auto const &[_, name] = kvp;
+      return name.scopeContains(topicId);
+   });
+}
+
+std::optional<std::reference_wrapper<TopicName>> Topic::findNameByScope(Identifiers const &scope)
+{
+   for (auto &[_, name] : names)
+   {
+      if (name.scopeEquals(scope))
+      {
+         return { name };
+      }
+   }
+   return {};
 }

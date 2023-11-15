@@ -1,16 +1,26 @@
 #include <raygui/raygui.h>
 
-#include "contomap/frontend/NewOccurrenceDialog.h"
+#include "contomap/frontend/LocateTopicAndActDialog.h"
+#include "contomap/frontend/Names.h"
 #include "contomap/model/Topics.h"
 
-using contomap::frontend::NewOccurrenceDialog;
+using contomap::editor::InputRequestHandler;
+using contomap::frontend::LocateTopicAndActDialog;
+using contomap::frontend::Names;
 using contomap::frontend::RenderContext;
+using contomap::model::ContomapView;
 using contomap::model::Identifier;
+using contomap::model::SpacialCoordinate;
 using contomap::model::Topic;
 using contomap::model::TopicName;
 using contomap::model::Topics;
 
-void NewOccurrenceDialog::TopicList::guiDrawRectangle(Rectangle rec, int borderWidth, Color borderColor, Color color)
+LocateTopicAndActDialog::TopicList::TopicList(ContomapView const &view)
+   : view(view)
+{
+}
+
+void LocateTopicAndActDialog::TopicList::guiDrawRectangle(Rectangle rec, int borderWidth, Color borderColor, Color color)
 {
    if (color.a > 0)
    {
@@ -27,12 +37,12 @@ void NewOccurrenceDialog::TopicList::guiDrawRectangle(Rectangle rec, int borderW
    }
 }
 
-float NewOccurrenceDialog::TopicList::guiStyleFloat(int control, int property)
+float LocateTopicAndActDialog::TopicList::guiStyleFloat(int control, int property)
 {
    return static_cast<float>(GuiGetStyle(control, property));
 }
 
-void NewOccurrenceDialog::TopicList::reset()
+void LocateTopicAndActDialog::TopicList::reset()
 {
    scrollIndex = 0;
    selectedIndex.reset();
@@ -40,7 +50,7 @@ void NewOccurrenceDialog::TopicList::reset()
    focusedTopicId.reset();
 }
 
-std::optional<Identifier> NewOccurrenceDialog::TopicList::draw(Rectangle bounds, contomap::infrastructure::Search<contomap::model::Topic const> topics)
+std::optional<Identifier> LocateTopicAndActDialog::TopicList::draw(Rectangle bounds, contomap::infrastructure::Search<contomap::model::Topic const> topics)
 {
    Rectangle itemBounds = {
       .x = bounds.x + guiStyleFloat(LISTVIEW, LIST_ITEMS_SPACING),
@@ -78,10 +88,14 @@ std::optional<Identifier> NewOccurrenceDialog::TopicList::draw(Rectangle bounds,
    bool somethingFocused = false;
    for (Topic const &topic : topics)
    {
-      for (TopicName const &name : topic.allNames())
+      for (std::string const &name : Names::forDisplay(topic, view.getDefaultScope()))
       {
+         if (!selectedIndex.has_value())
+         {
+            selectedIndex = totalCount;
+         }
          totalCount++;
-         if (!selectedTopicId.has_value() && selectedIndex.has_value() && (selectedIndex.value() == nameIndex))
+         if (!selectedTopicId.has_value() && (selectedIndex.value() == nameIndex))
          {
             selectedTopicId = topic.getId();
          }
@@ -116,7 +130,7 @@ std::optional<Identifier> NewOccurrenceDialog::TopicList::draw(Rectangle bounds,
             guiDrawRectangle(itemBounds, GuiGetStyle(LISTVIEW, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(LISTVIEW, BORDER_COLOR_FOCUSED)), 1.0f),
                Fade(GetColor(GuiGetStyle(LISTVIEW, BASE_COLOR_FOCUSED)), 1.0f));
          }
-         GuiLabel(itemBounds, name.getValue().raw().c_str());
+         GuiLabel(itemBounds, name.c_str());
 
          itemBounds.y += itemIntervalHeight;
       }
@@ -156,7 +170,7 @@ std::optional<Identifier> NewOccurrenceDialog::TopicList::draw(Rectangle bounds,
    return currentlySelectedTopicId;
 }
 
-void NewOccurrenceDialog::TopicList::offsetSelection(SelectionOffset offset, size_t visibleCount)
+void LocateTopicAndActDialog::TopicList::offsetSelection(SelectionOffset offset, size_t visibleCount)
 {
    auto offsetScrollIndex = [this](size_t add, size_t deduct) {
       scrollIndex = selectedIndex.value() + add;
@@ -218,17 +232,18 @@ void NewOccurrenceDialog::TopicList::offsetSelection(SelectionOffset offset, siz
    }
 }
 
-NewOccurrenceDialog::NewOccurrenceDialog(contomap::editor::InputRequestHandler &inputRequestHandler, contomap::model::ContomapView const &view,
-   contomap::frontend::Layout const &layout, contomap::model::SpacialCoordinate location)
+LocateTopicAndActDialog::LocateTopicAndActDialog(contomap::editor::InputRequestHandler &inputRequestHandler, ContomapView const &view,
+   contomap::frontend::Layout const &layout, std::vector<TitledAction> actions)
    : inputRequestHandler(inputRequestHandler)
    , view(view)
    , layout(layout)
-   , location(location)
+   , actions(std::move(actions))
+   , topicList(view)
 {
    searchInput.fill(0x00);
 }
 
-bool NewOccurrenceDialog::draw(RenderContext const &context)
+bool LocateTopicAndActDialog::draw(RenderContext const &context)
 {
    auto contentSize = context.getContentSize();
    auto padding = layout.padding();
@@ -251,25 +266,19 @@ bool NewOccurrenceDialog::draw(RenderContext const &context)
    };
    auto previousData = searchInput;
    GuiTextBox(inputBounds, searchInput.data(), static_cast<int>(searchInput.size()), true);
-   bool accept = IsKeyReleased(KEY_ENTER);
    if (previousData != searchInput)
    {
       topicList.reset();
    }
 
-   Rectangle okButtonBounds {
-      .x = inputBounds.x,
-      .y = 0.0f,
-      .width = 100.0f,
-      .height = 30.0f,
-   };
-   okButtonBounds.y = windowPos.y + windowSize.y - padding - okButtonBounds.height;
+   float buttonsHeight = layout.buttonHeight() + padding * 2;
+   float buttonsY = windowPos.y + windowSize.y - buttonsHeight;
 
    Rectangle listBounds {
       .x = inputBounds.x,
       .y = inputBounds.y + inputBounds.height + padding,
       .width = inputBounds.width,
-      .height = okButtonBounds.y - padding,
+      .height = buttonsY,
    };
    listBounds.height -= listBounds.y;
 
@@ -279,16 +288,55 @@ bool NewOccurrenceDialog::draw(RenderContext const &context)
    {
       GuiDisable();
    }
-   if (GuiButton(okButtonBounds, "OK"))
+
+   Rectangle buttonBounds {
+      .x = inputBounds.x,
+      .y = buttonsY + padding,
+      .width = 0.0f,
+      .height = layout.buttonHeight(),
+   };
+
+   Font font = GuiGetFont();
+   auto fontSize = static_cast<float>(GuiGetStyle(DEFAULT, TEXT_SIZE));
+   auto spacing = static_cast<float>(GuiGetStyle(DEFAULT, TEXT_SPACING));
+   auto textPadding = static_cast<float>(GuiGetStyle(BUTTON, TEXT_PADDING));
+   auto buttonBorderWidth = static_cast<float>(GuiGetStyle(BUTTON, BORDER_WIDTH));
+   float extraPadding = layout.buttonHeight(); // necessary as zero apparently results in characters cut away.
+
+   for (auto const &action : actions)
    {
-      accept = true;
-   }
-   if (accept && selectedTopicId.has_value())
-   {
-      inputRequestHandler.newOccurrenceRequested(selectedTopicId.value(), location);
-      closeDialog = true;
+      bool acceptByKey = (action.getHotkey() != 0) && IsKeyReleased(action.getHotkey()) && IsKeyDown(KEY_LEFT_ALT);
+      if (!acceptByKey && (actions.size() == 1))
+      {
+         acceptByKey = IsKeyReleased(KEY_ENTER);
+      }
+      auto textSize = MeasureTextEx(font, action.getTitle().c_str(), fontSize, spacing);
+      buttonBounds.width = textSize.x + (textPadding * 2.0f) + (buttonBorderWidth * 2.0f) + extraPadding;
+      if ((GuiButton(buttonBounds, action.getTitle().c_str()) || acceptByKey) && selectedTopicId.has_value())
+      {
+         action.act(inputRequestHandler, selectedTopicId.value());
+         closeDialog = true;
+         break;
+      }
+      buttonBounds.x += buttonBounds.width + padding;
    }
    GuiEnable();
 
    return closeDialog;
+}
+
+LocateTopicAndActDialog::TitledAction LocateTopicAndActDialog::newOccurrence(SpacialCoordinate location)
+{
+   return { "Add occurrence", KEY_O, [location](InputRequestHandler &handler, Identifier id) { handler.newOccurrenceRequested(id, location); } };
+}
+
+LocateTopicAndActDialog::TitledAction LocateTopicAndActDialog::setViewScope()
+{
+   return { std::string("#") + std::to_string(ICON_BOX_DOTS_BIG) + "#Set view scope", KEY_S,
+      [](InputRequestHandler &handler, Identifier id) { handler.setViewScopeTo(id); } };
+}
+
+LocateTopicAndActDialog::TitledAction LocateTopicAndActDialog::addToViewScope()
+{
+   return { "Add to view scope", KEY_V, [](InputRequestHandler &handler, Identifier id) { handler.addToViewScope(id); } };
 }

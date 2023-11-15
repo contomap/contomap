@@ -54,7 +54,7 @@ TEST_F(ContomapTest, topicsCanBeIterated)
 TEST_F(ContomapTest, deletingAssociationsCleansUpRoles)
 {
    auto &topic = map.newTopic();
-   auto &association = map.newAssociation(Identifiers {}, someSpacialCoordinate());
+   auto &association = map.newAssociation(Identifiers::ofSingle(map.getDefaultScope()), someSpacialCoordinate());
    auto associationId = association.getId();
    static_cast<void>(topic.newRole(association));
 
@@ -71,8 +71,8 @@ TEST_F(ContomapTest, deletingAssociationsCleansUpRoles)
 TEST_F(ContomapTest, deletingOccurrenceWhileOthersRemain)
 {
    auto &topic = map.newTopic();
-   auto occurrenceId1 = topic.newOccurrence({}, someSpacialCoordinate()).getId();
-   auto occurrenceId2 = topic.newOccurrence({}, someSpacialCoordinate()).getId();
+   auto occurrenceId1 = topic.newOccurrence(Identifiers::ofSingle(map.getDefaultScope()), someSpacialCoordinate()).getId();
+   auto occurrenceId2 = topic.newOccurrence(Identifiers::ofSingle(map.getDefaultScope()), someSpacialCoordinate()).getId();
 
    map.deleteOccurrences(Identifiers::ofSingle(occurrenceId1));
 
@@ -86,7 +86,7 @@ TEST_F(ContomapTest, deletingFinalOccurrenceRemovesTopic)
 {
    auto &topic = map.newTopic();
    auto topicId = topic.getId();
-   auto occurrenceId = topic.newOccurrence({}, someSpacialCoordinate()).getId();
+   auto occurrenceId = topic.newOccurrence(Identifiers::ofSingle(map.getDefaultScope()), someSpacialCoordinate()).getId();
 
    map.deleteOccurrences(Identifiers::ofSingle(occurrenceId));
 
@@ -97,18 +97,68 @@ TEST_F(ContomapTest, deletingFinalOccurrenceOfDefaultViewScopeDoesNotDeleteIt)
 {
    auto &topic = map.findTopic(map.getDefaultScope()).value().get();
    auto topicId = topic.getId();
-   auto occurrenceId = topic.newOccurrence({}, someSpacialCoordinate()).getId();
+   auto occurrenceId = topic.newOccurrence(Identifiers::ofSingle(map.getDefaultScope()), someSpacialCoordinate()).getId();
 
    map.deleteOccurrences(Identifiers::ofSingle(occurrenceId));
 
    view().shouldHaveTopicThat(topicId, [](Topic const &foundTopic) { EXPECT_TRUE(foundTopic.isWithoutOccurrences()); });
 }
 
+TEST_F(ContomapTest, removingAScopeTopicCascadesIntoFurtherRemovalOfOtherTopics)
+{
+   auto &topicA = map.newTopic();
+   auto &topicB = map.newTopic();
+   auto topicIdA = topicA.getId();
+   auto topicIdB = topicB.getId();
+   static_cast<void>(topicA.newOccurrence(Identifiers::ofSingle(topicIdB), someSpacialCoordinate()).getId());
+   auto occurrenceId = topicB.newOccurrence(Identifiers::ofSingle(map.getDefaultScope()), someSpacialCoordinate()).getId();
+
+   map.deleteOccurrences(Identifiers::ofSingle(occurrenceId));
+
+   view().shouldNotHaveTopic(topicIdA);
+   view().shouldNotHaveTopic(topicIdB);
+}
+
+TEST_F(ContomapTest, removingAScopeTopicCascadesIntoFurtherRemovalOfAssociations)
+{
+   auto &topicA = map.newTopic();
+   auto &topicB = map.newTopic();
+   auto topicIdB = topicB.getId();
+   static_cast<void>(topicA.newOccurrence(Identifiers::ofSingle(topicIdB), someSpacialCoordinate()).getId());
+   auto &association = map.newAssociation(Identifiers::ofSingle(topicIdB), someSpacialCoordinate());
+   auto associationId = association.getId();
+   static_cast<void>(topicA.newRole(association));
+   auto occurrenceId = topicB.newOccurrence(Identifiers::ofSingle(map.getDefaultScope()), someSpacialCoordinate()).getId();
+
+   map.deleteOccurrences(Identifiers::ofSingle(occurrenceId));
+
+   view().shouldNotHaveAssociation(associationId);
+}
+
+TEST_F(ContomapTest, removingACyclicDependencyWorks)
+{
+   auto &topicA = map.newTopic();
+   auto &topicB = map.newTopic();
+   auto &topicC = map.newTopic();
+   auto topicIdA = topicA.getId();
+   auto topicIdB = topicB.getId();
+   auto topicIdC = topicC.getId();
+   static_cast<void>(topicA.newOccurrence(Identifiers::ofSingle(topicIdB), someSpacialCoordinate()).getId());
+   static_cast<void>(topicB.newOccurrence(Identifiers::ofSingle(topicIdC), someSpacialCoordinate()).getId());
+   auto occurrenceId = topicC.newOccurrence(Identifiers::ofSingle(topicIdA), someSpacialCoordinate()).getId();
+
+   map.deleteOccurrences(Identifiers::ofSingle(occurrenceId));
+
+   view().shouldNotHaveTopic(topicIdA);
+   view().shouldNotHaveTopic(topicIdB);
+   view().shouldNotHaveTopic(topicIdC);
+}
+
 TEST_F(ContomapTest, rolesOfRemovedTopicAreAlsoRemoved)
 {
    auto &topic = map.newTopic();
-   auto occurrenceId = topic.newOccurrence({}, someSpacialCoordinate()).getId();
-   auto &association = map.newAssociation(Identifiers {}, someSpacialCoordinate());
+   auto occurrenceId = topic.newOccurrence(Identifiers::ofSingle(map.getDefaultScope()), someSpacialCoordinate()).getId();
+   auto &association = map.newAssociation(Identifiers::ofSingle(map.getDefaultScope()), someSpacialCoordinate());
    static_cast<void>(topic.newRole(association));
 
    map.deleteOccurrences(Identifiers::ofSingle(occurrenceId));
@@ -120,8 +170,8 @@ TEST_F(ContomapTest, rolesOfRemovedTopicAreAlsoRemoved)
 TEST_F(ContomapTest, rolesCanBeRemoved)
 {
    auto &topic = map.newTopic();
-   static_cast<void>(topic.newOccurrence({}, someSpacialCoordinate()).getId());
-   auto &association = map.newAssociation(Identifiers {}, someSpacialCoordinate());
+   static_cast<void>(topic.newOccurrence(Identifiers::ofSingle(map.getDefaultScope()), someSpacialCoordinate()).getId());
+   auto &association = map.newAssociation(Identifiers::ofSingle(map.getDefaultScope()), someSpacialCoordinate());
    auto roleId1 = topic.newRole(association).getId();
    auto roleId2 = topic.newRole(association).getId();
 
