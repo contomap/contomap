@@ -10,12 +10,14 @@
 #pragma GCC diagnostic pop
 
 #include "contomap/editor/Selections.h"
+#include "contomap/frontend/Colors.h"
 #include "contomap/frontend/HelpDialog.h"
 #include "contomap/frontend/LocateTopicAndActDialog.h"
 #include "contomap/frontend/MainWindow.h"
 #include "contomap/frontend/Names.h"
 #include "contomap/frontend/NewTopicDialog.h"
 #include "contomap/frontend/RenameTopicDialog.h"
+#include "contomap/frontend/StyleDialog.h"
 #include "contomap/model/Associations.h"
 #include "contomap/model/Topics.h"
 
@@ -23,6 +25,7 @@ using contomap::editor::InputRequestHandler;
 using contomap::editor::SelectedType;
 using contomap::editor::SelectionAction;
 using contomap::editor::Selections;
+using contomap::frontend::Colors;
 using contomap::frontend::LocateTopicAndActDialog;
 using contomap::frontend::MainWindow;
 using contomap::frontend::MapCamera;
@@ -36,6 +39,7 @@ using contomap::model::Identifiers;
 using contomap::model::Occurrence;
 using contomap::model::Role;
 using contomap::model::SpacialCoordinate;
+using contomap::model::Style;
 using contomap::model::Topic;
 using contomap::model::TopicName;
 using contomap::model::TopicNameValue;
@@ -362,7 +366,9 @@ void MainWindow::drawMap(RenderContext const &context)
          auto textSize = MeasureTextEx(font, nameText.c_str(), fontSize, spacing);
          float plateHeight = textSize.y;
 
-         Color plateBackground { 0xB0, 0x80, 0xE0, 0xC0 };
+         auto occurrenceStyle = occurrence.getAppearance();
+         Color plateBackground
+            = Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Fill, Style::Color { .red = 0xB0, .green = 0x80, .blue = 0xE0, .alpha = 0xC0 }));
          float leftCutoff = projectedLocation.x - textSize.x / 2.0f;
          float rightCutoff = projectedLocation.x + textSize.x / 2.0f;
 
@@ -393,7 +399,7 @@ void MainWindow::drawMap(RenderContext const &context)
          DrawCircleSector(Vector2 { .x = rightCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 0.0f, 180.0f, 20, plateBackground);
 
          DrawTextEx(font, nameText.c_str(), Vector2 { .x = projectedLocation.x - textSize.x / 2.0f, .y = projectedLocation.y - textSize.y / 2.0f }, fontSize,
-            spacing, Color { 0x00, 0x00, 0x00, 0xFF });
+            spacing, Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Text, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF })));
       }
    }
 
@@ -491,6 +497,18 @@ void MainWindow::drawUserInterface(RenderContext const &context)
       if (GuiButton(leftIconButtonsBounds, "[N]"))
       {
          openSetTopicNameInScopeDialog();
+      }
+      GuiEnable();
+      leftIconButtonsBounds.x += (iconSize + padding);
+
+      if (view.ofSelection().empty())
+      {
+         GuiDisable();
+      }
+      GuiSetTooltip("Set appearance");
+      if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_BRUSH_CLASSIC, nullptr)))
+      {
+         openEditStyleDialog();
       }
       GuiEnable();
       leftIconButtonsBounds.x += (iconSize + padding);
@@ -632,6 +650,17 @@ void MainWindow::openSetTopicNameInScopeDialog()
    }
 
    pendingDialog = RenameTopicDialog::forScopedName(inputRequestHandler, layout, topic.value().get().getId());
+}
+
+void MainWindow::openEditStyleDialog()
+{
+   auto style = Selections::firstAppearanceFrom(view.ofSelection(), view.ofMap());
+   if (!style.has_value())
+   {
+      return;
+   }
+
+   pendingDialog = std::make_unique<contomap::frontend::StyleDialog>(inputRequestHandler, layout, style.value());
 }
 
 SpacialCoordinate MainWindow::spacialCameraLocation()

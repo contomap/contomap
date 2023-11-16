@@ -20,6 +20,11 @@ public:
    Selection() = default;
 
    /**
+    * @return true if currently nothing is selected.
+    */
+   bool empty() const;
+
+   /**
     * Empties the selection.
     */
    void clear();
@@ -31,7 +36,7 @@ public:
     * @param type the queried type.
     * @return true if the selection has only one item selected, and it is of given type.
     */
-   bool hasSoleEntryFor(contomap::editor::SelectedType type) const;
+   [[nodiscard]] bool hasSoleEntryFor(contomap::editor::SelectedType type) const;
 
    /**
     * Set the sole selection to be for the identified type.

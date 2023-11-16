@@ -4,6 +4,7 @@
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
 #include "contomap/model/OptionalIdentifier.h"
+#include "contomap/model/Style.h"
 
 namespace contomap::model
 {
@@ -61,6 +62,32 @@ public:
     */
    [[nodiscard]] bool scopeContains(contomap::model::Identifier thatId) const;
 
+   /**
+    * Set the style of the appearance.
+    *
+    * @param style the new style to set.
+    */
+   void setAppearance(contomap::model::Style style);
+   /**
+    * @return the current style of the appearance.
+    */
+   [[nodiscard]] contomap::model::Style getAppearance() const;
+
+   /**
+    * Assign the type of this occurrence.
+    *
+    * @param typeTopicId the identifier of the topic that describes this occurrence.
+    */
+   void setType(contomap::model::Identifier typeTopicId);
+   /**
+    * Clears the type of this occurrence.
+    */
+   void clearType();
+   /**
+    * @return the identifier of the topic that describes this occurrence, if set.
+    */
+   [[nodiscard]] contomap::model::OptionalIdentifier getType() const;
+
 private:
    contomap::model::Identifier id;
    contomap::model::Identifier topicId;
@@ -69,7 +96,7 @@ private:
    contomap::model::OptionalIdentifier reifier;
    contomap::model::OptionalIdentifier type;
 
-   contomap::model::OptionalIdentifier appearance;
+   contomap::model::Style appearance;
    contomap::model::Coordinates location;
 };
 

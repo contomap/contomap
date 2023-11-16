@@ -7,6 +7,11 @@ using contomap::editor::Selection;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 
+bool Selection::empty() const
+{
+   return std::all_of(identifiers.begin(), identifiers.end(), [](std::map<SelectedType, Identifiers>::value_type const &kvp) { return kvp.second.empty(); });
+}
+
 void Selection::clear()
 {
    identifiers.clear();

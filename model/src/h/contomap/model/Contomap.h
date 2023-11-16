@@ -5,7 +5,6 @@
 #include "contomap/model/Association.h"
 #include "contomap/model/ContomapView.h"
 #include "contomap/model/Identifier.h"
-#include "contomap/model/Style.h"
 #include "contomap/model/Topic.h"
 
 namespace contomap::model
@@ -93,6 +92,11 @@ public:
     */
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Association>> findAssociation(contomap::model::Identifier id);
 
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence const> findOccurrences(contomap::model::Identifiers const &ids) const override;
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence> findOccurrences(contomap::model::Identifiers const &ids);
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role const> findRoles(contomap::model::Identifiers const &ids) const override;
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role> findRoles(contomap::model::Identifiers const &ids);
+
 private:
    Contomap();
 
@@ -105,7 +109,6 @@ private:
 
    std::map<contomap::model::Identifier, contomap::model::Topic> topics;
    std::map<contomap::model::Identifier, contomap::model::Association> associations;
-   std::map<contomap::model::Identifier, contomap::model::Style> styles;
    contomap::model::Identifier defaultScope;
 };
 

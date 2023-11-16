@@ -161,11 +161,55 @@ std::optional<std::reference_wrapper<Occurrence const>> Topic::getOccurrence(con
                                     : std::optional<std::reference_wrapper<Occurrence const>> {};
 }
 
+Search<Occurrence const> Topic::findOccurrences(Identifiers const &ids) const // NOLINT
+{
+   for (auto const &[occurrenceId, occurrence] : occurrences)
+   {
+      if (ids.contains(occurrenceId))
+      {
+         co_yield occurrence;
+      }
+   }
+}
+
+Search<Occurrence> Topic::findOccurrences(Identifiers const &ids) // NOLINT
+{
+   for (auto &[occurrenceId, occurrence] : occurrences)
+   {
+      if (ids.contains(occurrenceId))
+      {
+         co_yield occurrence;
+      }
+   }
+}
+
 Search<Role const> Topic::rolesAssociatedWith(Identifiers associations) const // NOLINT
 {
    for (auto const &[_, role] : roles)
    {
       if (associations.contains(role.getParent()))
+      {
+         co_yield role;
+      }
+   }
+}
+
+Search<Role const> Topic::findRoles(contomap::model::Identifiers const &ids) const // NOLINT
+{
+   for (auto const &[roleId, role] : roles)
+   {
+      if (ids.contains(roleId))
+      {
+         co_yield role;
+      }
+   }
+}
+
+Search<Role> Topic::findRoles(contomap::model::Identifiers const &ids) // NOLINT
+{
+   for (auto &[roleId, role] : roles)
+   {
+      if (ids.contains(roleId))
       {
          co_yield role;
       }

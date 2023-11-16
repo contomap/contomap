@@ -4,6 +4,7 @@
 #include "contomap/editor/SelectionAction.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/SpacialCoordinate.h"
+#include "contomap/model/Style.h"
 #include "contomap/model/TopicNameValue.h"
 
 namespace contomap::editor
@@ -90,6 +91,13 @@ public:
     * Called to request to delete all the selected items.
     */
    virtual void deleteSelection() = 0;
+
+   /**
+    * Sets the appearance of all selected items to the provided style.
+    *
+    * @param appearance the style to use.
+    */
+   virtual void setAppearanceOfSelection(contomap::model::Style appearance) = 0;
 
    /**
     * Sets the view scope from the current selection.

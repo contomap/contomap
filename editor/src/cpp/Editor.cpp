@@ -11,6 +11,7 @@ using contomap::model::Identifier;
 using contomap::model::Identifiers;
 using contomap::model::Occurrence;
 using contomap::model::SpacialCoordinate;
+using contomap::model::Style;
 using contomap::model::Topic;
 using contomap::model::TopicNameValue;
 using contomap::model::Topics;
@@ -140,6 +141,17 @@ void Editor::deleteSelection()
    map.deleteOccurrences(selection.of(SelectedType::Occurrence));
    selection.clear();
    verifyViewScopeIsStable();
+}
+
+void Editor::setAppearanceOfSelection(Style style)
+{
+   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   {
+      for (auto &occurrence : map.findOccurrences(ids))
+      {
+         occurrence.get().setAppearance(style);
+      }
+   }
 }
 
 void Editor::setViewScopeFromSelection()

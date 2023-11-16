@@ -1,77 +1,43 @@
 #include "contomap/model/Style.h"
 
-using contomap::model::Identifier;
 using contomap::model::Style;
 
-Style::Color const Style::Set::DEFAULT_TEXT { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF };
-Style::Color const Style::Set::DEFAULT_FILL { .red = 0xFF, .green = 0xFF, .blue = 0xFF, .alpha = 0xFF };
-Style::Color const Style::Set::DEFAULT_LINE { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF };
+Style::Color const Style::DEFAULT_COLOR { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0x00 };
 
-Style::Set Style::Set::withTextColor(Color value) const
+Style Style::withDefaultsFrom(Style const &other) const
 {
-   Set copy(*this);
-   copy.textColor = value;
-   return copy;
-}
-
-Style::Set Style::Set::withFillColor(Color value) const
-{
-   Set copy(*this);
-   copy.fillColor = value;
-   return copy;
-}
-
-Style::Set Style::Set::withLineColor(Color value) const
-{
-   Set copy(*this);
-   copy.lineColor = value;
-   return copy;
-}
-
-Style::Set Style::Set::withDefaultsFrom(Style const &style) const
-{
-   return withDefaultsFrom(style.toSet());
-}
-
-Style::Set Style::Set::withDefaultsFrom(Set const &other) const
-{
-   Set copy(*this);
-   if (!copy.textColor.has_value())
+   Style copy(*this);
+   for (auto const &[type, value] : other.colors)
    {
-      copy.textColor = other.textColor;
-   }
-   if (!copy.fillColor.has_value())
-   {
-      copy.fillColor = other.fillColor;
-   }
-   if (!copy.lineColor.has_value())
-   {
-      copy.lineColor = other.lineColor;
+      if (!copy.colors.contains(type))
+      {
+         copy.colors[type] = value;
+      }
    }
    return copy;
 }
 
-Style::Color Style::Set::getTextColor() const
+Style Style::with(ColorType type, Color value) const
 {
-   return textColor.value_or(DEFAULT_TEXT);
+   Style copy(*this);
+   copy.colors[type] = value;
+   return copy;
 }
 
-Style::Color Style::Set::getFillColor() const
+Style Style::without(ColorType type) const
 {
-   return fillColor.value_or(DEFAULT_FILL);
+   Style copy(*this);
+   copy.colors.erase(type);
+   return copy;
 }
 
-Style::Color Style::Set::getLineColor() const
+bool Style::has(ColorType type) const
 {
-   return lineColor.value_or(DEFAULT_LINE);
+   return colors.contains(type);
 }
 
-Style::Style(Identifier id)
-   : id(id)
+Style::Color Style::get(ColorType type, Color defaultColor) const
 {
-}
-
-Style::Set const &Style::toSet() const
-{
-   return set;
+   auto it = colors.find(type);
+   return (it != colors.end()) ? it->second : defaultColor;
 }

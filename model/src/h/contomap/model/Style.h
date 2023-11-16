@@ -1,11 +1,7 @@
 #pragma once
 
 #include <cstdint>
-
-#include "contomap/model/Identifier.h"
-#include "contomap/model/Identifiers.h"
-#include "contomap/model/OptionalIdentifier.h"
-#include "contomap/model/TopicNameValue.h"
+#include <map>
 
 namespace contomap::model
 {
@@ -16,6 +12,25 @@ namespace contomap::model
 class Style
 {
 public:
+   /**
+    * ColorType identifies a color property.
+    */
+   enum class ColorType
+   {
+      /**
+       * Text is meant for the primary color of displayed characters.
+       */
+      Text,
+      /**
+       * Line is meant for strokes that outline (or represent) a shape.
+       */
+      Line,
+      /**
+       * Fill is meant for areas of shapes.
+       */
+      Fill,
+   };
+
    /**
     * Color provides the intensities of the red, green, and blue color channels, as well as an alpha value for blending.
     */
@@ -32,99 +47,50 @@ public:
       uint8_t alpha;
    };
 
-   /**
-    * Set represents the sole properties for rendering of a style.
-    */
-   class Set
-   {
-   public:
-      /**
-       * Default constructor.
-       */
-      Set() = default;
-
-      /**
-       * Returns a new set with the copy from this set and the text color overridden.
-       *
-       * @param value the value to override.
-       * @return a new set instance.
-       */
-      [[nodiscard]] Set withTextColor(Color value) const;
-
-      /**
-       * Returns a new set with the copy from this set and the fill color overridden.
-       *
-       * @param value the value to override.
-       * @return a new set instance.
-       */
-      [[nodiscard]] Set withFillColor(Color value) const;
-
-      /**
-       * Returns a new set with the copy from this set and the line color overridden.
-       *
-       * @param value the value to override.
-       * @return a new set instance.
-       */
-      [[nodiscard]] Set withLineColor(Color value) const;
-
-      /**
-       * Returns a new set with a copy from this set and any optionals not yet filled out are defaulting to given style.
-       *
-       * @param style the style from which to take values.
-       * @return a new set instance.
-       */
-      [[nodiscard]] Set withDefaultsFrom(Style const &style) const;
-
-      /**
-       * Returns a new set with a copy from this set and any optionals not yet filled out are defaulting to given set.
-       *
-       * @param other the other set from which to take values.
-       * @return a new set instance.
-       */
-      [[nodiscard]] Set withDefaultsFrom(Set const &other) const;
-
-      /**
-       * @return the text color if complete, black otherwise.
-       */
-      [[nodiscard]] Color getTextColor() const;
-
-      /**
-       * @return the fill color if complete, white otherwise.
-       */
-      [[nodiscard]] Color getFillColor() const;
-
-      /**
-       * @return the line color if complete, black otherwise.
-       */
-      [[nodiscard]] Color getLineColor() const;
-
-   private:
-      static Color const DEFAULT_TEXT;
-      static Color const DEFAULT_FILL;
-      static Color const DEFAULT_LINE;
-
-      std::optional<Color> textColor;
-      std::optional<Color> fillColor;
-      std::optional<Color> lineColor;
-   };
+   /** The default value returned if not specified. */
+   static Color const DEFAULT_COLOR;
 
    /**
-    * Constructor.
+    * Returns a new style with a copy from this style and any optionals not yet filled out are defaulting to given style.
     *
-    * @param id the primary identifier of this style.
+    * @param style the style from which to take values.
+    * @return a new style instance.
     */
-   explicit Style(contomap::model::Identifier id);
+   [[nodiscard]] Style withDefaultsFrom(Style const &style) const;
 
    /**
-    * @return the set of parameters for this style.
+    * Returns a new style with the copy from this style and the identified color overridden.
+    *
+    * @param type the type of color to override.
+    * @param value the value to override.
+    * @return a new style instance.
     */
-   [[nodiscard]] Set const &toSet() const;
+   [[nodiscard]] Style with(ColorType type, Color value) const;
+
+   /**
+    * Returns a new style with the copy from this style and the identified color cleared.
+    *
+    * @param type the type of color to clear.
+    * @return a new style instance.
+    */
+   [[nodiscard]] Style without(ColorType type) const;
+
+   /**
+    * Returns whether a particular color has been set in this style.
+    *
+    * @param type the type of color to test.
+    * @return true if the color is defined, false otherwise.
+    */
+   [[nodiscard]] bool has(ColorType type) const;
+
+   /**
+    * @param type the type of color to retrieve.
+    * @return the text color if complete, transparent black otherwise.
+    */
+   [[nodiscard]] Color get(ColorType type, Color defaultValue = DEFAULT_COLOR) const;
 
 private:
-   contomap::model::Identifier id;
-   contomap::model::OptionalIdentifier localTo;
-
-   Set set;
+   std::map<ColorType, Color> colors;
 };
 
 }

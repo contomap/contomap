@@ -153,12 +153,44 @@ public:
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Occurrence const>> getOccurrence(contomap::model::Identifier occurrenceId) const;
 
    /**
+    * The returned search object will yield all occurrences that are in the set of identifiers.
+    *
+    * @param ids the set of identifiers to look for.
+    * @return a Search instance that can be iterated once.
+    */
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence const> findOccurrences(contomap::model::Identifiers const &ids) const;
+
+   /**
+    * The returned search object will yield all occurrences that are in the set of identifiers.
+    *
+    * @param ids the set of identifiers to look for.
+    * @return a Search instance that can be iterated once.
+    */
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence> findOccurrences(contomap::model::Identifiers const &ids);
+
+   /**
     * Return a Search for all roles that are related to given associations.
     *
     * @param associations the associations to look for.
     * @return a Search matching the given scope.
     */
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role const> rolesAssociatedWith(contomap::model::Identifiers associations) const;
+
+   /**
+    * The returned search object will yield all roles that are in the set of identifiers.
+    *
+    * @param ids the set of identifiers to look for.
+    * @return a Search instance that can be iterated once.
+    */
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role const> findRoles(contomap::model::Identifiers const &ids) const;
+
+   /**
+    * The returned search object will yield all roles that are in the set of identifiers.
+    *
+    * @param ids the set of identifiers to look for.
+    * @return a Search instance that can be iterated once.
+    */
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role> findRoles(contomap::model::Identifiers const &ids);
 
    /**
     * Removes any reference to the given identified topic.

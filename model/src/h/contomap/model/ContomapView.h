@@ -66,6 +66,22 @@ public:
     * @return a reference to the matching association, if existing.
     */
    [[nodiscard]] virtual std::optional<std::reference_wrapper<Association const>> findAssociation(contomap::model::Identifier id) const = 0;
+
+   /**
+    * Find occurrences by their identifier.
+    *
+    * @param ids the list of identifiers to search for.
+    * @return a Search instance that can be iterated once.
+    */
+   [[nodiscard]] virtual contomap::infrastructure::Search<contomap::model::Occurrence const> findOccurrences(contomap::model::Identifiers const &ids) const = 0;
+
+   /**
+    * Find roles by their identifier.
+    *
+    * @param ids the list of identifiers to search for.
+    * @return a Search instance that can be iterated once.
+    */
+   [[nodiscard]] virtual contomap::infrastructure::Search<contomap::model::Role const> findRoles(contomap::model::Identifiers const &ids) const = 0;
 };
 
 }

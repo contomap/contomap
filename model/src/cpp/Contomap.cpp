@@ -112,6 +112,50 @@ std::optional<std::reference_wrapper<Association>> Contomap::findAssociation(Ide
    return (it != associations.end()) ? std::optional<std::reference_wrapper<Association>>(it->second) : std::optional<std::reference_wrapper<Association>>();
 }
 
+contomap::infrastructure::Search<contomap::model::Occurrence const> Contomap::findOccurrences(Identifiers const &ids) const // NOLINT
+{
+   for (auto const &[_, topic] : topics)
+   {
+      for (auto &occurrence : topic.findOccurrences(ids))
+      {
+         co_yield occurrence;
+      }
+   }
+}
+
+contomap::infrastructure::Search<contomap::model::Occurrence> Contomap::findOccurrences(Identifiers const &ids) // NOLINT
+{
+   for (auto &[_, topic] : topics)
+   {
+      for (auto &occurrence : topic.findOccurrences(ids))
+      {
+         co_yield occurrence;
+      }
+   }
+}
+
+contomap::infrastructure::Search<contomap::model::Role const> Contomap::findRoles(Identifiers const &ids) const // NOLINT
+{
+   for (auto const &[_, topic] : topics)
+   {
+      for (auto const &role : topic.findRoles(ids))
+      {
+         co_yield role;
+      }
+   }
+}
+
+contomap::infrastructure::Search<contomap::model::Role> Contomap::findRoles(Identifiers const &ids) // NOLINT
+{
+   for (auto &[_, topic] : topics)
+   {
+      for (auto &role : topic.findRoles(ids))
+      {
+         co_yield role;
+      }
+   }
+}
+
 void Contomap::deleteRole(Identifier id)
 {
    for (auto &[associationId, association] : associations)
