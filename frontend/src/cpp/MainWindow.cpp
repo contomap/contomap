@@ -386,11 +386,11 @@ void MainWindow::drawMap(RenderContext const &context)
             plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x40 });
          }
 
-         DrawCircleSector(Vector2 { .x = leftCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 180.0f, 360.0f, 20, plateBackground);
+         DrawCircleSector(Vector2 { .x = leftCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 90.0f, 270.0f, 20, plateBackground);
          DrawRectangleRec(
             Rectangle { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f, .width = rightCutoff - leftCutoff, .height = plateHeight },
             plateBackground);
-         DrawCircleSector(Vector2 { .x = rightCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 0.0f, 180.0f, 20, plateBackground);
+         DrawCircleSector(Vector2 { .x = rightCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 270.0f, 450.0f, 20, plateBackground);
 
          DrawTextEx(font, nameText.c_str(), Vector2 { .x = projectedLocation.x - textSize.x / 2.0f, .y = projectedLocation.y - textSize.y / 2.0f }, fontSize,
             spacing, Color { 0x00, 0x00, 0x00, 0xFF });
@@ -550,7 +550,8 @@ void MainWindow::drawUserInterface(RenderContext const &context)
 
          float labelWidth = textSize.x + textPadding * 2;
          bool isActive = true;
-         if (!GuiToggle(Rectangle { .x = buttonStartX, .y = viewScopePosition.y + padding, .width = labelWidth, .height = iconSize }, name.c_str(), &isActive))
+         GuiToggle(Rectangle { .x = buttonStartX, .y = viewScopePosition.y + padding, .width = labelWidth, .height = iconSize }, name.c_str(), &isActive);
+         if (!isActive)
          {
             inputRequestHandler.removeFromViewScope(id);
          }
