@@ -106,6 +106,13 @@ public:
     */
    static TitledAction addToViewScope();
 
+   /**
+    * Sets the type of the selected items.
+    *
+    * @return an action for this dialog.
+    */
+   static TitledAction setTypeOfSelection();
+
 private:
    class TopicList
    {

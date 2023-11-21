@@ -44,6 +44,16 @@ bool Occurrence::scopeContains(Identifier thatId) const
    return scope.contains(thatId);
 }
 
+bool Occurrence::hasNarrowerScopeThan(Occurrence const &other) const
+{
+   return (scope.size() > other.scope.size()) || (hasSameScopeSizeAs(other) && (scope < other.scope));
+}
+
+bool Occurrence::hasSameScopeSizeAs(Occurrence const &other) const
+{
+   return scope.size() == other.scope.size();
+}
+
 void Occurrence::setAppearance(Style style)
 {
    appearance = std::move(style);

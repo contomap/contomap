@@ -63,6 +63,21 @@ public:
    [[nodiscard]] bool scopeContains(contomap::model::Identifier thatId) const;
 
    /**
+    * Use this method to sort occurrences according to scope.
+    *
+    * @param other the other occurrence to compare to.
+    * @return true if this occurrence has a narrower (longer) scope than the other. Also returns true if same size but smaller ID values.
+    */
+   [[nodiscard]] bool hasNarrowerScopeThan(Occurrence const &other) const;
+   /**
+    * Use this method to determine whether an occurrence is equivalent when considering scopes.
+    *
+    * @param other the other occurrence to compare to.
+    * @return true if this and the other occurrence have the same size of their scopes.
+    */
+   [[nodiscard]] bool hasSameScopeSizeAs(Occurrence const &other) const;
+
+   /**
     * Set the style of the appearance.
     *
     * @param style the new style to set.

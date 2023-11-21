@@ -340,3 +340,8 @@ LocateTopicAndActDialog::TitledAction LocateTopicAndActDialog::addToViewScope()
 {
    return { "Add to view scope", KEY_V, [](InputRequestHandler &handler, Identifier id) { handler.addToViewScope(id); } };
 }
+
+LocateTopicAndActDialog::TitledAction LocateTopicAndActDialog::setTypeOfSelection()
+{
+   return { "Set type", KEY_T, [](InputRequestHandler &handler, Identifier id) { handler.setTypeOfSelection(id); } };
+}

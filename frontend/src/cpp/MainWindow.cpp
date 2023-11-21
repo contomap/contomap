@@ -10,6 +10,7 @@
 #pragma GCC diagnostic pop
 
 #include "contomap/editor/Selections.h"
+#include "contomap/editor/Styles.h"
 #include "contomap/frontend/Colors.h"
 #include "contomap/frontend/HelpDialog.h"
 #include "contomap/frontend/LocateTopicAndActDialog.h"
@@ -25,6 +26,7 @@ using contomap::editor::InputRequestHandler;
 using contomap::editor::SelectedType;
 using contomap::editor::SelectionAction;
 using contomap::editor::Selections;
+using contomap::editor::Styles;
 using contomap::frontend::Colors;
 using contomap::frontend::LocateTopicAndActDialog;
 using contomap::frontend::MainWindow;
@@ -380,7 +382,7 @@ void MainWindow::drawMap(RenderContext const &context)
             focus.registerItem(std::make_shared<OccurrenceFocusItem>(occurrence.getId()), Vector2Distance(focusCoordinate, projectedLocation));
          }
 
-         auto occurrenceStyle = occurrence.getAppearance();
+         auto occurrenceStyle = Styles::resolve(occurrence.getAppearance(), occurrence.getType(), view.ofViewScope(), view.ofMap());
          Color plateBackground
             = Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Fill, Style::Color { .red = 0xB0, .green = 0x80, .blue = 0xE0, .alpha = 0xC0 }));
          Color plateOutline
@@ -641,6 +643,7 @@ void MainWindow::openNewLocateTopicAndActDialog()
       LocateTopicAndActDialog::setViewScope(),
       LocateTopicAndActDialog::addToViewScope(),
       LocateTopicAndActDialog::newOccurrence(spacialCameraLocation()),
+      LocateTopicAndActDialog::setTypeOfSelection(),
    };
    pendingDialog = std::make_unique<LocateTopicAndActDialog>(inputRequestHandler, view.ofMap(), layout, actions);
 }

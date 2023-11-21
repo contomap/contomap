@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <map>
+#include <vector>
 
 namespace contomap::model
 {
@@ -49,6 +50,13 @@ public:
 
    /** The default value returned if not specified. */
    static Color const DEFAULT_COLOR;
+
+   /**
+    * Creates an average of all provided styles.
+    * @param styles the list of styles from which to create an average.
+    * @return a resulting style.
+    */
+   [[nodiscard]] static Style averageOf(std::vector<Style> const &styles);
 
    /**
     * Returns a new style with a copy from this style and any optionals not yet filled out are defaulting to given style.
