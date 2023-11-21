@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include <raygui/raygui.h>
 
 #include "contomap/frontend/Colors.h"
@@ -56,7 +58,8 @@ bool StyleDialog::draw(RenderContext const &context)
       .height = layout.buttonHeight(),
    };
 
-   bool wantsColorSpecified = GuiCheckBox(colorCheckboxBounds, "Specify", style.has(activeColorType));
+   bool wantsColorSpecified = style.has(activeColorType);
+   GuiCheckBox(colorCheckboxBounds, "Specify", &wantsColorSpecified);
    if (wantsColorSpecified != style.has(activeColorType))
    {
       style
@@ -133,8 +136,12 @@ Style::Color StyleDialog::guiColorPicker(Rectangle bounds, Style::Color color)
       .width = bounds.width - static_cast<float>(GuiGetStyle(COLORPICKER, HUEBAR_WIDTH)) - innerPadding - (outerPadding * 2.0f),
       .height = bounds.height - alphaBounds.height - innerPadding - (outerPadding * 2.0f),
    };
-   auto result = GuiColorPicker(pickerBounds, nullptr, Colors::toUiColor(color));
-   result.a = static_cast<uint8_t>(GuiColorBarAlpha(alphaBounds, nullptr, static_cast<float>(color.alpha) / 255.0f) * 255.0f);
+   auto result = Colors::toUiColor(color);
+   GuiColorPicker(pickerBounds, nullptr, &result);
+
+   auto alpha = static_cast<float>(color.alpha) / 255.0f;
+   GuiColorBarAlpha(alphaBounds, nullptr, &alpha);
+   result.a = static_cast<uint8_t>(std::roundf(alpha * 255.0f));
    return Style::Color { .red = result.r, .green = result.g, .blue = result.b, .alpha = result.a };
 }
 
