@@ -152,6 +152,35 @@ void Editor::setAppearanceOfSelection(Style style)
          occurrence.get().setAppearance(style);
       }
    }
+   // TODO: set for other types
+}
+
+void Editor::setTypeOfSelection(contomap::model::Identifier topicId)
+{
+   if (!map.findTopic(topicId).has_value())
+   {
+      return;
+   }
+   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   {
+      for (auto &occurrence : map.findOccurrences(ids))
+      {
+         occurrence.get().setType(topicId);
+      }
+   }
+   // TODO: set for other types
+}
+
+void Editor::clearTypeOfSelection()
+{
+   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   {
+      for (auto &occurrence : map.findOccurrences(ids))
+      {
+         occurrence.get().clearType();
+      }
+   }
+   // TODO: set for other types
 }
 
 void Editor::setViewScopeFromSelection()

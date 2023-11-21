@@ -100,6 +100,17 @@ public:
    virtual void setAppearanceOfSelection(contomap::model::Style appearance) = 0;
 
    /**
+    * Sets the type of the selected items.
+    * @param topicId the identifier of the topic to set.
+    */
+   virtual void setTypeOfSelection(contomap::model::Identifier topicId) = 0;
+
+   /**
+    * Clears the type of the selected items.
+    */
+   virtual void clearTypeOfSelection() = 0;
+
+   /**
     * Sets the view scope from the current selection.
     */
    virtual void setViewScopeFromSelection() = 0;

@@ -4,7 +4,7 @@ using contomap::model::Identifier;
 using contomap::model::OptionalIdentifier;
 
 OptionalIdentifier::OptionalIdentifier(Identifier value)
-   : value(value)
+   : content(value)
 {
 }
 
@@ -15,16 +15,21 @@ OptionalIdentifier OptionalIdentifier::of(Identifier id)
 
 bool OptionalIdentifier::isAssigned() const
 {
-   return value.has_value();
+   return content.has_value();
+}
+
+Identifier OptionalIdentifier::value() const
+{
+   return content.value();
 }
 
 void OptionalIdentifier::clear()
 {
-   value.reset();
+   content.reset();
 }
 
 OptionalIdentifier &OptionalIdentifier::operator=(Identifier id)
 {
-   value = id;
+   content = id;
    return *this;
 }

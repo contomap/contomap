@@ -29,6 +29,8 @@ public:
    void linkSelection() override;
    void deleteSelection() override;
    void setAppearanceOfSelection(contomap::model::Style style) override;
+   void setTypeOfSelection(contomap::model::Identifier topicId) override;
+   void clearTypeOfSelection() override;
    void setViewScopeFromSelection() override;
    void addToViewScopeFromSelection() override;
    void setViewScopeToDefault() override;

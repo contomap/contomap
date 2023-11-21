@@ -25,8 +25,10 @@ TEST(OptionalIdentifierTest, canBeAssignedFromRaw)
 {
    OptionalIdentifier id;
 
-   id = Identifier::random();
+   auto source = Identifier::random();
+   id = source;
    EXPECT_TRUE(id.isAssigned());
+   EXPECT_EQ(id.value(), source);
 }
 
 TEST(OptionalIdentifierTest, canBeAssignedFromCopy)

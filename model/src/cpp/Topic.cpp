@@ -226,6 +226,14 @@ void Topic::removeTopicReferences(Identifier topicId)
       auto const &[_, name] = kvp;
       return name.scopeContains(topicId);
    });
+   for (auto &[_, occurrence] : occurrences)
+   {
+      auto typeId = occurrence.getType();
+      if (typeId.isAssigned() && (typeId.value() == topicId))
+      {
+         occurrence.clearType();
+      }
+   }
 }
 
 std::optional<std::reference_wrapper<TopicName>> Topic::findNameByScope(Identifiers const &scope)
