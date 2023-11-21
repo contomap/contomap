@@ -366,9 +366,6 @@ void MainWindow::drawMap(RenderContext const &context)
          auto textSize = MeasureTextEx(font, nameText.c_str(), fontSize, spacing);
          float plateHeight = textSize.y;
 
-         auto occurrenceStyle = occurrence.getAppearance();
-         Color plateBackground
-            = Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Fill, Style::Color { .red = 0xB0, .green = 0x80, .blue = 0xE0, .alpha = 0xC0 }));
          float leftCutoff = projectedLocation.x - textSize.x / 2.0f;
          float rightCutoff = projectedLocation.x + textSize.x / 2.0f;
 
@@ -383,13 +380,21 @@ void MainWindow::drawMap(RenderContext const &context)
             focus.registerItem(std::make_shared<OccurrenceFocusItem>(occurrence.getId()), Vector2Distance(focusCoordinate, projectedLocation));
          }
 
+         auto occurrenceStyle = occurrence.getAppearance();
+         Color plateBackground
+            = Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Fill, Style::Color { .red = 0xB0, .green = 0x80, .blue = 0xE0, .alpha = 0xC0 }));
+         Color plateOutline
+            = Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Line, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0x00 }));
+
          if (selection.contains(SelectedType::Occurrence, occurrence.getId()))
          {
             plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x80 });
+            plateOutline = ColorTint(plateOutline, Color { 0xFF, 0xFF, 0xFF, 0x80 });
          }
          if (currentFocus.isOccurrence(occurrence.getId()))
          {
             plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x40 });
+            plateOutline = ColorTint(plateOutline, Color { 0xFF, 0xFF, 0xFF, 0x40 });
          }
 
          DrawCircleSector(Vector2 { .x = leftCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 90.0f, 270.0f, 20, plateBackground);
@@ -400,6 +405,14 @@ void MainWindow::drawMap(RenderContext const &context)
 
          DrawTextEx(font, nameText.c_str(), Vector2 { .x = projectedLocation.x - textSize.x / 2.0f, .y = projectedLocation.y - textSize.y / 2.0f }, fontSize,
             spacing, Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Text, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF })));
+
+         // TODO: need local sector outline. existing seems to take different parameters - and doesn't support line thickness.
+         // DrawCircleSectorLines(Vector2 { .x = leftCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 90.0f, 270.0f, 20, plateBackground);
+         DrawLineEx(Vector2 { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f },
+            Vector2 { .x = rightCutoff, .y = projectedLocation.y - plateHeight / 2.0f }, 2.0f, plateOutline);
+         DrawLineEx(Vector2 { .x = leftCutoff, .y = projectedLocation.y + plateHeight / 2.0f },
+            Vector2 { .x = rightCutoff, .y = projectedLocation.y + plateHeight / 2.0f }, 2.0f, plateOutline);
+         // DrawCircleSectorLines(Vector2 { .x = leftCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 270.0f, 450.0f, 20, plateBackground);
       }
    }
 
