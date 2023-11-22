@@ -853,3 +853,55 @@ TEST_F(EditorTest, typeOfOccurrenceCanNotBeSetToUnknownId)
       ASSERT_FALSE(optionalType.isAssigned());
    });
 }
+
+TEST_F(EditorTest, settingTypeOfAssociation)
+{
+   Identifier typeTopicId = given().user().requestsANewTopic();
+   Identifier associationId = given().user().requestsANewAssociation();
+   given().user().selects(SelectedType::Association, associationId);
+   when().user().setsTypeOfSelectionTo(typeTopicId);
+   then().view().ofMap().shouldHaveAssociationThat(associationId, [typeTopicId](Association const &association) {
+      auto optionalType = association.getType();
+      ASSERT_TRUE(optionalType.isAssigned());
+      EXPECT_EQ(optionalType.value(), typeTopicId);
+   });
+}
+
+TEST_F(EditorTest, clearingTypeOfAssociation)
+{
+   Identifier typeTopicId = given().user().requestsANewTopic();
+   Identifier associationId = given().user().requestsANewAssociation();
+   given().user().selects(SelectedType::Association, associationId);
+   given().user().setsTypeOfSelectionTo(typeTopicId);
+   when().user().clearsTypeOfSelection();
+   then().view().ofMap().shouldHaveAssociationThat(associationId, [](Association const &association) {
+      auto optionalType = association.getType();
+      ASSERT_FALSE(optionalType.isAssigned());
+   });
+}
+
+TEST_F(EditorTest, deletingTypeOfAssociationClearsIt)
+{
+   Identifier typeTopicId = given().user().requestsANewTopic();
+   Identifier associationId = given().user().requestsANewAssociation();
+   given().user().selects(SelectedType::Association, associationId);
+   given().user().setsTypeOfSelectionTo(typeTopicId);
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(typeTopicId).getId());
+   when().user().deletesTheSelection();
+   then().view().ofMap().shouldHaveAssociationThat(associationId, [](Association const &association) {
+      auto optionalType = association.getType();
+      ASSERT_FALSE(optionalType.isAssigned());
+   });
+}
+
+TEST_F(EditorTest, typeOfAssociationCanNotBeSetToUnknownId)
+{
+   Identifier typeTopicId = Identifier::random();
+   Identifier associationId = given().user().requestsANewAssociation();
+   given().user().selects(SelectedType::Association, associationId);
+   when().user().setsTypeOfSelectionTo(typeTopicId);
+   then().view().ofMap().shouldHaveAssociationThat(associationId, [](Association const &association) {
+      auto optionalType = association.getType();
+      ASSERT_FALSE(optionalType.isAssigned());
+   });
+}

@@ -4,8 +4,10 @@
 using contomap::model::Association;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
+using contomap::model::OptionalIdentifier;
 using contomap::model::Role;
 using contomap::model::SpacialCoordinate;
+using contomap::model::Style;
 
 Association::Association(Identifier id, Identifiers scope, SpacialCoordinate spacial)
    : id(id)
@@ -61,10 +63,39 @@ bool Association::hasRoles() const
    return !roles.empty();
 }
 
-void Association::removeTopicReferences(contomap::model::Identifier topicId)
+void Association::removeTopicReferences(Identifier topicId)
 {
    if (scope.contains(topicId))
    {
       scope.clear();
    }
+   if (type.isAssigned() && (type.value() == topicId))
+   {
+      type.clear();
+   }
+}
+
+void Association::setAppearance(Style style)
+{
+   appearance = std::move(style);
+}
+
+Style Association::getAppearance() const
+{
+   return appearance;
+}
+
+void Association::setType(Identifier typeTopicId)
+{
+   type = typeTopicId;
+}
+
+void Association::clearType()
+{
+   type.clear();
+}
+
+OptionalIdentifier Association::getType() const
+{
+   return type;
 }

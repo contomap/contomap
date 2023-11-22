@@ -152,6 +152,14 @@ void Editor::setAppearanceOfSelection(Style style)
          occurrence.get().setAppearance(style);
       }
    }
+   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
+   {
+      for (auto id : ids)
+      {
+         Association &association = map.findAssociation(id).value();
+         association.setAppearance(style);
+      }
+   }
    // TODO: set for other types
 }
 
@@ -168,6 +176,14 @@ void Editor::setTypeOfSelection(contomap::model::Identifier topicId)
          occurrence.get().setType(topicId);
       }
    }
+   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
+   {
+      for (auto id : ids)
+      {
+         Association &association = map.findAssociation(id).value();
+         association.setType(topicId);
+      }
+   }
    // TODO: set for other types
 }
 
@@ -178,6 +194,14 @@ void Editor::clearTypeOfSelection()
       for (auto &occurrence : map.findOccurrences(ids))
       {
          occurrence.get().clearType();
+      }
+   }
+   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
+   {
+      for (auto id : ids)
+      {
+         Association &association = map.findAssociation(id).value();
+         association.clearType();
       }
    }
    // TODO: set for other types

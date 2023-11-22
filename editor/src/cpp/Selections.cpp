@@ -50,12 +50,17 @@ std::optional<std::reference_wrapper<Topic const>> Selections::topicOfFirstOccur
 
 std::optional<Style> Selections::firstAppearanceFrom(Selection const &selection, ContomapView const &view)
 {
-   if (auto const &occurrenceIds = selection.of(SelectedType::Occurrence); !occurrenceIds.empty())
+   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
    {
-      for (auto const &occurrence : view.findOccurrences(occurrenceIds))
+      for (auto const &occurrence : view.findOccurrences(ids))
       {
          return occurrence.get().getAppearance();
       }
+   }
+   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
+   {
+      auto const &association = view.findAssociation(*ids.begin());
+      return association.value().get().getAppearance();
    }
    // TODO: add further types
    return {};
