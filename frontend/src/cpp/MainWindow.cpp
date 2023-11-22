@@ -7,6 +7,7 @@
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #include <raylib.h>
 #include <raymath.h>
+#include <rlgl.h>
 #pragma GCC diagnostic pop
 
 #include "contomap/editor/Selections.h"
@@ -270,7 +271,13 @@ void MainWindow::drawMap(RenderContext const &context)
    auto visibleAssociations = map.find(Associations::thatAreIn(viewScope));
    for (Association const &visibleAssociation : visibleAssociations)
    {
+      auto optionalTypeId = visibleAssociation.getType();
       std::string nameText(" "); // TODO: resolve name. also: why do triangles overlap if name is empty?
+      if (optionalTypeId.isAssigned())
+      {
+         auto typeTopic = view.ofMap().findTopic(optionalTypeId.value());
+         nameText = bestTitleFor(typeTopic.value());
+      }
 
       auto spacialLocation = visibleAssociation.getLocation().getSpacial().getAbsoluteReference();
       Vector2 projectedLocation { .x = spacialLocation.X(), .y = spacialLocation.Y() };
@@ -281,7 +288,6 @@ void MainWindow::drawMap(RenderContext const &context)
       auto textSize = MeasureTextEx(font, nameText.c_str(), fontSize, spacing);
       float plateHeight = textSize.y;
 
-      Color plateBackground { 0x80, 0xE0, 0xB0, 0xC0 };
       float leftCutoff = projectedLocation.x - textSize.x / 2.0f;
       float rightCutoff = projectedLocation.x + textSize.x / 2.0f;
 
@@ -300,13 +306,20 @@ void MainWindow::drawMap(RenderContext const &context)
          focus.registerItem(std::make_shared<AssociationFocusItem>(visibleAssociation.getId()), Vector2Distance(focusCoordinate, projectedLocation));
       }
 
+      auto associationStyle = Styles::resolve(visibleAssociation.getAppearance(), visibleAssociation.getType(), view.ofViewScope(), view.ofMap());
+      Color plateBackground
+         = Colors::toUiColor(associationStyle.get(Style::ColorType::Fill, Style::Color { .red = 0xFF, .green = 0xFF, .blue = 0xFF, .alpha = 0xFF }));
+      Color plateOutline
+         = Colors::toUiColor(associationStyle.get(Style::ColorType::Line, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF }));
       if (selection.contains(SelectedType::Association, visibleAssociation.getId()))
       {
          plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x80 });
+         plateOutline = ColorTint(plateOutline, Color { 0xFF, 0xFF, 0xFF, 0x80 });
       }
       if (currentFocus.isAssociation(visibleAssociation.getId()))
       {
          plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x40 });
+         plateOutline = ColorTint(plateOutline, Color { 0xFF, 0xFF, 0xFF, 0x40 });
       }
 
       DrawTriangle(Vector2 { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f },
@@ -317,6 +330,90 @@ void MainWindow::drawMap(RenderContext const &context)
       DrawTriangle(Vector2 { .x = rightCutoff, .y = projectedLocation.y - plateHeight / 2.0f },
          Vector2 { .x = rightCutoff, .y = projectedLocation.y + plateHeight / 2.0f },
          Vector2 { .x = rightCutoff + plateHeight / 2.0f, .y = projectedLocation.y }, plateBackground);
+
+      {
+         // TODO: outsource this block, also consider a different approach by scaling the inner coordinates to achieve an equal thickness.
+         float half = plateHeight / 2.0f;
+         float thick = 1.0f;
+         rlBegin(RL_TRIANGLES);
+
+         rlColor4ub(plateOutline.r, plateOutline.g, plateOutline.b, plateOutline.a);
+
+         std::array<Vector2, 2> tl {
+            Vector2 { .x = leftCutoff, .y = projectedLocation.y - half - thick },
+            Vector2 { .x = leftCutoff, .y = projectedLocation.y - half + thick },
+         };
+         std::array<Vector2, 2> bl {
+            Vector2 { .x = leftCutoff, .y = projectedLocation.y + half + thick },
+            Vector2 { .x = leftCutoff, .y = projectedLocation.y + half - thick },
+         };
+         std::array<Vector2, 2> tr {
+            Vector2 { .x = rightCutoff, .y = projectedLocation.y - half - thick },
+            Vector2 { .x = rightCutoff, .y = projectedLocation.y - half + thick },
+         };
+         std::array<Vector2, 2> br {
+            Vector2 { .x = rightCutoff, .y = projectedLocation.y + half + thick },
+            Vector2 { .x = rightCutoff, .y = projectedLocation.y + half - thick },
+         };
+         std::array<Vector2, 2> r {
+            Vector2 { .x = rightCutoff + half + thick, .y = projectedLocation.y },
+            Vector2 { .x = rightCutoff + half - thick, .y = projectedLocation.y },
+         };
+         std::array<Vector2, 2> l {
+            Vector2 { .x = leftCutoff - half - thick, .y = projectedLocation.y },
+            Vector2 { .x = leftCutoff - half + thick, .y = projectedLocation.y },
+         };
+
+         rlVertex2f(l[0].x, l[0].y);
+         rlVertex2f(l[1].x, l[1].y);
+         rlVertex2f(tl[0].x, tl[0].y);
+
+         rlVertex2f(tl[0].x, tl[0].y);
+         rlVertex2f(l[1].x, l[1].y);
+         rlVertex2f(tl[1].x, tl[1].y);
+
+         rlVertex2f(tl[0].x, tl[0].y);
+         rlVertex2f(tl[1].x, tl[1].y);
+         rlVertex2f(tr[0].x, tr[0].y);
+
+         rlVertex2f(tr[0].x, tr[0].y);
+         rlVertex2f(tl[1].x, tl[1].y);
+         rlVertex2f(tr[1].x, tr[1].y);
+
+         rlVertex2f(tr[0].x, tr[0].y);
+         rlVertex2f(tr[1].x, tr[1].y);
+         rlVertex2f(r[0].x, r[0].y);
+
+         rlVertex2f(r[0].x, r[0].y);
+         rlVertex2f(tr[1].x, tr[1].y);
+         rlVertex2f(r[1].x, r[1].y);
+
+         rlVertex2f(l[1].x, l[1].y);
+         rlVertex2f(l[0].x, l[0].y);
+         rlVertex2f(bl[0].x, bl[0].y);
+
+         rlVertex2f(bl[0].x, bl[0].y);
+         rlVertex2f(bl[1].x, bl[1].y);
+         rlVertex2f(l[1].x, l[1].y);
+
+         rlVertex2f(bl[1].x, bl[1].y);
+         rlVertex2f(bl[0].x, bl[0].y);
+         rlVertex2f(br[1].x, br[1].y);
+
+         rlVertex2f(br[1].x, br[1].y);
+         rlVertex2f(bl[0].x, bl[0].y);
+         rlVertex2f(br[0].x, br[0].y);
+
+         rlVertex2f(br[1].x, br[1].y);
+         rlVertex2f(br[0].x, br[0].y);
+         rlVertex2f(r[1].x, r[1].y);
+
+         rlVertex2f(r[1].x, r[1].y);
+         rlVertex2f(br[0].x, br[0].y);
+         rlVertex2f(r[0].x, r[0].y);
+
+         rlEnd();
+      }
 
       DrawTextEx(font, nameText.c_str(), Vector2 { .x = projectedLocation.x - textSize.x / 2.0f, .y = projectedLocation.y - textSize.y / 2.0f }, fontSize,
          spacing, Color { 0x00, 0x00, 0x00, 0xFF });
