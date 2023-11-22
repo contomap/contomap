@@ -436,6 +436,14 @@ void MainWindow::drawMap(RenderContext const &context)
 
          for (Role const &role : roles)
          {
+            std::string roleTitle;
+            auto optionalTypeId = role.getType();
+            if (optionalTypeId.isAssigned())
+            {
+               auto typeTopic = view.ofMap().findTopic(optionalTypeId.value());
+               roleTitle = bestTitleFor(typeTopic.value());
+            }
+
             auto associationLocation = associationLocationsById[role.getParent()];
 
             if (CheckCollisionPointLine(focusCoordinate, projectedLocation, associationLocation, 5))
@@ -443,20 +451,47 @@ void MainWindow::drawMap(RenderContext const &context)
                focus.registerItem(std::make_shared<RoleFocusItem>(role.getId()), 0.0f);
             }
 
-            Color roleColor { 0x00, 0x00, 0x00, 0xFF };
+            auto roleStyle = Styles::resolve(role.getAppearance(), role.getType(), view.ofViewScope(), view.ofMap());
+            Color lineColor
+               = Colors::toUiColor(roleStyle.get(Style::ColorType::Line, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF }));
+            Color roleBackground
+               = Colors::toUiColor(roleStyle.get(Style::ColorType::Fill, Style::Color { .red = 0xFF, .green = 0xFF, .blue = 0xFF, .alpha = 0xFF }));
+
+            roleBackground = ColorTint(roleBackground, Color { 0xFF, 0xFF, 0xFF, 0x80 });
+
             float thickness = 1.0f;
             if (selection.contains(SelectedType::Role, role.getId()))
             {
-               roleColor = ColorTint(roleColor, Color { 0xFF, 0x00, 0x00, 0x80 });
+               lineColor = ColorTint(lineColor, Color { 0xFF, 0x00, 0x00, 0x80 });
                thickness += 2.0f;
             }
             if (currentFocus.isRole(role.getId()))
             {
-               roleColor = ColorTint(roleColor, Color { 0xFF, 0xFF, 0xFF, 0x40 });
+               lineColor = ColorTint(lineColor, Color { 0xFF, 0xFF, 0xFF, 0x40 });
                thickness += 0.5f;
             }
 
-            DrawLineEx(projectedLocation, associationLocation, thickness, roleColor);
+            DrawLineEx(projectedLocation, associationLocation, thickness, lineColor);
+
+            if (!roleTitle.empty())
+            {
+               Font font = GetFontDefault();
+               float fontSize = 10.0f;
+               float spacing = 1.0f;
+               auto textSize = MeasureTextEx(font, roleTitle.c_str(), fontSize, spacing);
+               float plateHeight = textSize.y;
+
+               Rectangle area {
+                  .x = (projectedLocation.x + associationLocation.x) / 2,
+                  .y = (projectedLocation.y + associationLocation.y) / 2 - textSize.y / 2.0f,
+                  .width = textSize.x,
+                  .height = plateHeight,
+               };
+
+               DrawRectangleRec(area, roleBackground);
+               DrawTextEx(font, roleTitle.c_str(), Vector2 { .x = area.x, .y = area.y }, fontSize, spacing,
+                  Colors::toUiColor(roleStyle.get(Style::ColorType::Text, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF })));
+            }
          }
 
          Font font = GetFontDefault();
