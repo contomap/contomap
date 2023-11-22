@@ -62,6 +62,12 @@ std::optional<Style> Selections::firstAppearanceFrom(Selection const &selection,
       auto const &association = view.findAssociation(*ids.begin());
       return association.value().get().getAppearance();
    }
-   // TODO: add further types
+   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
+   {
+      for (auto const &role : view.findRoles(ids))
+      {
+         return role.get().getAppearance();
+      }
+   }
    return {};
 }

@@ -10,6 +10,7 @@ using contomap::model::Contomap;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 using contomap::model::Occurrence;
+using contomap::model::Role;
 using contomap::model::SpacialCoordinate;
 using contomap::model::Style;
 using contomap::model::Topic;
@@ -160,7 +161,13 @@ void Editor::setAppearanceOfSelection(Style style)
          association.setAppearance(style);
       }
    }
-   // TODO: set for other types
+   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
+   {
+      for (Role &role : map.findRoles(ids))
+      {
+         role.setAppearance(style);
+      }
+   }
 }
 
 void Editor::setTypeOfSelection(contomap::model::Identifier topicId)
@@ -184,7 +191,13 @@ void Editor::setTypeOfSelection(contomap::model::Identifier topicId)
          association.setType(topicId);
       }
    }
-   // TODO: set for other types
+   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
+   {
+      for (Role &role : map.findRoles(ids))
+      {
+         role.setType(topicId);
+      }
+   }
 }
 
 void Editor::clearTypeOfSelection()
@@ -204,7 +217,13 @@ void Editor::clearTypeOfSelection()
          association.clearType();
       }
    }
-   // TODO: set for other types
+   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
+   {
+      for (Role &role : map.findRoles(ids))
+      {
+         role.clearType();
+      }
+   }
 }
 
 void Editor::setViewScopeFromSelection()

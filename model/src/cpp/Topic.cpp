@@ -234,6 +234,14 @@ void Topic::removeTopicReferences(Identifier topicId)
          occurrence.clearType();
       }
    }
+   for (auto &[_, role] : roles)
+   {
+      auto typeId = role.getType();
+      if (typeId.isAssigned() && (typeId.value() == topicId))
+      {
+         role.clearType();
+      }
+   }
 }
 
 std::optional<std::reference_wrapper<TopicName>> Topic::findNameByScope(Identifiers const &scope)
