@@ -14,7 +14,7 @@ Style Styles::resolve(Style const &localStyle, OptionalIdentifier localTypeId, I
    return resolve(localStyle, localTypeId, scope, view, 0);
 }
 
-Style Styles::resolve(Style const &localStyle, OptionalIdentifier localTypeId, Identifiers const &scope, ContomapView const &view, size_t depth)
+Style Styles::resolve(Style const &localStyle, OptionalIdentifier localTypeId, Identifiers const &scope, ContomapView const &view, size_t depth) // NOLINT
 {
    if ((depth >= 10) || !localTypeId.isAssigned())
    {

@@ -516,6 +516,7 @@ void MainWindow::drawUserInterface(RenderContext const &context)
       GuiEnable();
       leftIconButtonsBounds.x += (iconSize + padding);
 
+      leftIconButtonsBounds.x += (iconSize + padding);
       if (view.ofSelection().empty())
       {
          GuiDisable();
@@ -524,6 +525,18 @@ void MainWindow::drawUserInterface(RenderContext const &context)
       if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_BRUSH_CLASSIC, nullptr)))
       {
          openEditStyleDialog();
+      }
+      GuiEnable();
+      leftIconButtonsBounds.x += (iconSize + padding);
+
+      GuiSetTooltip("Clear type");
+      if (view.ofSelection().empty())
+      {
+         GuiDisable();
+      }
+      if (GuiButton(leftIconButtonsBounds, "-T"))
+      {
+         inputRequestHandler.clearTypeOfSelection();
       }
       GuiEnable();
       leftIconButtonsBounds.x += (iconSize + padding);
