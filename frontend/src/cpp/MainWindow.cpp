@@ -532,22 +532,25 @@ void MainWindow::drawMap(RenderContext const &context)
             plateOutline = ColorTint(plateOutline, Color { 0xFF, 0xFF, 0xFF, 0x40 });
          }
 
-         DrawCircleSector(Vector2 { .x = leftCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 90.0f, 270.0f, 20, plateBackground);
+         // DrawCircleSector(Vector2 { .x = leftCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 90.0f, 270.0f, 20, plateBackground);
          DrawRectangleRec(
             Rectangle { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f, .width = rightCutoff - leftCutoff, .height = plateHeight },
             plateBackground);
-         DrawCircleSector(Vector2 { .x = rightCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 270.0f, 450.0f, 20, plateBackground);
+         // DrawCircleSector(Vector2 { .x = rightCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 270.0f, 450.0f, 20, plateBackground);
 
          DrawTextEx(font, nameText.c_str(), Vector2 { .x = projectedLocation.x - textSize.x / 2.0f, .y = projectedLocation.y - textSize.y / 2.0f }, fontSize,
             spacing, Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Text)));
 
-         // TODO: need local sector outline. existing seems to take different parameters - and doesn't support line thickness.
-         // DrawCircleSectorLines(Vector2 { .x = leftCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 90.0f, 270.0f, 20, plateBackground);
-         DrawLineEx(Vector2 { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f },
-            Vector2 { .x = rightCutoff, .y = projectedLocation.y - plateHeight / 2.0f }, 2.0f, plateOutline);
-         DrawLineEx(Vector2 { .x = leftCutoff, .y = projectedLocation.y + plateHeight / 2.0f },
-            Vector2 { .x = rightCutoff, .y = projectedLocation.y + plateHeight / 2.0f }, 2.0f, plateOutline);
-         // DrawCircleSectorLines(Vector2 { .x = leftCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 270.0f, 450.0f, 20, plateBackground);
+         // TODO properly use area, better drawing
+         float thick = 2.0f;
+         DrawLineEx(Vector2 { .x = leftCutoff - thick / 2.0f, .y = projectedLocation.y - plateHeight / 2.0f - thick },
+            Vector2 { .x = leftCutoff - thick / 2.0f, .y = projectedLocation.y + plateHeight / 2.0f + thick }, thick, plateOutline);
+         DrawLineEx(Vector2 { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f - thick / 2.0f },
+            Vector2 { .x = rightCutoff, .y = projectedLocation.y - plateHeight / 2.0f - thick / 2.0f }, thick, plateOutline);
+         DrawLineEx(Vector2 { .x = rightCutoff + thick / 2.0f, .y = projectedLocation.y - plateHeight / 2.0f - thick },
+            Vector2 { .x = rightCutoff + thick / 2.0f, .y = projectedLocation.y + plateHeight / 2.0f + thick }, thick, plateOutline);
+         DrawLineEx(Vector2 { .x = leftCutoff, .y = projectedLocation.y + plateHeight / 2.0f + thick / 2.0f },
+            Vector2 { .x = rightCutoff, .y = projectedLocation.y + plateHeight / 2.0f + thick / 2.0f }, thick, plateOutline);
       }
    }
 
