@@ -252,6 +252,11 @@ void MainWindow::drawBackground()
 
 void MainWindow::drawMap(RenderContext const &context)
 {
+   static Style const defaultStyle = Style()
+                                        .with(Style::ColorType::Text, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF })
+                                        .with(Style::ColorType::Fill, Style::Color { .red = 0xE0, .green = 0xE0, .blue = 0xE0, .alpha = 0xFF })
+                                        .with(Style::ColorType::Line, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF });
+
    auto contentSize = context.getContentSize();
    auto projection = mapCamera.beginProjection(contentSize);
    auto focusCoordinate = projection.unproject(GetMousePosition());
@@ -306,11 +311,10 @@ void MainWindow::drawMap(RenderContext const &context)
          focus.registerItem(std::make_shared<AssociationFocusItem>(visibleAssociation.getId()), Vector2Distance(focusCoordinate, projectedLocation));
       }
 
-      auto associationStyle = Styles::resolve(visibleAssociation.getAppearance(), visibleAssociation.getType(), view.ofViewScope(), view.ofMap());
-      Color plateBackground
-         = Colors::toUiColor(associationStyle.get(Style::ColorType::Fill, Style::Color { .red = 0xFF, .green = 0xFF, .blue = 0xFF, .alpha = 0xFF }));
-      Color plateOutline
-         = Colors::toUiColor(associationStyle.get(Style::ColorType::Line, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF }));
+      auto associationStyle
+         = Styles::resolve(visibleAssociation.getAppearance(), visibleAssociation.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
+      Color plateBackground = Colors::toUiColor(associationStyle.get(Style::ColorType::Fill));
+      Color plateOutline = Colors::toUiColor(associationStyle.get(Style::ColorType::Line));
       if (selection.contains(SelectedType::Association, visibleAssociation.getId()))
       {
          plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x80 });
@@ -416,7 +420,7 @@ void MainWindow::drawMap(RenderContext const &context)
       }
 
       DrawTextEx(font, nameText.c_str(), Vector2 { .x = projectedLocation.x - textSize.x / 2.0f, .y = projectedLocation.y - textSize.y / 2.0f }, fontSize,
-         spacing, Color { 0x00, 0x00, 0x00, 0xFF });
+         spacing, Colors::toUiColor(associationStyle.get(Style::ColorType::Text)));
    }
 
    auto visibleTopics = map.find(Topics::thatAreIn(viewScope));
@@ -451,11 +455,9 @@ void MainWindow::drawMap(RenderContext const &context)
                focus.registerItem(std::make_shared<RoleFocusItem>(role.getId()), 0.0f);
             }
 
-            auto roleStyle = Styles::resolve(role.getAppearance(), role.getType(), view.ofViewScope(), view.ofMap());
-            Color lineColor
-               = Colors::toUiColor(roleStyle.get(Style::ColorType::Line, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF }));
-            Color roleBackground
-               = Colors::toUiColor(roleStyle.get(Style::ColorType::Fill, Style::Color { .red = 0xFF, .green = 0xFF, .blue = 0xFF, .alpha = 0xFF }));
+            auto roleStyle = Styles::resolve(role.getAppearance(), role.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
+            Color lineColor = Colors::toUiColor(roleStyle.get(Style::ColorType::Line));
+            Color roleBackground = Colors::toUiColor(roleStyle.get(Style::ColorType::Fill));
 
             roleBackground = ColorTint(roleBackground, Color { 0xFF, 0xFF, 0xFF, 0x80 });
 
@@ -489,8 +491,8 @@ void MainWindow::drawMap(RenderContext const &context)
                };
 
                DrawRectangleRec(area, roleBackground);
-               DrawTextEx(font, roleTitle.c_str(), Vector2 { .x = area.x, .y = area.y }, fontSize, spacing,
-                  Colors::toUiColor(roleStyle.get(Style::ColorType::Text, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF })));
+               DrawTextEx(
+                  font, roleTitle.c_str(), Vector2 { .x = area.x, .y = area.y }, fontSize, spacing, Colors::toUiColor(roleStyle.get(Style::ColorType::Text)));
             }
          }
 
@@ -514,11 +516,10 @@ void MainWindow::drawMap(RenderContext const &context)
             focus.registerItem(std::make_shared<OccurrenceFocusItem>(occurrence.getId()), Vector2Distance(focusCoordinate, projectedLocation));
          }
 
-         auto occurrenceStyle = Styles::resolve(occurrence.getAppearance(), occurrence.getType(), view.ofViewScope(), view.ofMap());
-         Color plateBackground
-            = Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Fill, Style::Color { .red = 0xB0, .green = 0x80, .blue = 0xE0, .alpha = 0xC0 }));
-         Color plateOutline
-            = Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Line, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0x00 }));
+         auto occurrenceStyle
+            = Styles::resolve(occurrence.getAppearance(), occurrence.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
+         Color plateBackground = Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Fill));
+         Color plateOutline = Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Line));
 
          if (selection.contains(SelectedType::Occurrence, occurrence.getId()))
          {
@@ -538,7 +539,7 @@ void MainWindow::drawMap(RenderContext const &context)
          DrawCircleSector(Vector2 { .x = rightCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 270.0f, 450.0f, 20, plateBackground);
 
          DrawTextEx(font, nameText.c_str(), Vector2 { .x = projectedLocation.x - textSize.x / 2.0f, .y = projectedLocation.y - textSize.y / 2.0f }, fontSize,
-            spacing, Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Text, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF })));
+            spacing, Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Text)));
 
          // TODO: need local sector outline. existing seems to take different parameters - and doesn't support line thickness.
          // DrawCircleSectorLines(Vector2 { .x = leftCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 90.0f, 270.0f, 20, plateBackground);
