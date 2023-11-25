@@ -93,6 +93,7 @@ public:
 
    /**
     * @param type the type of color to retrieve.
+    * @param defaultValue the value to return should this style not have the requested type.
     * @return the text color if complete, transparent black otherwise.
     */
    [[nodiscard]] Color get(ColorType type, Color defaultValue = DEFAULT_COLOR) const;

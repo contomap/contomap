@@ -19,7 +19,9 @@ public:
    /**
     * Constructor.
     *
+    * @param inputRequestHandler the handler to call for a user action.
     * @param layout the layout to work with when drawing.
+    * @param style the graphical details to modify.
     */
    StyleDialog(contomap::editor::InputRequestHandler &inputRequestHandler, contomap::frontend::Layout const &layout, contomap::model::Style style);
    ~StyleDialog() override = default;

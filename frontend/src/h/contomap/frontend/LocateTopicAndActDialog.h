@@ -75,7 +75,7 @@ public:
    /**
     * Constructor.
     *
-    * @param inputRequestHandler the handler to call for a new topic.
+    * @param inputRequestHandler the handler to call for a user action.
     * @param view the view on the current map.
     * @param layout the layout to use for drawing.
     * @param actions the actions to make available to the user.

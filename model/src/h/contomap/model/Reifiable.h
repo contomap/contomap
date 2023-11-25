@@ -59,6 +59,9 @@ public:
       return { reifier->refine() };
    }
 
+   /**
+    * @copydoc contomap::model::Reified::clearReifier()
+    */
    void clearReifier() final
    {
       if (hasNoReifier())
