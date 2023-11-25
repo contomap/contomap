@@ -34,6 +34,11 @@ public:
    [[nodiscard]] bool isAssigned() const;
 
    /**
+    * @return the contained value - if it is assigned.
+    */
+   [[nodiscard]] contomap::model::Identifier value() const;
+
+   /**
     * Remove the assignment of an identifier.
     */
    void clear();
@@ -49,7 +54,7 @@ public:
    {
       if (identifier.isAssigned())
       {
-         stream << identifier.value.value();
+         stream << identifier.content.value();
       }
       else
       {
@@ -77,7 +82,7 @@ public:
 private:
    explicit OptionalIdentifier(Identifier value);
 
-   std::optional<Identifier> value;
+   std::optional<Identifier> content;
 };
 
 }

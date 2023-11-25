@@ -7,15 +7,19 @@
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #include <raylib.h>
 #include <raymath.h>
+#include <rlgl.h>
 #pragma GCC diagnostic pop
 
 #include "contomap/editor/Selections.h"
+#include "contomap/editor/Styles.h"
+#include "contomap/frontend/Colors.h"
 #include "contomap/frontend/HelpDialog.h"
 #include "contomap/frontend/LocateTopicAndActDialog.h"
 #include "contomap/frontend/MainWindow.h"
 #include "contomap/frontend/Names.h"
 #include "contomap/frontend/NewTopicDialog.h"
 #include "contomap/frontend/RenameTopicDialog.h"
+#include "contomap/frontend/StyleDialog.h"
 #include "contomap/model/Associations.h"
 #include "contomap/model/Topics.h"
 
@@ -23,6 +27,8 @@ using contomap::editor::InputRequestHandler;
 using contomap::editor::SelectedType;
 using contomap::editor::SelectionAction;
 using contomap::editor::Selections;
+using contomap::editor::Styles;
+using contomap::frontend::Colors;
 using contomap::frontend::LocateTopicAndActDialog;
 using contomap::frontend::MainWindow;
 using contomap::frontend::MapCamera;
@@ -36,6 +42,7 @@ using contomap::model::Identifiers;
 using contomap::model::Occurrence;
 using contomap::model::Role;
 using contomap::model::SpacialCoordinate;
+using contomap::model::Style;
 using contomap::model::Topic;
 using contomap::model::TopicName;
 using contomap::model::TopicNameValue;
@@ -229,11 +236,21 @@ void MainWindow::cycleSelectedOccurrence(bool forward)
    {
       inputRequestHandler.cycleSelectedOccurrenceReverse();
    }
-   auto newOccurrence = Selections::firstOccurrenceFrom(view.ofSelection(), view.ofMap());
+   panCameraToSelectedOccurrence();
+}
 
-   if (newOccurrence.has_value())
+void MainWindow::jumpToFirstOccurrenceOf(Identifier topicId)
+{
+   inputRequestHandler.selectClosestOccurrenceOf(topicId);
+   panCameraToSelectedOccurrence();
+}
+
+void MainWindow::panCameraToSelectedOccurrence()
+{
+   auto occurrence = Selections::firstOccurrenceFrom(view.ofSelection(), view.ofMap());
+   if (occurrence.has_value())
    {
-      auto newLocation = newOccurrence.value().get().getLocation().getSpacial().getAbsoluteReference();
+      auto newLocation = occurrence.value().get().getLocation().getSpacial().getAbsoluteReference();
       mapCamera.panTo(Vector2 { .x = newLocation.X(), .y = newLocation.Y() });
    }
 }
@@ -245,6 +262,11 @@ void MainWindow::drawBackground()
 
 void MainWindow::drawMap(RenderContext const &context)
 {
+   static Style const defaultStyle = Style()
+                                        .with(Style::ColorType::Text, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF })
+                                        .with(Style::ColorType::Fill, Style::Color { .red = 0xE0, .green = 0xE0, .blue = 0xE0, .alpha = 0xFF })
+                                        .with(Style::ColorType::Line, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF });
+
    auto contentSize = context.getContentSize();
    auto projection = mapCamera.beginProjection(contentSize);
    auto focusCoordinate = projection.unproject(GetMousePosition());
@@ -264,7 +286,13 @@ void MainWindow::drawMap(RenderContext const &context)
    auto visibleAssociations = map.find(Associations::thatAreIn(viewScope));
    for (Association const &visibleAssociation : visibleAssociations)
    {
+      auto optionalTypeId = visibleAssociation.getType();
       std::string nameText(" "); // TODO: resolve name. also: why do triangles overlap if name is empty?
+      if (optionalTypeId.isAssigned())
+      {
+         auto typeTopic = view.ofMap().findTopic(optionalTypeId.value());
+         nameText = bestTitleFor(typeTopic.value());
+      }
 
       auto spacialLocation = visibleAssociation.getLocation().getSpacial().getAbsoluteReference();
       Vector2 projectedLocation { .x = spacialLocation.X(), .y = spacialLocation.Y() };
@@ -275,7 +303,6 @@ void MainWindow::drawMap(RenderContext const &context)
       auto textSize = MeasureTextEx(font, nameText.c_str(), fontSize, spacing);
       float plateHeight = textSize.y;
 
-      Color plateBackground { 0x80, 0xE0, 0xB0, 0xC0 };
       float leftCutoff = projectedLocation.x - textSize.x / 2.0f;
       float rightCutoff = projectedLocation.x + textSize.x / 2.0f;
 
@@ -294,13 +321,19 @@ void MainWindow::drawMap(RenderContext const &context)
          focus.registerItem(std::make_shared<AssociationFocusItem>(visibleAssociation.getId()), Vector2Distance(focusCoordinate, projectedLocation));
       }
 
+      auto associationStyle
+         = Styles::resolve(visibleAssociation.getAppearance(), visibleAssociation.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
+      Color plateBackground = Colors::toUiColor(associationStyle.get(Style::ColorType::Fill));
+      Color plateOutline = Colors::toUiColor(associationStyle.get(Style::ColorType::Line));
       if (selection.contains(SelectedType::Association, visibleAssociation.getId()))
       {
          plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x80 });
+         plateOutline = ColorTint(plateOutline, Color { 0xFF, 0xFF, 0xFF, 0x80 });
       }
       if (currentFocus.isAssociation(visibleAssociation.getId()))
       {
          plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x40 });
+         plateOutline = ColorTint(plateOutline, Color { 0xFF, 0xFF, 0xFF, 0x40 });
       }
 
       DrawTriangle(Vector2 { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f },
@@ -312,8 +345,139 @@ void MainWindow::drawMap(RenderContext const &context)
          Vector2 { .x = rightCutoff, .y = projectedLocation.y + plateHeight / 2.0f },
          Vector2 { .x = rightCutoff + plateHeight / 2.0f, .y = projectedLocation.y }, plateBackground);
 
+      {
+         bool hasReifier = visibleAssociation.hasReifier();
+
+         // TODO: outsource this block, also consider a different approach by scaling the inner coordinates to achieve an equal thickness.
+         float half = plateHeight / 2.0f;
+         float thick = 1.0f;
+         float reifierOffset = 2.0f + thick * 2.0f;
+         rlBegin(RL_TRIANGLES);
+
+         rlColor4ub(plateOutline.r, plateOutline.g, plateOutline.b, plateOutline.a);
+
+         std::array<Vector2, 2> tl {
+            Vector2 { .x = leftCutoff, .y = projectedLocation.y - half - thick },
+            Vector2 { .x = leftCutoff, .y = projectedLocation.y - half + thick },
+         };
+         std::array<Vector2, 2> bl {
+            Vector2 { .x = leftCutoff, .y = projectedLocation.y + half + thick },
+            Vector2 { .x = leftCutoff, .y = projectedLocation.y + half - thick },
+         };
+         std::array<Vector2, 2> tr {
+            Vector2 { .x = rightCutoff, .y = projectedLocation.y - half - thick },
+            Vector2 { .x = rightCutoff, .y = projectedLocation.y - half + thick },
+         };
+         std::array<Vector2, 2> br {
+            Vector2 { .x = rightCutoff, .y = projectedLocation.y + half + thick },
+            Vector2 { .x = rightCutoff, .y = projectedLocation.y + half - thick },
+         };
+         std::array<Vector2, 2> r {
+            Vector2 { .x = rightCutoff + half + thick, .y = projectedLocation.y },
+            Vector2 { .x = rightCutoff + half - thick, .y = projectedLocation.y },
+         };
+         std::array<Vector2, 2> l {
+            Vector2 { .x = leftCutoff - half - thick, .y = projectedLocation.y },
+            Vector2 { .x = leftCutoff - half + thick, .y = projectedLocation.y },
+         };
+
+         if (hasReifier)
+         {
+            rlVertex2f(l[0].x - reifierOffset, l[0].y);
+            rlVertex2f(l[1].x - reifierOffset, l[1].y);
+            rlVertex2f(tl[0].x - reifierOffset, tl[0].y);
+
+            rlVertex2f(tl[0].x - reifierOffset, tl[0].y);
+            rlVertex2f(l[1].x - reifierOffset, l[1].y);
+            rlVertex2f(tl[1].x - reifierOffset, tl[1].y);
+         }
+
+         rlVertex2f(l[0].x, l[0].y);
+         rlVertex2f(l[1].x, l[1].y);
+         rlVertex2f(tl[0].x, tl[0].y);
+
+         rlVertex2f(tl[0].x, tl[0].y);
+         rlVertex2f(l[1].x, l[1].y);
+         rlVertex2f(tl[1].x, tl[1].y);
+
+         rlVertex2f(tl[0].x, tl[0].y);
+         rlVertex2f(tl[1].x, tl[1].y);
+         rlVertex2f(tr[0].x, tr[0].y);
+
+         rlVertex2f(tr[0].x, tr[0].y);
+         rlVertex2f(tl[1].x, tl[1].y);
+         rlVertex2f(tr[1].x, tr[1].y);
+
+         rlVertex2f(tr[0].x, tr[0].y);
+         rlVertex2f(tr[1].x, tr[1].y);
+         rlVertex2f(r[0].x, r[0].y);
+
+         rlVertex2f(r[0].x, r[0].y);
+         rlVertex2f(tr[1].x, tr[1].y);
+         rlVertex2f(r[1].x, r[1].y);
+
+         if (hasReifier)
+         {
+            rlVertex2f(tr[0].x + reifierOffset, tr[0].y);
+            rlVertex2f(tr[1].x + reifierOffset, tr[1].y);
+            rlVertex2f(r[0].x + reifierOffset, r[0].y);
+
+            rlVertex2f(r[0].x + reifierOffset, r[0].y);
+            rlVertex2f(tr[1].x + reifierOffset, tr[1].y);
+            rlVertex2f(r[1].x + reifierOffset, r[1].y);
+         }
+
+         if (hasReifier)
+         {
+            rlVertex2f(l[1].x - reifierOffset, l[1].y);
+            rlVertex2f(l[0].x - reifierOffset, l[0].y);
+            rlVertex2f(bl[0].x - reifierOffset, bl[0].y);
+
+            rlVertex2f(bl[0].x - reifierOffset, bl[0].y);
+            rlVertex2f(bl[1].x - reifierOffset, bl[1].y);
+            rlVertex2f(l[1].x - reifierOffset, l[1].y);
+         }
+
+         rlVertex2f(l[1].x, l[1].y);
+         rlVertex2f(l[0].x, l[0].y);
+         rlVertex2f(bl[0].x, bl[0].y);
+
+         rlVertex2f(bl[0].x, bl[0].y);
+         rlVertex2f(bl[1].x, bl[1].y);
+         rlVertex2f(l[1].x, l[1].y);
+
+         rlVertex2f(bl[1].x, bl[1].y);
+         rlVertex2f(bl[0].x, bl[0].y);
+         rlVertex2f(br[1].x, br[1].y);
+
+         rlVertex2f(br[1].x, br[1].y);
+         rlVertex2f(bl[0].x, bl[0].y);
+         rlVertex2f(br[0].x, br[0].y);
+
+         rlVertex2f(br[1].x, br[1].y);
+         rlVertex2f(br[0].x, br[0].y);
+         rlVertex2f(r[1].x, r[1].y);
+
+         rlVertex2f(r[1].x, r[1].y);
+         rlVertex2f(br[0].x, br[0].y);
+         rlVertex2f(r[0].x, r[0].y);
+
+         if (hasReifier)
+         {
+            rlVertex2f(br[1].x + reifierOffset, br[1].y);
+            rlVertex2f(br[0].x + reifierOffset, br[0].y);
+            rlVertex2f(r[1].x + reifierOffset, r[1].y);
+
+            rlVertex2f(r[1].x + reifierOffset, r[1].y);
+            rlVertex2f(br[0].x + reifierOffset, br[0].y);
+            rlVertex2f(r[0].x + reifierOffset, r[0].y);
+         }
+
+         rlEnd();
+      }
+
       DrawTextEx(font, nameText.c_str(), Vector2 { .x = projectedLocation.x - textSize.x / 2.0f, .y = projectedLocation.y - textSize.y / 2.0f }, fontSize,
-         spacing, Color { 0x00, 0x00, 0x00, 0xFF });
+         spacing, Colors::toUiColor(associationStyle.get(Style::ColorType::Text)));
    }
 
    auto visibleTopics = map.find(Topics::thatAreIn(viewScope));
@@ -333,6 +497,14 @@ void MainWindow::drawMap(RenderContext const &context)
 
          for (Role const &role : roles)
          {
+            std::string roleTitle;
+            auto optionalTypeId = role.getType();
+            if (optionalTypeId.isAssigned())
+            {
+               auto typeTopic = view.ofMap().findTopic(optionalTypeId.value());
+               roleTitle = bestTitleFor(typeTopic.value());
+            }
+
             auto associationLocation = associationLocationsById[role.getParent()];
 
             if (CheckCollisionPointLine(focusCoordinate, projectedLocation, associationLocation, 5))
@@ -340,20 +512,71 @@ void MainWindow::drawMap(RenderContext const &context)
                focus.registerItem(std::make_shared<RoleFocusItem>(role.getId()), 0.0f);
             }
 
-            Color roleColor { 0x00, 0x00, 0x00, 0xFF };
+            auto roleStyle = Styles::resolve(role.getAppearance(), role.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
+            Color lineColor = Colors::toUiColor(roleStyle.get(Style::ColorType::Line));
+            Color roleBackground = Colors::toUiColor(roleStyle.get(Style::ColorType::Fill));
+
+            roleBackground = ColorTint(roleBackground, Color { 0xFF, 0xFF, 0xFF, 0x80 });
+
             float thickness = 1.0f;
             if (selection.contains(SelectedType::Role, role.getId()))
             {
-               roleColor = ColorTint(roleColor, Color { 0xFF, 0x00, 0x00, 0x80 });
+               lineColor = ColorTint(lineColor, Color { 0xFF, 0x00, 0x00, 0x80 });
                thickness += 2.0f;
             }
             if (currentFocus.isRole(role.getId()))
             {
-               roleColor = ColorTint(roleColor, Color { 0xFF, 0xFF, 0xFF, 0x40 });
+               lineColor = ColorTint(lineColor, Color { 0xFF, 0xFF, 0xFF, 0x40 });
                thickness += 0.5f;
             }
 
-            DrawLineEx(projectedLocation, associationLocation, thickness, roleColor);
+            DrawLineEx(projectedLocation, associationLocation, thickness, lineColor);
+            float diffX = projectedLocation.x - associationLocation.x;
+            float diffY = projectedLocation.y - associationLocation.y;
+            float length = Vector2Length(Vector2 { .x = diffX, .y = diffY });
+            if (length > 0.0001f && role.hasReifier())
+            {
+               auto drawWithOffset = [length, projectedLocation, associationLocation, thickness, lineColor](float offset) {
+                  Vector2 shiftedProjected {
+                     .x = projectedLocation.x + offset * (associationLocation.y - projectedLocation.y) / length,
+                     .y = projectedLocation.y + offset * (projectedLocation.x - associationLocation.x) / length,
+                  };
+                  Vector2 shiftedAssociation {
+                     .x = associationLocation.x + offset * (associationLocation.y - projectedLocation.y) / length,
+                     .y = associationLocation.y + offset * (projectedLocation.x - associationLocation.x) / length,
+                  };
+                  float diffX = shiftedAssociation.x - shiftedProjected.x;
+                  float diffY = shiftedAssociation.y - shiftedProjected.y;
+                  shiftedProjected.x += diffX / 3;
+                  shiftedProjected.y += diffY / 3;
+                  shiftedAssociation.x += -diffX / 3;
+                  shiftedAssociation.y += -diffY / 3;
+                  DrawLineEx(shiftedProjected, shiftedAssociation, thickness, lineColor);
+               };
+
+               drawWithOffset(+3.0f);
+               drawWithOffset(-3.0f);
+            }
+
+            if (!roleTitle.empty())
+            {
+               Font font = GetFontDefault();
+               float fontSize = 10.0f;
+               float spacing = 1.0f;
+               auto textSize = MeasureTextEx(font, roleTitle.c_str(), fontSize, spacing);
+               float plateHeight = textSize.y;
+
+               Rectangle area {
+                  .x = (projectedLocation.x + associationLocation.x) / 2,
+                  .y = (projectedLocation.y + associationLocation.y) / 2 - textSize.y / 2.0f,
+                  .width = textSize.x,
+                  .height = plateHeight,
+               };
+
+               DrawRectangleRec(area, roleBackground);
+               DrawTextEx(
+                  font, roleTitle.c_str(), Vector2 { .x = area.x, .y = area.y }, fontSize, spacing, Colors::toUiColor(roleStyle.get(Style::ColorType::Text)));
+            }
          }
 
          Font font = GetFontDefault();
@@ -362,7 +585,6 @@ void MainWindow::drawMap(RenderContext const &context)
          auto textSize = MeasureTextEx(font, nameText.c_str(), fontSize, spacing);
          float plateHeight = textSize.y;
 
-         Color plateBackground { 0xB0, 0x80, 0xE0, 0xC0 };
          float leftCutoff = projectedLocation.x - textSize.x / 2.0f;
          float rightCutoff = projectedLocation.x + textSize.x / 2.0f;
 
@@ -377,23 +599,49 @@ void MainWindow::drawMap(RenderContext const &context)
             focus.registerItem(std::make_shared<OccurrenceFocusItem>(occurrence.getId()), Vector2Distance(focusCoordinate, projectedLocation));
          }
 
+         auto occurrenceStyle
+            = Styles::resolve(occurrence.getAppearance(), occurrence.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
+         Color plateBackground = Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Fill));
+         Color plateOutline = Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Line));
+
          if (selection.contains(SelectedType::Occurrence, occurrence.getId()))
          {
             plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x80 });
+            plateOutline = ColorTint(plateOutline, Color { 0xFF, 0xFF, 0xFF, 0x80 });
          }
          if (currentFocus.isOccurrence(occurrence.getId()))
          {
             plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x40 });
+            plateOutline = ColorTint(plateOutline, Color { 0xFF, 0xFF, 0xFF, 0x40 });
          }
 
-         DrawCircleSector(Vector2 { .x = leftCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 90.0f, 270.0f, 20, plateBackground);
+         // DrawCircleSector(Vector2 { .x = leftCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 90.0f, 270.0f, 20, plateBackground);
          DrawRectangleRec(
             Rectangle { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f, .width = rightCutoff - leftCutoff, .height = plateHeight },
             plateBackground);
-         DrawCircleSector(Vector2 { .x = rightCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 270.0f, 450.0f, 20, plateBackground);
+         // DrawCircleSector(Vector2 { .x = rightCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 270.0f, 450.0f, 20, plateBackground);
 
          DrawTextEx(font, nameText.c_str(), Vector2 { .x = projectedLocation.x - textSize.x / 2.0f, .y = projectedLocation.y - textSize.y / 2.0f }, fontSize,
-            spacing, Color { 0x00, 0x00, 0x00, 0xFF });
+            spacing, Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Text)));
+
+         // TODO properly use area, better drawing
+         float thick = 2.0f;
+         DrawLineEx(Vector2 { .x = leftCutoff - thick / 2.0f, .y = projectedLocation.y - plateHeight / 2.0f - thick },
+            Vector2 { .x = leftCutoff - thick / 2.0f, .y = projectedLocation.y + plateHeight / 2.0f + thick }, thick, plateOutline);
+         DrawLineEx(Vector2 { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f - thick / 2.0f },
+            Vector2 { .x = rightCutoff, .y = projectedLocation.y - plateHeight / 2.0f - thick / 2.0f }, thick, plateOutline);
+         DrawLineEx(Vector2 { .x = rightCutoff + thick / 2.0f, .y = projectedLocation.y - plateHeight / 2.0f - thick },
+            Vector2 { .x = rightCutoff + thick / 2.0f, .y = projectedLocation.y + plateHeight / 2.0f + thick }, thick, plateOutline);
+         DrawLineEx(Vector2 { .x = leftCutoff, .y = projectedLocation.y + plateHeight / 2.0f + thick / 2.0f },
+            Vector2 { .x = rightCutoff, .y = projectedLocation.y + plateHeight / 2.0f + thick / 2.0f }, thick, plateOutline);
+
+         if (occurrence.hasReifier())
+         {
+            DrawLineEx(Vector2 { .x = leftCutoff - thick * 1.5f - 2.0f, .y = projectedLocation.y - plateHeight / 2.0f - thick },
+               Vector2 { .x = leftCutoff - thick * 1.5f - 2.0f, .y = projectedLocation.y + plateHeight / 2.0f + thick }, thick, plateOutline);
+            DrawLineEx(Vector2 { .x = rightCutoff + thick * 1.5f + 2.0f, .y = projectedLocation.y - plateHeight / 2.0f - thick },
+               Vector2 { .x = rightCutoff + thick * 1.5f + 2.0f, .y = projectedLocation.y + plateHeight / 2.0f + thick }, thick, plateOutline);
+         }
       }
    }
 
@@ -494,6 +742,59 @@ void MainWindow::drawUserInterface(RenderContext const &context)
       }
       GuiEnable();
       leftIconButtonsBounds.x += (iconSize + padding);
+
+      leftIconButtonsBounds.x += (iconSize + padding);
+      if (view.ofSelection().empty())
+      {
+         GuiDisable();
+      }
+      GuiSetTooltip("Set appearance");
+      if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_BRUSH_CLASSIC, nullptr)))
+      {
+         openEditStyleDialog();
+      }
+      GuiEnable();
+      leftIconButtonsBounds.x += (iconSize + padding);
+
+      GuiSetTooltip("Clear type");
+      if (view.ofSelection().empty())
+      {
+         GuiDisable();
+      }
+      if (GuiButton(leftIconButtonsBounds, "-T"))
+      {
+         inputRequestHandler.clearTypeOfSelection();
+      }
+      GuiEnable();
+      leftIconButtonsBounds.x += (iconSize + padding);
+
+      leftIconButtonsBounds.x += (iconSize + padding);
+      GuiSetTooltip("Go to reifier");
+      if (!view.ofSelection().hasSoleEntry() || !Selections::firstReifiableFrom(view.ofSelection(), view.ofMap()).value().get().getReifier().has_value())
+      {
+         GuiDisable();
+      }
+      if (GuiButton(leftIconButtonsBounds, "[R]"))
+      {
+         auto optionalReifiable = Selections::firstReifiableFrom(view.ofSelection(), view.ofMap());
+         if (optionalReifiable.has_value())
+         {
+            contomap::model::Reifiable<Topic> const &reifiable = optionalReifiable.value();
+            jumpToFirstOccurrenceOf(reifiable.getReifier().value().get().getId());
+         }
+      }
+      GuiEnable();
+      leftIconButtonsBounds.x += (iconSize + padding);
+      GuiSetTooltip("Clear reifier");
+      if (view.ofSelection().empty())
+      {
+         GuiDisable();
+      }
+      if (GuiButton(leftIconButtonsBounds, "-R"))
+      {
+         inputRequestHandler.clearReifierOfSelection();
+      }
+      GuiEnable();
    }
 
    {
@@ -610,7 +911,16 @@ void MainWindow::openNewLocateTopicAndActDialog()
       LocateTopicAndActDialog::setViewScope(),
       LocateTopicAndActDialog::addToViewScope(),
       LocateTopicAndActDialog::newOccurrence(spacialCameraLocation()),
+
    };
+   if (!view.ofSelection().empty())
+   {
+      actions.emplace_back(LocateTopicAndActDialog::setTypeOfSelection());
+   }
+   if (view.ofSelection().hasSoleEntry())
+   {
+      actions.emplace_back(LocateTopicAndActDialog::setReifierOfSelection());
+   }
    pendingDialog = std::make_unique<LocateTopicAndActDialog>(inputRequestHandler, view.ofMap(), layout, actions);
 }
 
@@ -634,6 +944,17 @@ void MainWindow::openSetTopicNameInScopeDialog()
    }
 
    pendingDialog = RenameTopicDialog::forScopedName(inputRequestHandler, layout, topic.value().get().getId());
+}
+
+void MainWindow::openEditStyleDialog()
+{
+   auto style = Selections::firstAppearanceFrom(view.ofSelection(), view.ofMap());
+   if (!style.has_value())
+   {
+      return;
+   }
+
+   pendingDialog = std::make_unique<contomap::frontend::StyleDialog>(inputRequestHandler, layout, style.value());
 }
 
 SpacialCoordinate MainWindow::spacialCameraLocation()

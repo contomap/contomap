@@ -4,6 +4,7 @@
 #include "contomap/editor/SelectionAction.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/SpacialCoordinate.h"
+#include "contomap/model/Style.h"
 #include "contomap/model/TopicNameValue.h"
 
 namespace contomap::editor
@@ -92,6 +93,35 @@ public:
    virtual void deleteSelection() = 0;
 
    /**
+    * Sets the appearance of all selected items to the provided style.
+    *
+    * @param appearance the style to use.
+    */
+   virtual void setAppearanceOfSelection(contomap::model::Style appearance) = 0;
+
+   /**
+    * Sets the type of the selected items.
+    * @param topicId the identifier of the topic to set.
+    */
+   virtual void setTypeOfSelection(contomap::model::Identifier topicId) = 0;
+
+   /**
+    * Clears the type of the selected items.
+    */
+   virtual void clearTypeOfSelection() = 0;
+
+   /**
+    * Sets the reifier of the selected items.
+    * @param topicId the identifier of the topic to set.
+    */
+   virtual void setReifierOfSelection(contomap::model::Identifier topicId) = 0;
+
+   /**
+    * Clears the reifier of the selected items.
+    */
+   virtual void clearReifierOfSelection() = 0;
+
+   /**
     * Sets the view scope from the current selection.
     */
    virtual void setViewScopeFromSelection() = 0;
@@ -140,6 +170,14 @@ public:
     * and sets the view scope to that of the new occurrence.
     */
    virtual void cycleSelectedOccurrenceReverse() = 0;
+
+   /**
+    * Selects the closest occurrence of the topic with given identifier.
+    * Closeness is determined by the current view scope.
+    *
+    * @param topicId the identifier of the topic to look for.
+    */
+   virtual void selectClosestOccurrenceOf(contomap::model::Identifier topicId) = 0;
 };
 
 } // namespace contomap::editor

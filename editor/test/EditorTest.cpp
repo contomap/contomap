@@ -228,6 +228,16 @@ public:
          handler.deleteSelection();
       }
 
+      void setsTypeOfSelectionTo(Identifier id)
+      {
+         handler.setTypeOfSelection(id);
+      }
+
+      void clearsTypeOfSelection()
+      {
+         handler.clearTypeOfSelection();
+      }
+
       void setsTheViewScopeFromSelection()
       {
          handler.setViewScopeFromSelection();
@@ -785,5 +795,189 @@ TEST_F(EditorTest, scopedTopicNameIsRemovedIfScopeIsDeleted)
    then().view().ofMap().shouldHaveTopicThat(topicId, [defaultName](Topic const &topic) {
       EXPECT_THAT(topic, hasNameCountOf(1));
       EXPECT_THAT(topic, hasDefaultName(defaultName));
+   });
+}
+
+TEST_F(EditorTest, settingTypeOfOccurrence)
+{
+   Identifier typeTopicId = given().user().requestsANewTopic();
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier occurrenceId = occurrenceOf(topicId).getId();
+   given().user().selects(SelectedType::Occurrence, occurrenceId);
+   when().user().setsTypeOfSelectionTo(typeTopicId);
+   then().view().ofMap().shouldHaveTopicThat(topicId, [occurrenceId, typeTopicId](Topic const &topic) {
+      auto optionalType = topic.getOccurrence(occurrenceId)->get().getType();
+      ASSERT_TRUE(optionalType.isAssigned());
+      EXPECT_EQ(optionalType.value(), typeTopicId);
+   });
+}
+
+TEST_F(EditorTest, clearingTypeOfOccurrence)
+{
+   Identifier typeTopicId = given().user().requestsANewTopic();
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier occurrenceId = occurrenceOf(topicId).getId();
+   given().user().selects(SelectedType::Occurrence, occurrenceId);
+   given().user().setsTypeOfSelectionTo(typeTopicId);
+   when().user().clearsTypeOfSelection();
+   then().view().ofMap().shouldHaveTopicThat(topicId, [occurrenceId](Topic const &topic) {
+      auto optionalType = topic.getOccurrence(occurrenceId)->get().getType();
+      ASSERT_FALSE(optionalType.isAssigned());
+   });
+}
+
+TEST_F(EditorTest, deletingTypeOfOccurrenceClearsIt)
+{
+   Identifier typeTopicId = given().user().requestsANewTopic();
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier occurrenceId = occurrenceOf(topicId).getId();
+   given().user().selects(SelectedType::Occurrence, occurrenceId);
+   given().user().setsTypeOfSelectionTo(typeTopicId);
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(typeTopicId).getId());
+   when().user().deletesTheSelection();
+   then().view().ofMap().shouldHaveTopicThat(topicId, [occurrenceId](Topic const &topic) {
+      auto optionalType = topic.getOccurrence(occurrenceId)->get().getType();
+      ASSERT_FALSE(optionalType.isAssigned());
+   });
+}
+
+TEST_F(EditorTest, typeOfOccurrenceCanNotBeSetToUnknownId)
+{
+   Identifier typeTopicId = Identifier::random();
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier occurrenceId = occurrenceOf(topicId).getId();
+   given().user().selects(SelectedType::Occurrence, occurrenceId);
+   when().user().setsTypeOfSelectionTo(typeTopicId);
+   then().view().ofMap().shouldHaveTopicThat(topicId, [occurrenceId](Topic const &topic) {
+      auto optionalType = topic.getOccurrence(occurrenceId)->get().getType();
+      ASSERT_FALSE(optionalType.isAssigned());
+   });
+}
+
+TEST_F(EditorTest, settingTypeOfAssociation)
+{
+   Identifier typeTopicId = given().user().requestsANewTopic();
+   Identifier associationId = given().user().requestsANewAssociation();
+   given().user().selects(SelectedType::Association, associationId);
+   when().user().setsTypeOfSelectionTo(typeTopicId);
+   then().view().ofMap().shouldHaveAssociationThat(associationId, [typeTopicId](Association const &association) {
+      auto optionalType = association.getType();
+      ASSERT_TRUE(optionalType.isAssigned());
+      EXPECT_EQ(optionalType.value(), typeTopicId);
+   });
+}
+
+TEST_F(EditorTest, clearingTypeOfAssociation)
+{
+   Identifier typeTopicId = given().user().requestsANewTopic();
+   Identifier associationId = given().user().requestsANewAssociation();
+   given().user().selects(SelectedType::Association, associationId);
+   given().user().setsTypeOfSelectionTo(typeTopicId);
+   when().user().clearsTypeOfSelection();
+   then().view().ofMap().shouldHaveAssociationThat(associationId, [](Association const &association) {
+      auto optionalType = association.getType();
+      ASSERT_FALSE(optionalType.isAssigned());
+   });
+}
+
+TEST_F(EditorTest, deletingTypeOfAssociationClearsIt)
+{
+   Identifier typeTopicId = given().user().requestsANewTopic();
+   Identifier associationId = given().user().requestsANewAssociation();
+   given().user().selects(SelectedType::Association, associationId);
+   given().user().setsTypeOfSelectionTo(typeTopicId);
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(typeTopicId).getId());
+   when().user().deletesTheSelection();
+   then().view().ofMap().shouldHaveAssociationThat(associationId, [](Association const &association) {
+      auto optionalType = association.getType();
+      ASSERT_FALSE(optionalType.isAssigned());
+   });
+}
+
+TEST_F(EditorTest, typeOfAssociationCanNotBeSetToUnknownId)
+{
+   Identifier typeTopicId = Identifier::random();
+   Identifier associationId = given().user().requestsANewAssociation();
+   given().user().selects(SelectedType::Association, associationId);
+   when().user().setsTypeOfSelectionTo(typeTopicId);
+   then().view().ofMap().shouldHaveAssociationThat(associationId, [](Association const &association) {
+      auto optionalType = association.getType();
+      ASSERT_FALSE(optionalType.isAssigned());
+   });
+}
+
+TEST_F(EditorTest, settingTypeOfRole)
+{
+   Identifier typeTopicId = given().user().requestsANewTopic();
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier associationId = given().user().requestsANewAssociation();
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(topicId).getId());
+   given().user().togglesSelectionOf(SelectedType::Association, associationId);
+   given().user().linksTheSelection();
+   Identifier roleId = roleOf(topicId, associationId).getId();
+   given().user().selects(SelectedType::Role, roleId);
+   when().user().setsTypeOfSelectionTo(typeTopicId);
+   then().view().ofMap().shouldHaveTopicThat(topicId, [roleId, typeTopicId](Topic const &topic) {
+      Role const &role = *topic.findRoles(Identifiers::ofSingle(roleId)).begin();
+      auto optionalType = role.getType();
+      ASSERT_TRUE(optionalType.isAssigned());
+      EXPECT_EQ(optionalType.value(), typeTopicId);
+   });
+}
+
+TEST_F(EditorTest, clearingTypeOfRole)
+{
+   Identifier typeTopicId = given().user().requestsANewTopic();
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier associationId = given().user().requestsANewAssociation();
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(topicId).getId());
+   given().user().togglesSelectionOf(SelectedType::Association, associationId);
+   given().user().linksTheSelection();
+   Identifier roleId = roleOf(topicId, associationId).getId();
+   given().user().selects(SelectedType::Role, roleId);
+   given().user().setsTypeOfSelectionTo(typeTopicId);
+   when().user().clearsTypeOfSelection();
+   then().view().ofMap().shouldHaveTopicThat(topicId, [roleId](Topic const &topic) {
+      Role const &role = *topic.findRoles(Identifiers::ofSingle(roleId)).begin();
+      auto optionalType = role.getType();
+      ASSERT_FALSE(optionalType.isAssigned());
+   });
+}
+
+TEST_F(EditorTest, deletingTypeOfRoleClearsIt)
+{
+   Identifier typeTopicId = given().user().requestsANewTopic();
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier associationId = given().user().requestsANewAssociation();
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(topicId).getId());
+   given().user().togglesSelectionOf(SelectedType::Association, associationId);
+   given().user().linksTheSelection();
+   Identifier roleId = roleOf(topicId, associationId).getId();
+   given().user().selects(SelectedType::Role, roleId);
+   given().user().setsTypeOfSelectionTo(typeTopicId);
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(typeTopicId).getId());
+   when().user().deletesTheSelection();
+   then().view().ofMap().shouldHaveTopicThat(topicId, [roleId](Topic const &topic) {
+      Role const &role = *topic.findRoles(Identifiers::ofSingle(roleId)).begin();
+      auto optionalType = role.getType();
+      ASSERT_FALSE(optionalType.isAssigned());
+   });
+}
+
+TEST_F(EditorTest, typeOfRoleCanNotBeSetToUnknownId)
+{
+   Identifier typeTopicId = Identifier::random();
+   Identifier topicId = given().user().requestsANewTopic();
+   Identifier associationId = given().user().requestsANewAssociation();
+   given().user().selects(SelectedType::Occurrence, occurrenceOf(topicId).getId());
+   given().user().togglesSelectionOf(SelectedType::Association, associationId);
+   given().user().linksTheSelection();
+   Identifier roleId = roleOf(topicId, associationId).getId();
+   given().user().selects(SelectedType::Role, roleId);
+   when().user().setsTypeOfSelectionTo(typeTopicId);
+   then().view().ofMap().shouldHaveTopicThat(topicId, [roleId](Topic const &topic) {
+      Role const &role = *topic.findRoles(Identifiers::ofSingle(roleId)).begin();
+      auto optionalType = role.getType();
+      ASSERT_FALSE(optionalType.isAssigned());
    });
 }

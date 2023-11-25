@@ -239,6 +239,8 @@ private:
    void processInput();
    void updateState();
    void cycleSelectedOccurrence(bool forward);
+   void jumpToFirstOccurrenceOf(contomap::model::Identifier topicId);
+   void panCameraToSelectedOccurrence();
 
    void drawBackground();
    void drawMap(RenderContext const &context);
@@ -251,6 +253,7 @@ private:
    void openNewLocateTopicAndActDialog();
    void openSetTopicNameDefaultDialog();
    void openSetTopicNameInScopeDialog();
+   void openEditStyleDialog();
 
    [[nodiscard]] contomap::model::SpacialCoordinate spacialCameraLocation();
    [[nodiscard]] std::string bestTitleFor(contomap::model::Topic const &topic);

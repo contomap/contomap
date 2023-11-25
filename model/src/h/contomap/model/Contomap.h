@@ -5,7 +5,6 @@
 #include "contomap/model/Association.h"
 #include "contomap/model/ContomapView.h"
 #include "contomap/model/Identifier.h"
-#include "contomap/model/Style.h"
 #include "contomap/model/Topic.h"
 
 namespace contomap::model
@@ -61,9 +60,6 @@ public:
     */
    void deleteOccurrences(contomap::model::Identifiers const &ids);
 
-   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Topic const> find(
-      std::shared_ptr<contomap::model::Filter<contomap::model::Topic>> filter) const override;
-
    /**
     * Find topics that match a certain filter, for potential modification.
     *
@@ -73,7 +69,9 @@ public:
     * @return a Search instance that can be iterated once.
     */
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Topic> find(std::shared_ptr<contomap::model::Filter<contomap::model::Topic>> filter);
-   [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Topic const>> findTopic(contomap::model::Identifier id) const override;
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Topic const> find(
+      std::shared_ptr<contomap::model::Filter<contomap::model::Topic>> filter) const override;
+
    /**
     * Find a topic with a specific identifier, for potential modification.
     *
@@ -81,9 +79,10 @@ public:
     * @return a reference to the matching topic, if existing.
     */
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Topic>> findTopic(contomap::model::Identifier id);
+   [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Topic const>> findTopic(contomap::model::Identifier id) const override;
+
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Association const> find(
       std::shared_ptr<contomap::model::Filter<contomap::model::Association>> filter) const override;
-   [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Association const>> findAssociation(contomap::model::Identifier id) const override;
 
    /**
     * Find a association with a specific identifier, for potential modification.
@@ -92,6 +91,24 @@ public:
     * @return a reference to the matching association, if existing.
     */
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Association>> findAssociation(contomap::model::Identifier id);
+   [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Association const>> findAssociation(contomap::model::Identifier id) const override;
+
+   /**
+    * Find occurrences by their identifier.
+    *
+    * @param ids the list of identifiers to search for.
+    * @return a Search instance that can be iterated once.
+    */
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence> findOccurrences(contomap::model::Identifiers const &ids);
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence const> findOccurrences(contomap::model::Identifiers const &ids) const override;
+   /**
+    * Find roles by their identifier.
+    *
+    * @param ids the list of identifiers to search for.
+    * @return a Search instance that can be iterated once.
+    */
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role> findRoles(contomap::model::Identifiers const &ids);
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role const> findRoles(contomap::model::Identifiers const &ids) const override;
 
 private:
    Contomap();
@@ -103,9 +120,8 @@ private:
    bool topicShouldBeRemoved(Topic const &topic);
    void deleting(contomap::model::Identifiers &toDelete, contomap::model::Topic &topic);
 
-   std::map<contomap::model::Identifier, contomap::model::Topic> topics;
+   std::map<contomap::model::Identifier, std::unique_ptr<contomap::model::Topic>> topics;
    std::map<contomap::model::Identifier, contomap::model::Association> associations;
-   std::map<contomap::model::Identifier, contomap::model::Style> styles;
    contomap::model::Identifier defaultScope;
 };
 

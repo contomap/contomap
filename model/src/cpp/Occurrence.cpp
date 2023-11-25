@@ -1,8 +1,12 @@
 #include "contomap/model/Occurrence.h"
+#include "contomap/model/Topic.h"
 
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 using contomap::model::Occurrence;
+using contomap::model::OptionalIdentifier;
+using contomap::model::Style;
+using contomap::model::Topic;
 
 Occurrence::Occurrence(Identifier id, Identifier topicId, Identifiers scope, SpacialCoordinate spacial)
    : id(id)
@@ -40,4 +44,39 @@ bool Occurrence::isIn(Identifiers const &thatScope) const
 bool Occurrence::scopeContains(Identifier thatId) const
 {
    return scope.contains(thatId);
+}
+
+bool Occurrence::hasNarrowerScopeThan(Occurrence const &other) const
+{
+   return (scope.size() > other.scope.size()) || (hasSameScopeSizeAs(other) && (scope < other.scope));
+}
+
+bool Occurrence::hasSameScopeSizeAs(Occurrence const &other) const
+{
+   return scope.size() == other.scope.size();
+}
+
+void Occurrence::setAppearance(Style style)
+{
+   appearance = std::move(style);
+}
+
+Style Occurrence::getAppearance() const
+{
+   return appearance;
+}
+
+void Occurrence::setType(Identifier typeTopicId)
+{
+   type = typeTopicId;
+}
+
+void Occurrence::clearType()
+{
+   type.clear();
+}
+
+OptionalIdentifier Occurrence::getType() const
+{
+   return type;
 }

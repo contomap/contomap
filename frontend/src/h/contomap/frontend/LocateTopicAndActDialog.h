@@ -75,7 +75,7 @@ public:
    /**
     * Constructor.
     *
-    * @param inputRequestHandler the handler to call for a new topic.
+    * @param inputRequestHandler the handler to call for a user action.
     * @param view the view on the current map.
     * @param layout the layout to use for drawing.
     * @param actions the actions to make available to the user.
@@ -105,6 +105,20 @@ public:
     * @return an action for this dialog.
     */
    static TitledAction addToViewScope();
+
+   /**
+    * Sets the type of the selected items.
+    *
+    * @return an action for this dialog.
+    */
+   static TitledAction setTypeOfSelection();
+
+   /**
+    * Sets the reifier of the selected items.
+    *
+    * @return an action for this dialog.
+    */
+   static TitledAction setReifierOfSelection();
 
 private:
    class TopicList
