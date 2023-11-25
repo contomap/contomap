@@ -4,16 +4,19 @@
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
 #include "contomap/model/OptionalIdentifier.h"
+#include "contomap/model/Reifiable.h"
 #include "contomap/model/Role.h"
 #include "contomap/model/Style.h"
 
 namespace contomap::model
 {
 
+class Topic;
+
 /**
  * An Association represents the link or relation between topics.
  */
-class Association
+class Association : public contomap::model::Reifiable<contomap::model::Topic>
 {
 public:
    /**
@@ -118,7 +121,6 @@ private:
    contomap::model::Identifier id;
    contomap::model::Identifiers scope;
 
-   contomap::model::OptionalIdentifier reifier;
    contomap::model::OptionalIdentifier type;
 
    contomap::model::Style appearance;

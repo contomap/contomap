@@ -107,7 +107,7 @@ private:
    bool topicShouldBeRemoved(Topic const &topic);
    void deleting(contomap::model::Identifiers &toDelete, contomap::model::Topic &topic);
 
-   std::map<contomap::model::Identifier, contomap::model::Topic> topics;
+   std::map<contomap::model::Identifier, std::unique_ptr<contomap::model::Topic>> topics;
    std::map<contomap::model::Identifier, contomap::model::Association> associations;
    contomap::model::Identifier defaultScope;
 };

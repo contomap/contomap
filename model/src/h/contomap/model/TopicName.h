@@ -83,8 +83,6 @@ private:
    contomap::model::Identifier id;
    contomap::model::Identifiers scope;
 
-   contomap::model::OptionalIdentifier reifier;
-
    contomap::model::TopicNameValue value;
 };
 

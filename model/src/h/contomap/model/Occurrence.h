@@ -4,15 +4,18 @@
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
 #include "contomap/model/OptionalIdentifier.h"
+#include "contomap/model/Reifiable.h"
 #include "contomap/model/Style.h"
 
 namespace contomap::model
 {
 
+class Topic;
+
 /**
  * An Occurrence represents the presence of a topic.
  */
-class Occurrence
+class Occurrence : public contomap::model::Reifiable<contomap::model::Topic>
 {
 public:
    /**
@@ -108,11 +111,10 @@ private:
    contomap::model::Identifier topicId;
    contomap::model::Identifiers scope;
 
-   contomap::model::OptionalIdentifier reifier;
-   contomap::model::OptionalIdentifier type;
-
    contomap::model::Style appearance;
    contomap::model::Coordinates location;
+
+   contomap::model::OptionalIdentifier type;
 };
 
 }

@@ -1,11 +1,14 @@
 #pragma once
 
 #include <map>
+#include <memory>
 
 #include "contomap/infrastructure/Generator.h"
 #include "contomap/model/Association.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Occurrence.h"
+#include "contomap/model/Reified.h"
+#include "contomap/model/Reifier.h"
 #include "contomap/model/Role.h"
 #include "contomap/model/TopicName.h"
 
@@ -15,7 +18,7 @@ namespace contomap::model
 /**
  * A Topic captures the information about a particular subject.
  */
-class Topic
+class Topic : public contomap::model::Reifier<Topic>
 {
 public:
    /**
@@ -24,6 +27,9 @@ public:
     * @param id the primary identifier of this name.
     */
    explicit Topic(contomap::model::Identifier id);
+   ~Topic() override;
+
+   Topic &refine() override;
 
    /**
     * @return the unique identifier of this topic instance.
@@ -199,16 +205,19 @@ public:
     */
    void removeTopicReferences(contomap::model::Identifier topicId);
 
+   void setReified(contomap::model::Reified &item) final;
+   void clearReified() final;
+
 private:
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::TopicName>> findNameByScope(contomap::model::Identifiers const &scope);
 
    contomap::model::Identifier id;
 
-   contomap::model::OptionalIdentifier reified;
-
    std::map<contomap::model::Identifier, contomap::model::TopicName> names;
-   std::map<contomap::model::Identifier, contomap::model::Occurrence> occurrences;
+   std::map<contomap::model::Identifier, std::unique_ptr<contomap::model::Occurrence>> occurrences;
    std::map<contomap::model::Identifier, contomap::model::Role> roles;
+
+   std::optional<std::reference_wrapper<contomap::model::Reified>> reified;
 };
 
 }

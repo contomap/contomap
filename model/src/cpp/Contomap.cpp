@@ -10,7 +10,7 @@ using contomap::model::Topic;
 Contomap::Contomap()
    : defaultScope(Identifier::random())
 {
-   topics.emplace(defaultScope, Topic(defaultScope));
+   topics.emplace(defaultScope, std::make_unique<Topic>(defaultScope));
 }
 
 Contomap Contomap::newMap()
@@ -26,8 +26,8 @@ Identifier Contomap::getDefaultScope() const
 Topic &Contomap::newTopic()
 {
    auto id = Identifier::random();
-   auto it = topics.emplace(id, Topic(id));
-   return it.first->second;
+   auto it = topics.emplace(id, std::make_unique<Topic>(id));
+   return *it.first->second;
 }
 
 Association &Contomap::newAssociation(Identifiers scope, SpacialCoordinate location)
@@ -57,9 +57,9 @@ contomap::infrastructure::Search<contomap::model::Topic const> Contomap::find( /
 {
    for (auto const &it : topics)
    {
-      if (filter->matches(it.second, *this))
+      if (filter->matches(*it.second, *this))
       {
-         co_yield it.second;
+         co_yield *it.second;
       }
    }
 }
@@ -68,9 +68,9 @@ contomap::infrastructure::Search<contomap::model::Topic> Contomap::find(std::sha
 {
    for (auto &it : topics)
    {
-      if (filter->matches(it.second, *this))
+      if (filter->matches(*it.second, *this))
       {
-         co_yield it.second;
+         co_yield *it.second;
       }
    }
 }
@@ -78,13 +78,13 @@ contomap::infrastructure::Search<contomap::model::Topic> Contomap::find(std::sha
 std::optional<std::reference_wrapper<Topic const>> Contomap::findTopic(Identifier id) const
 {
    auto it = topics.find(id);
-   return (it != topics.end()) ? std::optional<std::reference_wrapper<Topic const>>(it->second) : std::optional<std::reference_wrapper<Topic const>>();
+   return (it != topics.end()) ? std::optional<std::reference_wrapper<Topic const>>(*it->second) : std::optional<std::reference_wrapper<Topic const>>();
 }
 
 std::optional<std::reference_wrapper<Topic>> Contomap::findTopic(Identifier id)
 {
    auto it = topics.find(id);
-   return (it != topics.end()) ? std::optional<std::reference_wrapper<Topic>>(it->second) : std::optional<std::reference_wrapper<Topic>>();
+   return (it != topics.end()) ? std::optional<std::reference_wrapper<Topic>>(*it->second) : std::optional<std::reference_wrapper<Topic>>();
 }
 
 contomap::infrastructure::Search<contomap::model::Association const> Contomap::find( // NOLINT
@@ -116,7 +116,7 @@ contomap::infrastructure::Search<contomap::model::Occurrence const> Contomap::fi
 {
    for (auto const &[_, topic] : topics)
    {
-      for (auto &occurrence : topic.findOccurrences(ids))
+      for (auto &occurrence : topic->findOccurrences(ids))
       {
          co_yield occurrence;
       }
@@ -127,7 +127,7 @@ contomap::infrastructure::Search<contomap::model::Occurrence> Contomap::findOccu
 {
    for (auto &[_, topic] : topics)
    {
-      for (auto &occurrence : topic.findOccurrences(ids))
+      for (auto &occurrence : topic->findOccurrences(ids))
       {
          co_yield occurrence;
       }
@@ -138,7 +138,7 @@ contomap::infrastructure::Search<contomap::model::Role const> Contomap::findRole
 {
    for (auto const &[_, topic] : topics)
    {
-      for (auto const &role : topic.findRoles(ids))
+      for (auto const &role : topic->findRoles(ids))
       {
          co_yield role;
       }
@@ -149,7 +149,7 @@ contomap::infrastructure::Search<contomap::model::Role> Contomap::findRoles(Iden
 {
    for (auto &[_, topic] : topics)
    {
-      for (auto &role : topic.findRoles(ids))
+      for (auto &role : topic->findRoles(ids))
       {
          co_yield role;
       }
@@ -164,7 +164,7 @@ void Contomap::deleteRole(Identifier id)
       {
          for (auto &[topicId, topic] : topics)
          {
-            topic.removeRole(association, id);
+            topic->removeRole(association, id);
          }
       }
    }
@@ -179,7 +179,7 @@ void Contomap::deleteAssociation(Identifier id)
    auto &association = associations.at(id);
    for (auto &[_, topic] : topics)
    {
-      topic.removeRolesOf(association);
+      topic->removeRolesOf(association);
    }
    associations.erase(id);
 }
@@ -189,9 +189,9 @@ void Contomap::deleteOccurrence(Identifier id)
    Identifiers topicsToDelete;
    for (auto &[_, topic] : topics)
    {
-      if (topic.removeOccurrence(id) && topicShouldBeRemoved(topic))
+      if (topic->removeOccurrence(id) && topicShouldBeRemoved(*topic))
       {
-         topicsToDelete.add(topic.getId());
+         topicsToDelete.add(topic->getId());
       }
    }
    deleteTopicsCascading(topicsToDelete);
@@ -213,7 +213,7 @@ void Contomap::deleteTopicsCascading(Identifiers toDelete)
          auto it = topics.find(topicId);
          if (it != topics.end())
          {
-            deleting(toDelete, it->second);
+            deleting(toDelete, *it->second);
             topics.erase(it);
          }
       }
@@ -236,10 +236,10 @@ void Contomap::deleting(Identifiers &toDelete, Topic &topic)
 
    for (auto &[_, otherTopic] : topics)
    {
-      otherTopic.removeTopicReferences(topic.getId());
-      if (topicShouldBeRemoved(otherTopic))
+      otherTopic->removeTopicReferences(topic.getId());
+      if (topicShouldBeRemoved(*otherTopic))
       {
-         toDelete.add(otherTopic.getId());
+         toDelete.add(otherTopic->getId());
       }
    }
 }

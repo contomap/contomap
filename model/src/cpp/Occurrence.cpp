@@ -1,10 +1,12 @@
 #include "contomap/model/Occurrence.h"
+#include "contomap/model/Topic.h"
 
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 using contomap::model::Occurrence;
 using contomap::model::OptionalIdentifier;
 using contomap::model::Style;
+using contomap::model::Topic;
 
 Occurrence::Occurrence(Identifier id, Identifier topicId, Identifiers scope, SpacialCoordinate spacial)
    : id(id)
