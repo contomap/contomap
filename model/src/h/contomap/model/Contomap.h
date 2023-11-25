@@ -80,7 +80,7 @@ public:
     */
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Topic>> findTopic(contomap::model::Identifier id);
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Topic const>> findTopic(contomap::model::Identifier id) const override;
-   
+
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Association const> find(
       std::shared_ptr<contomap::model::Filter<contomap::model::Association>> filter) const override;
 
