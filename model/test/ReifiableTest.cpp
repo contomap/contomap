@@ -35,8 +35,10 @@ TEST_F(ReifiableTest, reifierCanBeRetrieved)
 {
    NiceMock<MockedReifier> reifier;
    TestedReifiable reifiable;
+   EXPECT_FALSE(reifiable.hasReifier());
    EXPECT_FALSE(reifiable.getReifier().has_value());
    reifiable.setReifier(reifier);
+   EXPECT_TRUE(reifiable.hasReifier());
    ASSERT_TRUE(reifiable.getReifier().has_value());
    EXPECT_EQ(&reifiable.getReifier().value().get(), &reifier);
 }

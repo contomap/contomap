@@ -113,6 +113,13 @@ public:
     */
    static TitledAction setTypeOfSelection();
 
+   /**
+    * Sets the reifier of the selected items.
+    *
+    * @return an action for this dialog.
+    */
+   static TitledAction setReifierOfSelection();
+
 private:
    class TopicList
    {

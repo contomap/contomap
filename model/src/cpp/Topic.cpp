@@ -138,6 +138,26 @@ Search<Occurrence const> Topic::occurrencesIn(contomap::model::Identifiers scope
    }
 }
 
+std::optional<std::reference_wrapper<Occurrence const>> Topic::closestOccurrenceTo(contomap::model::Identifiers const &scope) const
+{
+   auto scopedView = std::ranges::common_view(occurrencesIn(scope));
+   std::vector<std::reference_wrapper<Occurrence const>> candidates(scopedView.begin(), scopedView.end());
+   if (candidates.empty())
+   {
+      for (auto const &occurrence : occurrences)
+      {
+         candidates.emplace_back(*occurrence.second);
+      }
+   }
+   if (occurrences.empty())
+   {
+      return {};
+   }
+
+   std::sort(candidates.begin(), candidates.end(), [](Occurrence const &a, Occurrence const &b) { return a.hasNarrowerScopeThan(b); });
+   return candidates[0];
+}
+
 Occurrence const &Topic::nextOccurrenceAfter(Identifier reference) const
 {
    auto it = occurrences.find(reference);

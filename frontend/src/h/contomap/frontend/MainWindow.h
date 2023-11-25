@@ -239,6 +239,8 @@ private:
    void processInput();
    void updateState();
    void cycleSelectedOccurrence(bool forward);
+   void jumpToFirstOccurrenceOf(contomap::model::Identifier topicId);
+   void panCameraToSelectedOccurrence();
 
    void drawBackground();
    void drawMap(RenderContext const &context);

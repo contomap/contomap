@@ -111,6 +111,17 @@ public:
    virtual void clearTypeOfSelection() = 0;
 
    /**
+    * Sets the reifier of the selected items.
+    * @param topicId the identifier of the topic to set.
+    */
+   virtual void setReifierOfSelection(contomap::model::Identifier topicId) = 0;
+
+   /**
+    * Clears the reifier of the selected items.
+    */
+   virtual void clearReifierOfSelection() = 0;
+
+   /**
     * Sets the view scope from the current selection.
     */
    virtual void setViewScopeFromSelection() = 0;
@@ -159,6 +170,14 @@ public:
     * and sets the view scope to that of the new occurrence.
     */
    virtual void cycleSelectedOccurrenceReverse() = 0;
+
+   /**
+    * Selects the closest occurrence of the topic with given identifier.
+    * Closeness is determined by the current view scope.
+    *
+    * @param topicId the identifier of the topic to look for.
+    */
+   virtual void selectClosestOccurrenceOf(contomap::model::Identifier topicId) = 0;
 };
 
 } // namespace contomap::editor

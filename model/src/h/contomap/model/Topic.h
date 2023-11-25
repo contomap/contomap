@@ -135,6 +135,14 @@ public:
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence const> occurrencesIn(contomap::model::Identifiers scope) const;
 
    /**
+    * Tries to find an occurrence that ideally is closest to the provided scope.
+    *
+    * @param scope the scope to look for.
+    * @return a reference to the occurrence closest to given scope.
+    */
+   [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Occurrence const>> closestOccurrenceTo(contomap::model::Identifiers const &scope) const;
+
+   /**
     * Determines the occurrence that follows the given one.
     *
     * @param reference the identifier of the occurrence to determine.

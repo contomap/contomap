@@ -31,6 +31,8 @@ public:
    void setAppearanceOfSelection(contomap::model::Style style) override;
    void setTypeOfSelection(contomap::model::Identifier topicId) override;
    void clearTypeOfSelection() override;
+   void setReifierOfSelection(contomap::model::Identifier topicId) override;
+   void clearReifierOfSelection() override;
    void setViewScopeFromSelection() override;
    void addToViewScopeFromSelection() override;
    void setViewScopeToDefault() override;
@@ -39,6 +41,7 @@ public:
    void removeFromViewScope(contomap::model::Identifier id) override;
    void cycleSelectedOccurrenceForward() override;
    void cycleSelectedOccurrenceReverse() override;
+   void selectClosestOccurrenceOf(contomap::model::Identifier topicId) override;
 
    [[nodiscard]] contomap::model::Identifiers const &ofViewScope() const override;
    [[nodiscard]] contomap::model::ContomapView const &ofMap() const override;

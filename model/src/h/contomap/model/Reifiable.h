@@ -28,9 +28,29 @@ public:
    }
 
    /**
+    * @return true if this reifiable has a reifier associated.
+    */
+   [[nodiscard]] bool hasReifier() const
+   {
+      return !hasNoReifier();
+   }
+
+   /**
     * @return the refined reifier instance that describes this reifiable, if set.
     */
-   [[nodiscard]] std::optional<std::reference_wrapper<T>> getReifier() const
+   [[nodiscard]] std::optional<std::reference_wrapper<T>> getReifier()
+   {
+      if (hasNoReifier())
+      {
+         return {};
+      }
+      return { reifier->refine() };
+   }
+
+   /**
+    * @return the refined reifier instance that describes this reifiable, if set.
+    */
+   [[nodiscard]] std::optional<std::reference_wrapper<T const>> getReifier() const
    {
       if (hasNoReifier())
       {

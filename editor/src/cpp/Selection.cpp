@@ -9,7 +9,7 @@ using contomap::model::Identifiers;
 
 bool Selection::empty() const
 {
-   return std::all_of(identifiers.begin(), identifiers.end(), [](std::map<SelectedType, Identifiers>::value_type const &kvp) { return kvp.second.empty(); });
+   return std::all_of(identifiers.begin(), identifiers.end(), [](auto const &kvp) { return kvp.second.empty(); });
 }
 
 void Selection::clear()
@@ -17,9 +17,31 @@ void Selection::clear()
    identifiers.clear();
 }
 
+bool Selection::hasSoleEntry() const
+{
+   bool foundOne = false;
+   for (auto const &[_, specific] : identifiers)
+   {
+      size_t size = specific.size();
+      if (size > 1)
+      {
+         return false;
+      }
+      else if (size == 1)
+      {
+         if (foundOne)
+         {
+            return false;
+         }
+         foundOne = true;
+      }
+   }
+   return foundOne;
+}
+
 bool Selection::hasSoleEntryFor(SelectedType type) const
 {
-   return identifiers.contains(type) && std::all_of(identifiers.begin(), identifiers.end(), [type](std::map<SelectedType, Identifiers>::value_type const &kvp) {
+   return identifiers.contains(type) && std::all_of(identifiers.begin(), identifiers.end(), [type](auto const &kvp) {
       auto const &[otherType, specific] = kvp;
       return ((otherType == type) && (specific.size() == 1)) || ((otherType != type) && specific.empty());
    });

@@ -22,12 +22,17 @@ public:
    /**
     * @return true if currently nothing is selected.
     */
-   bool empty() const;
+   [[nodiscard]] bool empty() const;
 
    /**
     * Empties the selection.
     */
    void clear();
+
+   /**
+    * @return true if the selection has only one item selected.
+    */
+   [[nodiscard]] bool hasSoleEntry() const;
 
    /**
     * Determines whether the selection contains only a single entry of given type.

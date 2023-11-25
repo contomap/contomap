@@ -8,6 +8,7 @@ using contomap::model::ContomapView;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 using contomap::model::Occurrence;
+using contomap::model::Reifiable;
 using contomap::model::Style;
 using contomap::model::Topic;
 using contomap::model::Topics;
@@ -67,6 +68,30 @@ std::optional<Style> Selections::firstAppearanceFrom(Selection const &selection,
       for (auto const &role : view.findRoles(ids))
       {
          return role.get().getAppearance();
+      }
+   }
+   return {};
+}
+
+std::optional<std::reference_wrapper<Reifiable<Topic> const>> Selections::firstReifiableFrom(Selection const &selection, ContomapView const &view)
+{
+   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   {
+      for (auto const &occurrence : view.findOccurrences(ids))
+      {
+         return occurrence.get();
+      }
+   }
+   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
+   {
+      auto const &association = view.findAssociation(*ids.begin());
+      return association.value().get();
+   }
+   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
+   {
+      for (auto const &role : view.findRoles(ids))
+      {
+         return role.get();
       }
    }
    return {};

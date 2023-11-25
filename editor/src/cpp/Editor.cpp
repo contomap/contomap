@@ -226,6 +226,63 @@ void Editor::clearTypeOfSelection()
    }
 }
 
+void Editor::setReifierOfSelection(contomap::model::Identifier topicId)
+{
+   auto topic = map.findTopic(topicId);
+   if (!topic.has_value())
+   {
+      return;
+   }
+   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   {
+      for (auto &occurrence : map.findOccurrences(ids))
+      {
+         occurrence.get().setReifier(topic.value());
+      }
+   }
+   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
+   {
+      for (auto id : ids)
+      {
+         Association &association = map.findAssociation(id).value();
+         association.setReifier(topic.value());
+      }
+   }
+   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
+   {
+      for (Role &role : map.findRoles(ids))
+      {
+         role.setReifier(topic.value());
+      }
+   }
+}
+
+void Editor::clearReifierOfSelection()
+{
+   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   {
+      for (auto &occurrence : map.findOccurrences(ids))
+      {
+         occurrence.get().clearReifier();
+      }
+   }
+   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
+   {
+      for (auto id : ids)
+      {
+         Association &association = map.findAssociation(id).value();
+         association.clearReifier();
+      }
+   }
+   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
+   {
+      for (Role &role : map.findRoles(ids))
+      {
+         role.clearReifier();
+      }
+   }
+}
+
 void Editor::setViewScopeFromSelection()
 {
    auto &occurrenceIds = selection.of(SelectedType::Occurrence);
@@ -311,7 +368,25 @@ void Editor::cycleSelectedOccurrence(bool forward)
    }
 }
 
-contomap::model::Identifiers const &Editor::ofViewScope() const
+void Editor::selectClosestOccurrenceOf(Identifier topicId)
+{
+   auto optionalTopic = map.findTopic(topicId);
+   if (!optionalTopic.has_value())
+   {
+      return;
+   }
+   Topic &topic = optionalTopic.value();
+   auto optionalOccurrence = topic.closestOccurrenceTo(viewScope);
+   if (!optionalOccurrence.has_value())
+   {
+      return;
+   }
+   Occurrence const &occurrence = optionalOccurrence.value();
+   viewScope = occurrence.getScope();
+   selection.setSole(SelectedType::Occurrence, occurrence.getId());
+}
+
+Identifiers const &Editor::ofViewScope() const
 {
    return viewScope;
 }
