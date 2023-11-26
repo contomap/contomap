@@ -82,7 +82,6 @@ MainWindow::LengthInPixel MainWindow::Size::getHeight() const
 
 MainWindow::Size const MainWindow::DEFAULT_SIZE = MainWindow::Size::ofPixel(1280, 720);
 char const MainWindow::DEFAULT_TITLE[] = "contomap";
-std::vector<std::pair<int, contomap::frontend::MapCamera::ZoomFactor>> const MainWindow::ZOOM_LEVELS(MainWindow::generateZoomLevels());
 
 MainWindow::MainWindow(DisplayEnvironment &environment, contomap::editor::View &view, contomap::editor::InputRequestHandler &inputRequestHandler)
    : mapCamera(std::make_shared<MapCamera::ImmediateGearbox>())
@@ -828,6 +827,8 @@ std::vector<std::pair<int, MapCamera::ZoomFactor>> MainWindow::generateZoomLevel
 
 MapCamera::ZoomOperation MainWindow::doubledRelative(bool nearer)
 {
+   static std::vector<std::pair<int, contomap::frontend::MapCamera::ZoomFactor>> const ZOOM_LEVELS(MainWindow::generateZoomLevels());
+
    return [nearer](MapCamera::ZoomFactor currentTarget) {
       float currentRawTarget = currentTarget.raw();
       if (nearer)
