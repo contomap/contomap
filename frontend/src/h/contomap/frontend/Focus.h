@@ -73,6 +73,12 @@ public:
    {
    }
 
+   /**
+    * Tests whether the item is an association with the given identifier.
+    *
+    * @param otherId the identifier to test against.
+    * @return true if this item is the identified association.
+    */
    [[nodiscard]] bool isAssociation(contomap::model::Identifier otherId) const override
    {
       return id == otherId;
@@ -103,6 +109,12 @@ public:
    {
    }
 
+   /**
+    * Tests whether the item is an role with the given identifier.
+    *
+    * @param otherId the identifier to test against.
+    * @return true if this item is the identified role.
+    */
    [[nodiscard]] bool isRole(contomap::model::Identifier otherId) const override
    {
       return id == otherId;
@@ -133,6 +145,12 @@ public:
    {
    }
 
+   /**
+    * Tests whether the item is an occurrence with the given identifier.
+    *
+    * @param otherId the identifier to test against.
+    * @return true if this item is the identified occurrence.
+    */
    [[nodiscard]] bool isOccurrence(contomap::model::Identifier otherId) const override
    {
       return id == otherId;

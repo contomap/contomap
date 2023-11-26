@@ -16,6 +16,7 @@ namespace contomap::frontend
 class SaveAsDialog : public contomap::frontend::Dialog
 {
 public:
+   /** Function to be called upon completion. */
    using SaveFunction = std::function<void(std::string const &)>;
 
    /**
