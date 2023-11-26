@@ -11,6 +11,8 @@
 #include "contomap/frontend/HelpDialog.h"
 #include "contomap/frontend/LocateTopicAndActDialog.h"
 #include "contomap/frontend/MainWindow.h"
+#include "contomap/frontend/MapRenderList.h"
+#include "contomap/frontend/MapRenderMeasurer.h"
 #include "contomap/frontend/Names.h"
 #include "contomap/frontend/NewTopicDialog.h"
 #include "contomap/frontend/RenameTopicDialog.h"
@@ -755,16 +757,32 @@ void MainWindow::openEditStyleDialog()
 
 void MainWindow::saveAs(std::string const &filePath)
 {
-   auto renderTexture = LoadRenderTexture(1920, 1080);
-
-   // TODO: pre-render, determine size, then project
+   contomap::frontend::MapRenderList renderList;
+   renderMap(renderList, {}, {});
+   contomap::frontend::MapRenderMeasurer measurer;
+   renderList.renderTo(measurer);
+   auto mapArea = measurer.getArea();
+   mapArea.x -= 5.0f;
+   mapArea.y -= 5.0f;
+   mapArea.width += 10.0f;
+   mapArea.height += 10.0f;
+   // For some reason the DPI scale is still playing into the system when rendering to texture - need to calculate this out.
+   auto dpiScale = GetWindowScaleDPI();
+   mapArea.x *= dpiScale.x;
+   mapArea.y *= dpiScale.y;
+   mapArea.width *= dpiScale.x;
+   mapArea.height *= dpiScale.y;
+   auto renderTexture = LoadRenderTexture(std::ceil(mapArea.width), std::ceil(mapArea.height));
 
    {
+      DirectMapRenderer directRenderer;
       BeginTextureMode(renderTexture);
-      auto renderContext = RenderContext::fromCurrentState();
-
       drawBackground();
-      drawMap(renderContext);
+      MapCamera camera(std::make_unique<MapCamera::ImmediateGearbox>());
+      // It is not clear why the camera needs to be panned to the edge of the viewport, and not its center.
+      camera.panTo(Vector2 { .x = (mapArea.x + mapArea.width) / dpiScale.x, .y = (mapArea.y + mapArea.height) / dpiScale.y });
+      auto projection = camera.beginProjection(Vector2 { mapArea.width, mapArea.height });
+      renderList.renderTo(directRenderer);
       EndTextureMode();
    }
 
