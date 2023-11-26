@@ -186,6 +186,11 @@ void MainWindow::processInput()
          inputRequestHandler.deleteSelection();
       }
 
+      if (IsKeyPressed(KEY_S) && (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)))
+      {
+         requestSave();
+      }
+
       // TODO: avoid map interaction click when on view scope bar.
       if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && (static_cast<float>(GetMouseY()) > (layout.buttonHeight() + layout.padding() * 2.0f)))
       {
@@ -677,9 +682,17 @@ void MainWindow::drawUserInterface(RenderContext const &context)
 
 void MainWindow::requestSave()
 {
-   // TODO: check for existing name, then save directly
-   pendingDialog = std::make_unique<contomap::frontend::SaveAsDialog>(
-      environment, layout, "unnamed.contomap.png", [this](std::string const &filePath) { saveAs(filePath); });
+   if (!currentFilePath.empty())
+   {
+      save();
+   }
+   else
+   {
+      pendingDialog = std::make_unique<contomap::frontend::SaveAsDialog>(environment, layout, "unnamed.contomap.png", [this](std::string const &filePath) {
+         currentFilePath = filePath;
+         save();
+      });
+   }
 }
 
 void MainWindow::closeDialog()
@@ -755,7 +768,7 @@ void MainWindow::openEditStyleDialog()
    pendingDialog = std::make_unique<contomap::frontend::StyleDialog>(inputRequestHandler, layout, style.value());
 }
 
-void MainWindow::saveAs(std::string const &filePath)
+void MainWindow::save()
 {
    contomap::frontend::MapRenderList renderList;
    renderMap(renderList, {}, {});
@@ -792,7 +805,7 @@ void MainWindow::saveAs(std::string const &filePath)
    auto exported = ExportImageToMemory(image, ".png", &fileSize);
    if (exported != nullptr)
    {
-      SaveFileData(filePath.c_str(), exported, fileSize);
+      SaveFileData(currentFilePath.c_str(), exported, fileSize);
       RL_FREE(exported);
 
       // TODO: inform display environment of saved file -> download in browser environment

@@ -148,7 +148,7 @@ private:
    void openSetTopicNameInScopeDialog();
    void openEditStyleDialog();
 
-   void saveAs(std::string const &filePath);
+   void save();
 
    [[nodiscard]] static contomap::model::Style selectedStyle(contomap::model::Style style);
    [[nodiscard]] static contomap::model::Style highlightedStyle(contomap::model::Style style);
@@ -172,6 +172,7 @@ private:
    std::unique_ptr<contomap::frontend::Dialog> pendingDialog;
 
    contomap::frontend::Focus currentFocus;
+   std::string currentFilePath;
 };
 
 } // namespace contomap::frontend
