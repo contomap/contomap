@@ -246,6 +246,8 @@ private:
    void drawMap(RenderContext const &context);
    void drawUserInterface(contomap::frontend::RenderContext const &context);
 
+   void requestSave();
+
    void closeDialog();
    void openHelpDialog();
    void openNewTopicDialog();

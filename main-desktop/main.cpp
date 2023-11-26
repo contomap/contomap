@@ -1,4 +1,5 @@
 #include <raylib.h>
+#include <tinyfiledialogs/tinyfiledialogs.h>
 
 #include "contomap/application/Application.h"
 
@@ -14,6 +15,24 @@ public:
    void closeWindow() override
    {
       shouldClose = true;
+   }
+
+   DialogResult showSaveAsDialog(
+      std::string const &title, std::string &filePath, std::vector<std::string> const &filter, std::string const &description) override
+   {
+      std::vector<char const *> filterPointers;
+      for (auto const &f : filter)
+      {
+         filterPointers.emplace_back(f.c_str());
+      }
+      auto tempPath
+         = tinyfd_saveFileDialog(title.c_str(), filePath.c_str(), static_cast<int>(filterPointers.size()), filterPointers.data(), description.c_str());
+      if (tempPath == nullptr)
+      {
+         return DialogResult::Cancelled;
+      }
+      filePath = tempPath;
+      return DialogResult::Confirmed;
    }
 
    /**

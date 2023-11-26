@@ -19,6 +19,7 @@
 #include "contomap/frontend/Names.h"
 #include "contomap/frontend/NewTopicDialog.h"
 #include "contomap/frontend/RenameTopicDialog.h"
+#include "contomap/frontend/SaveAsDialog.h"
 #include "contomap/frontend/StyleDialog.h"
 #include "contomap/model/Associations.h"
 #include "contomap/model/Topics.h"
@@ -687,6 +688,14 @@ void MainWindow::drawUserInterface(RenderContext const &context)
          .width = iconSize,
          .height = iconSize,
       };
+      GuiSetTooltip("Save map");
+      if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_FILE_SAVE, nullptr)))
+      {
+         requestSave();
+      }
+      leftIconButtonsBounds.x += (iconSize + padding);
+
+      leftIconButtonsBounds.x += (iconSize + padding);
       GuiSetTooltip("Set home view scope");
       if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_HOUSE, nullptr)))
       {
@@ -882,6 +891,12 @@ void MainWindow::drawUserInterface(RenderContext const &context)
          closeDialog();
       }
    }
+}
+
+void MainWindow::requestSave()
+{
+   // TODO: check for existing name
+   pendingDialog = std::make_unique<contomap::frontend::SaveAsDialog>(environment, layout, "unnamed.contomap.png");
 }
 
 void MainWindow::closeDialog()
