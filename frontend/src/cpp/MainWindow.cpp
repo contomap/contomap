@@ -294,7 +294,7 @@ void MainWindow::drawMap(RenderContext const &context)
    for (Association const &visibleAssociation : visibleAssociations)
    {
       auto optionalTypeId = visibleAssociation.getType();
-      std::string nameText(" "); // TODO: resolve name. also: why do triangles overlap if name is empty?
+      std::string nameText;
       if (optionalTypeId.isAssigned())
       {
          auto typeTopic = view.ofMap().findTopic(optionalTypeId.value());
@@ -308,16 +308,30 @@ void MainWindow::drawMap(RenderContext const &context)
       float fontSize = 16.0f;
       float spacing = 1.0f;
       auto textSize = MeasureTextEx(font, nameText.c_str(), fontSize, spacing);
-      float plateHeight = textSize.y;
+      float lineThickness = 2.0f;
 
-      float leftCutoff = projectedLocation.x - textSize.x / 2.0f;
-      float rightCutoff = projectedLocation.x + textSize.x / 2.0f;
-
-      Rectangle area {
-         .x = leftCutoff - plateHeight / 2.0f,
+      Rectangle textArea {
+         .x = projectedLocation.x - textSize.x / 2.0f,
          .y = projectedLocation.y - textSize.y / 2.0f,
-         .width = textSize.x + plateHeight,
-         .height = plateHeight,
+         .width = textSize.x,
+         .height = textSize.y,
+      };
+
+      float platePadding = 2.0f;
+      Rectangle plate {
+         .x = textArea.x - platePadding,
+         .y = textArea.y - platePadding,
+         .width = textArea.width + platePadding * 2.0f,
+         .height = textArea.height + platePadding * 2.0f,
+      };
+      float halfHeight = plate.height / 2.0f;
+      float reifierPadding = 2.0f + (lineThickness * 0.4f);
+      float reifierOffset = lineThickness + reifierPadding;
+      Rectangle area {
+         .x = plate.x - reifierOffset - lineThickness - halfHeight,
+         .y = plate.y - lineThickness,
+         .width = plate.width + (reifierOffset + lineThickness + halfHeight) * 2.0f,
+         .height = plate.height + lineThickness * 2.0f,
       };
 
       associationIds.add(visibleAssociation.getId());
@@ -330,161 +344,17 @@ void MainWindow::drawMap(RenderContext const &context)
 
       auto associationStyle
          = Styles::resolve(visibleAssociation.getAppearance(), visibleAssociation.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
-      Color plateBackground = Colors::toUiColor(associationStyle.get(Style::ColorType::Fill));
-      Color plateOutline = Colors::toUiColor(associationStyle.get(Style::ColorType::Line));
       if (selection.contains(SelectedType::Association, visibleAssociation.getId()))
       {
-         plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x80 });
-         plateOutline = ColorTint(plateOutline, Color { 0xFF, 0xFF, 0xFF, 0x80 });
+         associationStyle = selectedStyle(associationStyle);
       }
       if (currentFocus.isAssociation(visibleAssociation.getId()))
       {
-         plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x40 });
-         plateOutline = ColorTint(plateOutline, Color { 0xFF, 0xFF, 0xFF, 0x40 });
+         associationStyle = highlightedStyle(associationStyle);
       }
 
-      DrawTriangle(Vector2 { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f },
-         Vector2 { .x = leftCutoff - plateHeight / 2.0f, .y = projectedLocation.y }, Vector2 { .x = leftCutoff, .y = projectedLocation.y + plateHeight / 2.0f },
-         plateBackground);
-      DrawRectangleRec(Rectangle { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f, .width = rightCutoff - leftCutoff, .height = plateHeight },
-         plateBackground);
-      DrawTriangle(Vector2 { .x = rightCutoff, .y = projectedLocation.y - plateHeight / 2.0f },
-         Vector2 { .x = rightCutoff, .y = projectedLocation.y + plateHeight / 2.0f },
-         Vector2 { .x = rightCutoff + plateHeight / 2.0f, .y = projectedLocation.y }, plateBackground);
-
-      {
-         bool hasReifier = visibleAssociation.hasReifier();
-
-         // TODO: outsource this block, also consider a different approach by scaling the inner coordinates to achieve an equal thickness.
-         float half = plateHeight / 2.0f;
-         float thick = 1.0f;
-         float reifierOffset = 2.0f + thick * 2.0f;
-         rlBegin(RL_TRIANGLES);
-
-         rlColor4ub(plateOutline.r, plateOutline.g, plateOutline.b, plateOutline.a);
-
-         std::array<Vector2, 2> tl {
-            Vector2 { .x = leftCutoff, .y = projectedLocation.y - half - thick },
-            Vector2 { .x = leftCutoff, .y = projectedLocation.y - half + thick },
-         };
-         std::array<Vector2, 2> bl {
-            Vector2 { .x = leftCutoff, .y = projectedLocation.y + half + thick },
-            Vector2 { .x = leftCutoff, .y = projectedLocation.y + half - thick },
-         };
-         std::array<Vector2, 2> tr {
-            Vector2 { .x = rightCutoff, .y = projectedLocation.y - half - thick },
-            Vector2 { .x = rightCutoff, .y = projectedLocation.y - half + thick },
-         };
-         std::array<Vector2, 2> br {
-            Vector2 { .x = rightCutoff, .y = projectedLocation.y + half + thick },
-            Vector2 { .x = rightCutoff, .y = projectedLocation.y + half - thick },
-         };
-         std::array<Vector2, 2> r {
-            Vector2 { .x = rightCutoff + half + thick, .y = projectedLocation.y },
-            Vector2 { .x = rightCutoff + half - thick, .y = projectedLocation.y },
-         };
-         std::array<Vector2, 2> l {
-            Vector2 { .x = leftCutoff - half - thick, .y = projectedLocation.y },
-            Vector2 { .x = leftCutoff - half + thick, .y = projectedLocation.y },
-         };
-
-         if (hasReifier)
-         {
-            rlVertex2f(l[0].x - reifierOffset, l[0].y);
-            rlVertex2f(l[1].x - reifierOffset, l[1].y);
-            rlVertex2f(tl[0].x - reifierOffset, tl[0].y);
-
-            rlVertex2f(tl[0].x - reifierOffset, tl[0].y);
-            rlVertex2f(l[1].x - reifierOffset, l[1].y);
-            rlVertex2f(tl[1].x - reifierOffset, tl[1].y);
-         }
-
-         rlVertex2f(l[0].x, l[0].y);
-         rlVertex2f(l[1].x, l[1].y);
-         rlVertex2f(tl[0].x, tl[0].y);
-
-         rlVertex2f(tl[0].x, tl[0].y);
-         rlVertex2f(l[1].x, l[1].y);
-         rlVertex2f(tl[1].x, tl[1].y);
-
-         rlVertex2f(tl[0].x, tl[0].y);
-         rlVertex2f(tl[1].x, tl[1].y);
-         rlVertex2f(tr[0].x, tr[0].y);
-
-         rlVertex2f(tr[0].x, tr[0].y);
-         rlVertex2f(tl[1].x, tl[1].y);
-         rlVertex2f(tr[1].x, tr[1].y);
-
-         rlVertex2f(tr[0].x, tr[0].y);
-         rlVertex2f(tr[1].x, tr[1].y);
-         rlVertex2f(r[0].x, r[0].y);
-
-         rlVertex2f(r[0].x, r[0].y);
-         rlVertex2f(tr[1].x, tr[1].y);
-         rlVertex2f(r[1].x, r[1].y);
-
-         if (hasReifier)
-         {
-            rlVertex2f(tr[0].x + reifierOffset, tr[0].y);
-            rlVertex2f(tr[1].x + reifierOffset, tr[1].y);
-            rlVertex2f(r[0].x + reifierOffset, r[0].y);
-
-            rlVertex2f(r[0].x + reifierOffset, r[0].y);
-            rlVertex2f(tr[1].x + reifierOffset, tr[1].y);
-            rlVertex2f(r[1].x + reifierOffset, r[1].y);
-         }
-
-         if (hasReifier)
-         {
-            rlVertex2f(l[1].x - reifierOffset, l[1].y);
-            rlVertex2f(l[0].x - reifierOffset, l[0].y);
-            rlVertex2f(bl[0].x - reifierOffset, bl[0].y);
-
-            rlVertex2f(bl[0].x - reifierOffset, bl[0].y);
-            rlVertex2f(bl[1].x - reifierOffset, bl[1].y);
-            rlVertex2f(l[1].x - reifierOffset, l[1].y);
-         }
-
-         rlVertex2f(l[1].x, l[1].y);
-         rlVertex2f(l[0].x, l[0].y);
-         rlVertex2f(bl[0].x, bl[0].y);
-
-         rlVertex2f(bl[0].x, bl[0].y);
-         rlVertex2f(bl[1].x, bl[1].y);
-         rlVertex2f(l[1].x, l[1].y);
-
-         rlVertex2f(bl[1].x, bl[1].y);
-         rlVertex2f(bl[0].x, bl[0].y);
-         rlVertex2f(br[1].x, br[1].y);
-
-         rlVertex2f(br[1].x, br[1].y);
-         rlVertex2f(bl[0].x, bl[0].y);
-         rlVertex2f(br[0].x, br[0].y);
-
-         rlVertex2f(br[1].x, br[1].y);
-         rlVertex2f(br[0].x, br[0].y);
-         rlVertex2f(r[1].x, r[1].y);
-
-         rlVertex2f(r[1].x, r[1].y);
-         rlVertex2f(br[0].x, br[0].y);
-         rlVertex2f(r[0].x, r[0].y);
-
-         if (hasReifier)
-         {
-            rlVertex2f(br[1].x + reifierOffset, br[1].y);
-            rlVertex2f(br[0].x + reifierOffset, br[0].y);
-            rlVertex2f(r[1].x + reifierOffset, r[1].y);
-
-            rlVertex2f(r[1].x + reifierOffset, r[1].y);
-            rlVertex2f(br[0].x + reifierOffset, br[0].y);
-            rlVertex2f(r[0].x + reifierOffset, r[0].y);
-         }
-
-         rlEnd();
-      }
-
-      DrawTextEx(font, nameText.c_str(), Vector2 { .x = projectedLocation.x - textSize.x / 2.0f, .y = projectedLocation.y - textSize.y / 2.0f }, fontSize,
-         spacing, Colors::toUiColor(associationStyle.get(Style::ColorType::Text)));
+      renderer.renderAssociationPlate(area, associationStyle, plate, lineThickness, visibleAssociation.hasReifier());
+      renderer.renderText(textArea, Style().with(Style::ColorType::Text, associationStyle.get(Style::ColorType::Text)), nameText, font, fontSize, spacing);
    }
 
    auto visibleTopics = map.find(Topics::thatAreIn(viewScope));
