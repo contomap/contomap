@@ -779,21 +779,17 @@ void MainWindow::save()
    mapArea.y -= 5.0f;
    mapArea.width += 10.0f;
    mapArea.height += 10.0f;
-   // For some reason the DPI scale is still playing into the system when rendering to texture - need to calculate this out.
+   // The DPI scale is also considered when rendering to texture, so increase its size accordingly.
    auto dpiScale = GetWindowScaleDPI();
-   mapArea.x *= dpiScale.x;
-   mapArea.y *= dpiScale.y;
-   mapArea.width *= dpiScale.x;
-   mapArea.height *= dpiScale.y;
-   auto renderTexture = LoadRenderTexture(std::ceil(mapArea.width), std::ceil(mapArea.height));
+   auto renderTexture = LoadRenderTexture(std::ceil(mapArea.width * dpiScale.x), std::ceil(mapArea.height * dpiScale.y));
 
    {
       DirectMapRenderer directRenderer;
       BeginTextureMode(renderTexture);
       drawBackground();
       MapCamera camera(std::make_unique<MapCamera::ImmediateGearbox>());
-      camera.panTo(Vector2 { .x = (mapArea.x + mapArea.width / 2.0f) / dpiScale.x, .y = (mapArea.y + mapArea.height / 2.0f) / dpiScale.y });
-      auto projection = camera.beginProjection(Vector2 { mapArea.width / dpiScale.x, mapArea.height / dpiScale.y });
+      camera.panTo(Vector2 { .x = mapArea.x + (mapArea.width / 2.0f), .y = mapArea.y + (mapArea.height / 2.0f) });
+      auto projection = camera.beginProjection(Vector2 { mapArea.width, mapArea.height });
       renderList.renderTo(directRenderer);
       EndTextureMode();
    }
@@ -803,6 +799,7 @@ void MainWindow::save()
    int fileSize = 0;
    auto exported = ExportImageToMemory(image, ".png", &fileSize);
    UnloadImage(image);
+   UnloadRenderTexture(renderTexture);
    if (exported != nullptr)
    {
       SaveFileData(currentFilePath.c_str(), exported, fileSize);
