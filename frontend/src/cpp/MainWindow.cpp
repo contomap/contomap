@@ -792,9 +792,8 @@ void MainWindow::save()
       BeginTextureMode(renderTexture);
       drawBackground();
       MapCamera camera(std::make_unique<MapCamera::ImmediateGearbox>());
-      // It is not clear why the camera needs to be panned to the edge of the viewport, and not its center.
-      camera.panTo(Vector2 { .x = (mapArea.x + mapArea.width) / dpiScale.x, .y = (mapArea.y + mapArea.height) / dpiScale.y });
-      auto projection = camera.beginProjection(Vector2 { mapArea.width, mapArea.height });
+      camera.panTo(Vector2 { .x = (mapArea.x + mapArea.width / 2.0f) / dpiScale.x, .y = (mapArea.y + mapArea.height / 2.0f) / dpiScale.y });
+      auto projection = camera.beginProjection(Vector2 { mapArea.width / dpiScale.x, mapArea.height / dpiScale.y });
       renderList.renderTo(directRenderer);
       EndTextureMode();
    }
