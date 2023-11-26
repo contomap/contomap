@@ -11,6 +11,7 @@
 #include "contomap/frontend/Focus.h"
 #include "contomap/frontend/Layout.h"
 #include "contomap/frontend/MapCamera.h"
+#include "contomap/frontend/MapRenderer.h"
 #include "contomap/frontend/RenderContext.h"
 
 namespace contomap::frontend
@@ -133,6 +134,8 @@ private:
    void drawBackground();
    void drawMap(RenderContext const &context);
    void drawUserInterface(contomap::frontend::RenderContext const &context);
+
+   void renderMap(contomap::frontend::MapRenderer &renderer, contomap::editor::Selection const &selection, Focus const &focus);
 
    void requestSave();
 

@@ -235,24 +235,27 @@ void MainWindow::drawBackground()
 
 void MainWindow::drawMap(RenderContext const &context)
 {
-   static Style const defaultStyle = Style()
-                                        .with(Style::ColorType::Text, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF })
-                                        .with(Style::ColorType::Fill, Style::Color { .red = 0xE0, .green = 0xE0, .blue = 0xE0, .alpha = 0xFF })
-                                        .with(Style::ColorType::Line, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF });
-
    auto contentSize = context.getContentSize();
    auto projection = mapCamera.beginProjection(contentSize);
    auto focusCoordinate = projection.unproject(GetMousePosition());
 
    DirectMapRenderer directMapRenderer;
    FocusInterceptor focusInterceptor(directMapRenderer, focusCoordinate);
-   MapRenderer &renderer = focusInterceptor;
+
+   renderMap(focusInterceptor, view.ofSelection(), currentFocus);
+
+   currentFocus = focusInterceptor.getNewFocus();
+}
+
+void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection const &selection, Focus const &focus)
+{
+   static Style const defaultStyle = Style()
+                                        .with(Style::ColorType::Text, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF })
+                                        .with(Style::ColorType::Fill, Style::Color { .red = 0xE0, .green = 0xE0, .blue = 0xE0, .alpha = 0xFF })
+                                        .with(Style::ColorType::Line, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF });
 
    auto const &viewScope = view.ofViewScope();
    auto const &map = view.ofMap();
-   auto const &selection = view.ofSelection();
-
-   // TODO: rework algorithm: need first to determine visible/referenced topics & associations; declutter; draw player lines; draw topics; animate!
 
    Identifiers associationIds;
    std::map<Identifier, Vector2> associationLocationsById;
@@ -310,7 +313,7 @@ void MainWindow::drawMap(RenderContext const &context)
       {
          associationStyle = selectedStyle(associationStyle);
       }
-      if (currentFocus.isAssociation(visibleAssociation.getId()))
+      if (focus.isAssociation(visibleAssociation.getId()))
       {
          associationStyle = highlightedStyle(associationStyle);
       }
@@ -352,7 +355,7 @@ void MainWindow::drawMap(RenderContext const &context)
                roleStyle = selectedStyle(roleStyle);
                thickness += 2.0f;
             }
-            if (currentFocus.isRole(role.getId()))
+            if (focus.isRole(role.getId()))
             {
                roleStyle = highlightedStyle(roleStyle);
                thickness += 0.5f;
@@ -415,7 +418,7 @@ void MainWindow::drawMap(RenderContext const &context)
          {
             occurrenceStyle = selectedStyle(occurrenceStyle);
          }
-         if (currentFocus.isOccurrence(occurrence.getId()))
+         if (focus.isOccurrence(occurrence.getId()))
          {
             occurrenceStyle = highlightedStyle(occurrenceStyle);
          }
@@ -424,8 +427,6 @@ void MainWindow::drawMap(RenderContext const &context)
          renderer.renderText(textArea, Style().with(Style::ColorType::Text, occurrenceStyle.get(Style::ColorType::Text)), nameText, font, fontSize, spacing);
       }
    }
-
-   currentFocus = focusInterceptor.getNewFocus();
 }
 
 void MainWindow::drawUserInterface(RenderContext const &context)
