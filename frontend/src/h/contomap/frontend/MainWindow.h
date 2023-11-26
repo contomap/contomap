@@ -259,6 +259,10 @@ private:
 
    void saveAs(std::string const &filePath);
 
+   [[nodiscard]] static contomap::model::Style selectedStyle(contomap::model::Style style);
+   [[nodiscard]] static contomap::model::Style highlightedStyle(contomap::model::Style style);
+   [[nodiscard]] static contomap::model::Style::Color brightenColor(contomap::model::Style::Color base, float factor);
+
    [[nodiscard]] contomap::model::SpacialCoordinate spacialCameraLocation();
    [[nodiscard]] std::string bestTitleFor(contomap::model::Topic const &topic);
 

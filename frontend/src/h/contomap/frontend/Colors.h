@@ -23,6 +23,17 @@ public:
    {
       return Color { .r = value.red, .g = value.green, .b = value.blue, .a = value.alpha };
    }
+
+   /**
+    * Converts a color from the frontend type to the model.
+    *
+    * @param value the value to convert.
+    * @return the equivalent type.
+    */
+   [[nodiscard]] static contomap::model::Style::Color fromUiColor(Color value)
+   {
+      return contomap::model::Style::Color { .red = value.r, .green = value.g, .blue = value.b, .alpha = value.a };
+   }
 };
 
 }

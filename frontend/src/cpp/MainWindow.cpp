@@ -13,6 +13,7 @@
 #include "contomap/editor/Selections.h"
 #include "contomap/editor/Styles.h"
 #include "contomap/frontend/Colors.h"
+#include "contomap/frontend/DirectMapRenderer.h"
 #include "contomap/frontend/HelpDialog.h"
 #include "contomap/frontend/LocateTopicAndActDialog.h"
 #include "contomap/frontend/MainWindow.h"
@@ -30,9 +31,11 @@ using contomap::editor::SelectionAction;
 using contomap::editor::Selections;
 using contomap::editor::Styles;
 using contomap::frontend::Colors;
+using contomap::frontend::DirectMapRenderer;
 using contomap::frontend::LocateTopicAndActDialog;
 using contomap::frontend::MainWindow;
 using contomap::frontend::MapCamera;
+using contomap::frontend::MapRenderer;
 using contomap::frontend::Names;
 using contomap::frontend::RenameTopicDialog;
 using contomap::frontend::RenderContext;
@@ -267,6 +270,9 @@ void MainWindow::drawMap(RenderContext const &context)
                                         .with(Style::ColorType::Text, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF })
                                         .with(Style::ColorType::Fill, Style::Color { .red = 0xE0, .green = 0xE0, .blue = 0xE0, .alpha = 0xFF })
                                         .with(Style::ColorType::Line, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF });
+
+   DirectMapRenderer directMapRenderer;
+   MapRenderer &renderer = directMapRenderer;
 
    auto contentSize = context.getContentSize();
    auto projection = mapCamera.beginProjection(contentSize);
@@ -584,17 +590,31 @@ void MainWindow::drawMap(RenderContext const &context)
          float fontSize = 16.0f;
          float spacing = 1.0f;
          auto textSize = MeasureTextEx(font, nameText.c_str(), fontSize, spacing);
-         float plateHeight = textSize.y;
 
-         float leftCutoff = projectedLocation.x - textSize.x / 2.0f;
-         float rightCutoff = projectedLocation.x + textSize.x / 2.0f;
+         float lineThickness = 2.0f;
 
-         Rectangle area {
-            .x = leftCutoff - plateHeight / 2.0f,
+         Rectangle textArea {
+            .x = projectedLocation.x - textSize.x / 2.0f,
             .y = projectedLocation.y - textSize.y / 2.0f,
-            .width = textSize.x + plateHeight,
-            .height = plateHeight,
+            .width = textSize.x,
+            .height = textSize.y,
          };
+         float platePadding = 2.0f;
+         Rectangle plate {
+            .x = textArea.x - platePadding,
+            .y = textArea.y - platePadding,
+            .width = textArea.width + platePadding * 2.0f,
+            .height = textArea.height + platePadding * 2.0f,
+         };
+         float reifierPadding = 2.0f;
+         float reifierOffset = lineThickness + reifierPadding;
+         Rectangle area {
+            .x = plate.x - reifierOffset - lineThickness,
+            .y = plate.y - lineThickness,
+            .width = plate.width + (reifierOffset * 2.0f) + (lineThickness * 2.0f),
+            .height = plate.height + (lineThickness * 2.0f),
+         };
+
          if (CheckCollisionPointRec(focusCoordinate, area))
          {
             focus.registerItem(std::make_shared<OccurrenceFocusItem>(occurrence.getId()), Vector2Distance(focusCoordinate, projectedLocation));
@@ -602,47 +622,17 @@ void MainWindow::drawMap(RenderContext const &context)
 
          auto occurrenceStyle
             = Styles::resolve(occurrence.getAppearance(), occurrence.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
-         Color plateBackground = Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Fill));
-         Color plateOutline = Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Line));
-
          if (selection.contains(SelectedType::Occurrence, occurrence.getId()))
          {
-            plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x80 });
-            plateOutline = ColorTint(plateOutline, Color { 0xFF, 0xFF, 0xFF, 0x80 });
+            occurrenceStyle = selectedStyle(occurrenceStyle);
          }
          if (currentFocus.isOccurrence(occurrence.getId()))
          {
-            plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x40 });
-            plateOutline = ColorTint(plateOutline, Color { 0xFF, 0xFF, 0xFF, 0x40 });
+            occurrenceStyle = highlightedStyle(occurrenceStyle);
          }
 
-         // DrawCircleSector(Vector2 { .x = leftCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 90.0f, 270.0f, 20, plateBackground);
-         DrawRectangleRec(
-            Rectangle { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f, .width = rightCutoff - leftCutoff, .height = plateHeight },
-            plateBackground);
-         // DrawCircleSector(Vector2 { .x = rightCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 270.0f, 450.0f, 20, plateBackground);
-
-         DrawTextEx(font, nameText.c_str(), Vector2 { .x = projectedLocation.x - textSize.x / 2.0f, .y = projectedLocation.y - textSize.y / 2.0f }, fontSize,
-            spacing, Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Text)));
-
-         // TODO properly use area, better drawing
-         float thick = 2.0f;
-         DrawLineEx(Vector2 { .x = leftCutoff - thick / 2.0f, .y = projectedLocation.y - plateHeight / 2.0f - thick },
-            Vector2 { .x = leftCutoff - thick / 2.0f, .y = projectedLocation.y + plateHeight / 2.0f + thick }, thick, plateOutline);
-         DrawLineEx(Vector2 { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f - thick / 2.0f },
-            Vector2 { .x = rightCutoff, .y = projectedLocation.y - plateHeight / 2.0f - thick / 2.0f }, thick, plateOutline);
-         DrawLineEx(Vector2 { .x = rightCutoff + thick / 2.0f, .y = projectedLocation.y - plateHeight / 2.0f - thick },
-            Vector2 { .x = rightCutoff + thick / 2.0f, .y = projectedLocation.y + plateHeight / 2.0f + thick }, thick, plateOutline);
-         DrawLineEx(Vector2 { .x = leftCutoff, .y = projectedLocation.y + plateHeight / 2.0f + thick / 2.0f },
-            Vector2 { .x = rightCutoff, .y = projectedLocation.y + plateHeight / 2.0f + thick / 2.0f }, thick, plateOutline);
-
-         if (occurrence.hasReifier())
-         {
-            DrawLineEx(Vector2 { .x = leftCutoff - thick * 1.5f - 2.0f, .y = projectedLocation.y - plateHeight / 2.0f - thick },
-               Vector2 { .x = leftCutoff - thick * 1.5f - 2.0f, .y = projectedLocation.y + plateHeight / 2.0f + thick }, thick, plateOutline);
-            DrawLineEx(Vector2 { .x = rightCutoff + thick * 1.5f + 2.0f, .y = projectedLocation.y - plateHeight / 2.0f - thick },
-               Vector2 { .x = rightCutoff + thick * 1.5f + 2.0f, .y = projectedLocation.y + plateHeight / 2.0f + thick }, thick, plateOutline);
-         }
+         renderer.renderOccurrencePlate(area, occurrenceStyle, plate, lineThickness, occurrence.hasReifier());
+         renderer.renderText(textArea, Style().with(Style::ColorType::Text, occurrenceStyle.get(Style::ColorType::Text)), nameText, font, fontSize, spacing);
       }
    }
 
@@ -1039,4 +1029,25 @@ MapCamera::ZoomOperation MainWindow::doubledRelative(bool nearer)
 std::string MainWindow::bestTitleFor(Topic const &topic)
 {
    return Names::forScopedDisplay(topic, view.ofViewScope(), view.ofMap().getDefaultScope())[0];
+}
+
+Style MainWindow::selectedStyle(Style style)
+{
+   float factor = 0.5f;
+   Style copy = std::move(style);
+   return copy.with(Style::ColorType::Fill, brightenColor(copy.get(Style::ColorType::Fill), factor))
+      .with(Style::ColorType::Line, brightenColor(copy.get(Style::ColorType::Line), factor));
+}
+
+Style MainWindow::highlightedStyle(Style style)
+{
+   float factor = 0.75f;
+   Style copy = std::move(style);
+   return copy.with(Style::ColorType::Fill, brightenColor(copy.get(Style::ColorType::Fill), factor))
+      .with(Style::ColorType::Line, brightenColor(copy.get(Style::ColorType::Line), factor));
+}
+
+Style::Color MainWindow::brightenColor(Style::Color base, float factor)
+{
+   return Colors::fromUiColor(ColorBrightness(Colors::toUiColor(base), factor));
 }
