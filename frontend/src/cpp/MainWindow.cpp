@@ -3,17 +3,11 @@
 
 #include <raygui/raygui.h>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-#include <raylib.h>
-#include <raymath.h>
-#include <rlgl.h>
-#pragma GCC diagnostic pop
-
 #include "contomap/editor/Selections.h"
 #include "contomap/editor/Styles.h"
 #include "contomap/frontend/Colors.h"
 #include "contomap/frontend/DirectMapRenderer.h"
+#include "contomap/frontend/FocusInterceptor.h"
 #include "contomap/frontend/HelpDialog.h"
 #include "contomap/frontend/LocateTopicAndActDialog.h"
 #include "contomap/frontend/MainWindow.h"
@@ -32,6 +26,7 @@ using contomap::editor::Selections;
 using contomap::editor::Styles;
 using contomap::frontend::Colors;
 using contomap::frontend::DirectMapRenderer;
+using contomap::frontend::FocusInterceptor;
 using contomap::frontend::LocateTopicAndActDialog;
 using contomap::frontend::MainWindow;
 using contomap::frontend::MapCamera;
@@ -81,32 +76,6 @@ MainWindow::LengthInPixel MainWindow::Size::getWidth() const
 MainWindow::LengthInPixel MainWindow::Size::getHeight() const
 {
    return height;
-}
-
-MainWindow::Focus::Focus()
-   : distance(std::numeric_limits<float>::max())
-{
-}
-
-void MainWindow::Focus::registerItem(std::shared_ptr<FocusItem> newItem, float newDistance)
-{
-   if (newDistance < distance)
-   {
-      item = std::move(newItem);
-      distance = newDistance;
-   }
-}
-
-void MainWindow::Focus::modifySelection(InputRequestHandler &handler, SelectionAction action) const
-{
-   if (item != nullptr)
-   {
-      item->modifySelection(handler, action);
-   }
-   else
-   {
-      handler.clearSelection();
-   }
 }
 
 MainWindow::Size const MainWindow::DEFAULT_SIZE = MainWindow::Size::ofPixel(1280, 720);
@@ -271,21 +240,19 @@ void MainWindow::drawMap(RenderContext const &context)
                                         .with(Style::ColorType::Fill, Style::Color { .red = 0xE0, .green = 0xE0, .blue = 0xE0, .alpha = 0xFF })
                                         .with(Style::ColorType::Line, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF });
 
-   DirectMapRenderer directMapRenderer;
-   MapRenderer &renderer = directMapRenderer;
-
    auto contentSize = context.getContentSize();
    auto projection = mapCamera.beginProjection(contentSize);
    auto focusCoordinate = projection.unproject(GetMousePosition());
-   Focus focus;
+
+   DirectMapRenderer directMapRenderer;
+   FocusInterceptor focusInterceptor(directMapRenderer, focusCoordinate);
+   MapRenderer &renderer = focusInterceptor;
 
    auto const &viewScope = view.ofViewScope();
    auto const &map = view.ofMap();
    auto const &selection = view.ofSelection();
 
    // TODO: rework algorithm: need first to determine visible/referenced topics & associations; declutter; draw player lines; draw topics; animate!
-
-   // TODO: find better way to indicate selected and focused items.
 
    Identifiers associationIds;
    std::map<Identifier, Vector2> associationLocationsById;
@@ -337,11 +304,6 @@ void MainWindow::drawMap(RenderContext const &context)
       associationIds.add(visibleAssociation.getId());
       associationLocationsById[visibleAssociation.getId()] = projectedLocation;
 
-      if (CheckCollisionPointRec(focusCoordinate, area))
-      {
-         focus.registerItem(std::make_shared<AssociationFocusItem>(visibleAssociation.getId()), Vector2Distance(focusCoordinate, projectedLocation));
-      }
-
       auto associationStyle
          = Styles::resolve(visibleAssociation.getAppearance(), visibleAssociation.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
       if (selection.contains(SelectedType::Association, visibleAssociation.getId()))
@@ -353,7 +315,7 @@ void MainWindow::drawMap(RenderContext const &context)
          associationStyle = highlightedStyle(associationStyle);
       }
 
-      renderer.renderAssociationPlate(area, associationStyle, plate, lineThickness, visibleAssociation.hasReifier());
+      renderer.renderAssociationPlate(visibleAssociation.getId(), area, associationStyle, plate, lineThickness, visibleAssociation.hasReifier());
       renderer.renderText(textArea, Style().with(Style::ColorType::Text, associationStyle.get(Style::ColorType::Text)), nameText, font, fontSize, spacing);
    }
 
@@ -382,13 +344,6 @@ void MainWindow::drawMap(RenderContext const &context)
                roleTitle = bestTitleFor(typeTopic.value());
             }
 
-            auto associationLocation = associationLocationsById[role.getParent()];
-
-            if (CheckCollisionPointLine(focusCoordinate, projectedLocation, associationLocation, 5))
-            {
-               focus.registerItem(std::make_shared<RoleFocusItem>(role.getId()), 0.0f);
-            }
-
             auto roleStyle = Styles::resolve(role.getAppearance(), role.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
 
             float thickness = 1.0f;
@@ -403,7 +358,8 @@ void MainWindow::drawMap(RenderContext const &context)
                thickness += 0.5f;
             }
 
-            renderer.renderRoleLine(projectedLocation, associationLocation, roleStyle, thickness, role.hasReifier());
+            auto associationLocation = associationLocationsById[role.getParent()];
+            renderer.renderRoleLine(role.getId(), projectedLocation, associationLocation, roleStyle, thickness, role.hasReifier());
 
             if (!roleTitle.empty())
             {
@@ -453,11 +409,6 @@ void MainWindow::drawMap(RenderContext const &context)
             .height = plate.height + (lineThickness * 2.0f),
          };
 
-         if (CheckCollisionPointRec(focusCoordinate, area))
-         {
-            focus.registerItem(std::make_shared<OccurrenceFocusItem>(occurrence.getId()), Vector2Distance(focusCoordinate, projectedLocation));
-         }
-
          auto occurrenceStyle
             = Styles::resolve(occurrence.getAppearance(), occurrence.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
          if (selection.contains(SelectedType::Occurrence, occurrence.getId()))
@@ -469,12 +420,12 @@ void MainWindow::drawMap(RenderContext const &context)
             occurrenceStyle = highlightedStyle(occurrenceStyle);
          }
 
-         renderer.renderOccurrencePlate(area, occurrenceStyle, plate, lineThickness, occurrence.hasReifier());
+         renderer.renderOccurrencePlate(occurrence.getId(), area, occurrenceStyle, plate, lineThickness, occurrence.hasReifier());
          renderer.renderText(textArea, Style().with(Style::ColorType::Text, occurrenceStyle.get(Style::ColorType::Text)), nameText, font, fontSize, spacing);
       }
    }
 
-   currentFocus = focus;
+   currentFocus = focusInterceptor.getNewFocus();
 }
 
 void MainWindow::drawUserInterface(RenderContext const &context)

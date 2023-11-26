@@ -4,6 +4,7 @@
 
 #include <raylib.h>
 
+#include "contomap/model/Identifier.h"
 #include "contomap/model/Style.h"
 
 namespace contomap::frontend
@@ -32,35 +33,47 @@ public:
    /**
     * Render an occurrence plate.
     *
+    * @param id the identifier of the rendered item.
     * @param area the overall area within which the plate is put.
     * @param style the style to use for drawing.
     * @param plate the area of the central plate.
     * @param lineThickness the thickness of lines.
     * @param reified whether the reification state should be drawn.
     */
-   virtual void renderOccurrencePlate(Rectangle area, contomap::model::Style const &style, Rectangle plate, float lineThickness, bool reified) = 0;
+   // clang-format off
+   virtual void renderOccurrencePlate(
+      contomap::model::Identifier id, Rectangle area, contomap::model::Style const &style, Rectangle plate, float lineThickness, bool reified) = 0;
+   // clang-format on
 
    /**
     * Render an association plate.
     *
+    * @param id the identifier of the rendered item.
     * @param area the overall area within which the plate is put.
     * @param style the style to use for drawing.
     * @param plate the area of the central plate.
     * @param lineThickness the thickness of lines.
     * @param reified whether the reification state should be drawn.
     */
-   virtual void renderAssociationPlate(Rectangle area, contomap::model::Style const &style, Rectangle plate, float lineThickness, bool reified) = 0;
+   // clang-format off
+   virtual void renderAssociationPlate(
+      contomap::model::Identifier id, Rectangle area, contomap::model::Style const &style, Rectangle plate, float lineThickness, bool reified) = 0;
+   // clang-format on
 
    /**
     * Render the line of a role.
     *
+    * @param id the identifier of the rendered item.
     * @param a first position.
     * @param b second position.
     * @param style the style to use for drawing.
     * @param lineThickness the thickness of lines.
     * @param reified whether the reification state should be drawn.
     */
-   virtual void renderRoleLine(Vector2 a, Vector2 b, contomap::model::Style const &style, float lineThickness, bool reified) = 0;
+   // clang-format off
+   virtual void renderRoleLine(
+      contomap::model::Identifier id, Vector2 a, Vector2 b, contomap::model::Style const &style, float lineThickness, bool reified) = 0;
+   // clang-format on
 };
 
 } // namespace contomap::frontend

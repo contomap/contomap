@@ -12,6 +12,7 @@
 
 using contomap::frontend::Colors;
 using contomap::frontend::DirectMapRenderer;
+using contomap::model::Identifier;
 using contomap::model::Style;
 
 void DirectMapRenderer::renderText(Rectangle area, Style const &style, std::string const &text, Font font, float fontSize, float spacing)
@@ -20,7 +21,7 @@ void DirectMapRenderer::renderText(Rectangle area, Style const &style, std::stri
    DrawTextEx(font, text.c_str(), Vector2 { .x = area.x, .y = area.y }, fontSize, spacing, Colors::toUiColor(style.get(Style::ColorType::Text)));
 }
 
-void DirectMapRenderer::renderOccurrencePlate(Rectangle area, Style const &style, Rectangle plate, float lineThickness, bool reified)
+void DirectMapRenderer::renderOccurrencePlate(Identifier, Rectangle area, Style const &style, Rectangle plate, float lineThickness, bool reified)
 {
    DrawRectangleRec(plate, Colors::toUiColor(style.get(Style::ColorType::Fill)));
    std::array<Vector2, 10> vertices {
@@ -46,7 +47,7 @@ void DirectMapRenderer::renderOccurrencePlate(Rectangle area, Style const &style
    }
 }
 
-void DirectMapRenderer::renderAssociationPlate(Rectangle area, Style const &style, Rectangle plate, float lineThickness, bool reified)
+void DirectMapRenderer::renderAssociationPlate(Identifier, Rectangle area, Style const &style, Rectangle plate, float lineThickness, bool reified)
 {
    float centerY = plate.y + (plate.height / 2.0f);
    {
@@ -127,7 +128,7 @@ void DirectMapRenderer::renderAssociationPlate(Rectangle area, Style const &styl
    }
 }
 
-void DirectMapRenderer::renderRoleLine(Vector2 a, Vector2 b, Style const &style, float lineThickness, bool reified)
+void DirectMapRenderer::renderRoleLine(Identifier, Vector2 a, Vector2 b, Style const &style, float lineThickness, bool reified)
 {
    auto color = Colors::toUiColor(style.get(Style::ColorType::Line));
    DrawLineEx(a, b, lineThickness, color);
