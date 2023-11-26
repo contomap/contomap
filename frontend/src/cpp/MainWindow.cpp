@@ -803,14 +803,14 @@ void MainWindow::save()
    ImageFlipVertical(&image);
    int fileSize = 0;
    auto exported = ExportImageToMemory(image, ".png", &fileSize);
+   UnloadImage(image);
    if (exported != nullptr)
    {
       SaveFileData(currentFilePath.c_str(), exported, fileSize);
       RL_FREE(exported);
 
-      // TODO: inform display environment of saved file -> download in browser environment
+      environment.fileSaved(currentFilePath);
    }
-   UnloadImage(image);
 }
 
 SpacialCoordinate MainWindow::spacialCameraLocation()

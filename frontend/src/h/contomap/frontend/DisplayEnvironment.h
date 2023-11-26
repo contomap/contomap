@@ -45,6 +45,13 @@ public:
    virtual DialogResult showSaveAsDialog(
       std::string const &title, std::string &filePath, std::vector<std::string> const &filter, std::string const &description) = 0;
    // clang-format on
+
+   /**
+    * Notifies the environment that a file was saved.
+    *
+    * @param filePath the full path of the saved file.
+    */
+   virtual void fileSaved(std::string const &filePath) = 0;
 };
 
 } // namespace contomap::frontend

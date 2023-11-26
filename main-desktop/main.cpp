@@ -35,6 +35,10 @@ public:
       return DialogResult::Confirmed;
    }
 
+   void fileSaved(std::string const &) override
+   {
+   }
+
    /**
     * @return true in case the window should be closed.
     */
