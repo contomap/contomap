@@ -197,12 +197,24 @@ target_link_libraries(contomap-application
 )
 
 if (${PLATFORM} STREQUAL "Desktop")
+    add_library(tinyfiledialogs STATIC "${PROJECT_SOURCE_DIR}/vendor/tinyfiledialogs/src/tinyfiledialogs.c")
+    target_include_directories(tinyfiledialogs
+            PRIVATE
+            "${PROJECT_SOURCE_DIR}/vendor/tinyfiledialogs/include/tinyfiledialogs"
+            PUBLIC
+            "${PROJECT_SOURCE_DIR}/vendor/tinyfiledialogs/include"
+    )
+    if (WIN32)
+        target_link_libraries(tinyfiledialogs PRIVATE comdlg32 ole32)
+    endif ()
+
     add_executable(contomap "${PROJECT_SOURCE_DIR}/main-desktop/main.cpp")
     target_link_libraries(contomap
             PRIVATE
             all_warnings
             contomap-application
             raylib
+            tinyfiledialogs
     )
     if (APPLE)
         # Checks if OSX and links appropriate frameworks (Only required on MacOS)

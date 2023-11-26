@@ -1,4 +1,5 @@
 #include <memory>
+#include <sstream>
 
 #include <emscripten/emscripten.h>
 #include <raylib.h>
@@ -49,6 +50,44 @@ public:
    void closeWindow() override
    {
       emscripten_cancel_main_loop();
+   }
+
+   DialogResult showSaveAsDialog(std::string const &, std::string &, std::vector<std::string> const &, std::string const &) override
+   {
+      return DialogResult::NotSupported;
+   }
+
+   void fileSaved(std::string const &filePath) override
+   {
+      std::ostringstream script;
+      auto toIntArray = [&script](std::string const &name, std::string const &text) {
+         // Avoid script injections from user by encoding/decoding the input via UTF-8 values.
+         script << "let " << name << " = new Int8Array([";
+         for (size_t i = 0; i < text.size(); i++)
+         {
+            if (i > 0)
+            {
+               script << ",";
+            }
+            script << std::to_string(static_cast<int>(text[i]));
+         }
+         script << "]);";
+      };
+      toIntArray("rawSourcePath", filePath);
+      toIntArray("rawTargetPath", GetFileName(filePath.c_str()));
+      script << R"EOT(
+let utf8Decoder = new TextDecoder();
+let sourcePath = utf8Decoder.decode(rawSourcePath);
+let sourceData = FS.readFile(sourcePath);
+let blob = new Blob([sourceData.buffer], { type: "image/png" });
+let element = document.createElement("a");
+let url = window.URL.createObjectURL(blob);
+element.href = url;
+element.download = utf8Decoder.decode(rawTargetPath);
+element.click();
+window.URL.revokeObjectURL(url);
+)EOT";
+      emscripten_run_script(script.str().c_str());
    }
 
    /**

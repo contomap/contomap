@@ -3,22 +3,20 @@
 
 #include <raygui/raygui.h>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-#include <raylib.h>
-#include <raymath.h>
-#include <rlgl.h>
-#pragma GCC diagnostic pop
-
 #include "contomap/editor/Selections.h"
 #include "contomap/editor/Styles.h"
 #include "contomap/frontend/Colors.h"
+#include "contomap/frontend/DirectMapRenderer.h"
+#include "contomap/frontend/FocusInterceptor.h"
 #include "contomap/frontend/HelpDialog.h"
 #include "contomap/frontend/LocateTopicAndActDialog.h"
 #include "contomap/frontend/MainWindow.h"
+#include "contomap/frontend/MapRenderList.h"
+#include "contomap/frontend/MapRenderMeasurer.h"
 #include "contomap/frontend/Names.h"
 #include "contomap/frontend/NewTopicDialog.h"
 #include "contomap/frontend/RenameTopicDialog.h"
+#include "contomap/frontend/SaveAsDialog.h"
 #include "contomap/frontend/StyleDialog.h"
 #include "contomap/model/Associations.h"
 #include "contomap/model/Topics.h"
@@ -29,9 +27,12 @@ using contomap::editor::SelectionAction;
 using contomap::editor::Selections;
 using contomap::editor::Styles;
 using contomap::frontend::Colors;
+using contomap::frontend::DirectMapRenderer;
+using contomap::frontend::FocusInterceptor;
 using contomap::frontend::LocateTopicAndActDialog;
 using contomap::frontend::MainWindow;
 using contomap::frontend::MapCamera;
+using contomap::frontend::MapRenderer;
 using contomap::frontend::Names;
 using contomap::frontend::RenameTopicDialog;
 using contomap::frontend::RenderContext;
@@ -79,35 +80,8 @@ MainWindow::LengthInPixel MainWindow::Size::getHeight() const
    return height;
 }
 
-MainWindow::Focus::Focus()
-   : distance(std::numeric_limits<float>::max())
-{
-}
-
-void MainWindow::Focus::registerItem(std::shared_ptr<FocusItem> newItem, float newDistance)
-{
-   if (newDistance < distance)
-   {
-      item = std::move(newItem);
-      distance = newDistance;
-   }
-}
-
-void MainWindow::Focus::modifySelection(InputRequestHandler &handler, SelectionAction action) const
-{
-   if (item != nullptr)
-   {
-      item->modifySelection(handler, action);
-   }
-   else
-   {
-      handler.clearSelection();
-   }
-}
-
 MainWindow::Size const MainWindow::DEFAULT_SIZE = MainWindow::Size::ofPixel(1280, 720);
 char const MainWindow::DEFAULT_TITLE[] = "contomap";
-std::vector<std::pair<int, contomap::frontend::MapCamera::ZoomFactor>> const MainWindow::ZOOM_LEVELS(MainWindow::generateZoomLevels());
 
 MainWindow::MainWindow(DisplayEnvironment &environment, contomap::editor::View &view, contomap::editor::InputRequestHandler &inputRequestHandler)
    : mapCamera(std::make_shared<MapCamera::ImmediateGearbox>())
@@ -211,6 +185,11 @@ void MainWindow::processInput()
          inputRequestHandler.deleteSelection();
       }
 
+      if (IsKeyPressed(KEY_S) && (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)))
+      {
+         requestSave();
+      }
+
       // TODO: avoid map interaction click when on view scope bar.
       if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && (static_cast<float>(GetMouseY()) > (layout.buttonHeight() + layout.padding() * 2.0f)))
       {
@@ -262,23 +241,27 @@ void MainWindow::drawBackground()
 
 void MainWindow::drawMap(RenderContext const &context)
 {
+   auto contentSize = context.getContentSize();
+   auto projection = mapCamera.beginProjection(contentSize);
+   auto focusCoordinate = projection.unproject(GetMousePosition());
+
+   DirectMapRenderer directMapRenderer;
+   FocusInterceptor focusInterceptor(directMapRenderer, focusCoordinate);
+
+   renderMap(focusInterceptor, view.ofSelection(), currentFocus);
+
+   currentFocus = focusInterceptor.getNewFocus();
+}
+
+void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection const &selection, Focus const &focus)
+{
    static Style const defaultStyle = Style()
                                         .with(Style::ColorType::Text, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF })
                                         .with(Style::ColorType::Fill, Style::Color { .red = 0xE0, .green = 0xE0, .blue = 0xE0, .alpha = 0xFF })
                                         .with(Style::ColorType::Line, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF });
 
-   auto contentSize = context.getContentSize();
-   auto projection = mapCamera.beginProjection(contentSize);
-   auto focusCoordinate = projection.unproject(GetMousePosition());
-   Focus focus;
-
    auto const &viewScope = view.ofViewScope();
    auto const &map = view.ofMap();
-   auto const &selection = view.ofSelection();
-
-   // TODO: rework algorithm: need first to determine visible/referenced topics & associations; declutter; draw player lines; draw topics; animate!
-
-   // TODO: find better way to indicate selected and focused items.
 
    Identifiers associationIds;
    std::map<Identifier, Vector2> associationLocationsById;
@@ -287,7 +270,7 @@ void MainWindow::drawMap(RenderContext const &context)
    for (Association const &visibleAssociation : visibleAssociations)
    {
       auto optionalTypeId = visibleAssociation.getType();
-      std::string nameText(" "); // TODO: resolve name. also: why do triangles overlap if name is empty?
+      std::string nameText;
       if (optionalTypeId.isAssigned())
       {
          auto typeTopic = view.ofMap().findTopic(optionalTypeId.value());
@@ -301,183 +284,48 @@ void MainWindow::drawMap(RenderContext const &context)
       float fontSize = 16.0f;
       float spacing = 1.0f;
       auto textSize = MeasureTextEx(font, nameText.c_str(), fontSize, spacing);
-      float plateHeight = textSize.y;
+      float lineThickness = 2.0f;
 
-      float leftCutoff = projectedLocation.x - textSize.x / 2.0f;
-      float rightCutoff = projectedLocation.x + textSize.x / 2.0f;
-
-      Rectangle area {
-         .x = leftCutoff - plateHeight / 2.0f,
+      Rectangle textArea {
+         .x = projectedLocation.x - textSize.x / 2.0f,
          .y = projectedLocation.y - textSize.y / 2.0f,
-         .width = textSize.x + plateHeight,
-         .height = plateHeight,
+         .width = textSize.x,
+         .height = textSize.y,
+      };
+
+      float platePadding = 2.0f;
+      Rectangle plate {
+         .x = textArea.x - platePadding,
+         .y = textArea.y - platePadding,
+         .width = textArea.width + platePadding * 2.0f,
+         .height = textArea.height + platePadding * 2.0f,
+      };
+      float halfHeight = plate.height / 2.0f;
+      float reifierPadding = 2.0f + (lineThickness * 0.4f);
+      float reifierOffset = lineThickness + reifierPadding;
+      Rectangle area {
+         .x = plate.x - reifierOffset - lineThickness - halfHeight,
+         .y = plate.y - lineThickness,
+         .width = plate.width + (reifierOffset + lineThickness + halfHeight) * 2.0f,
+         .height = plate.height + lineThickness * 2.0f,
       };
 
       associationIds.add(visibleAssociation.getId());
-      associationLocationsById[visibleAssociation.getId()] = projectedLocation; // TODO: store collision area, for intersection later
-
-      if (CheckCollisionPointRec(focusCoordinate, area))
-      {
-         focus.registerItem(std::make_shared<AssociationFocusItem>(visibleAssociation.getId()), Vector2Distance(focusCoordinate, projectedLocation));
-      }
+      associationLocationsById[visibleAssociation.getId()] = projectedLocation;
 
       auto associationStyle
          = Styles::resolve(visibleAssociation.getAppearance(), visibleAssociation.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
-      Color plateBackground = Colors::toUiColor(associationStyle.get(Style::ColorType::Fill));
-      Color plateOutline = Colors::toUiColor(associationStyle.get(Style::ColorType::Line));
       if (selection.contains(SelectedType::Association, visibleAssociation.getId()))
       {
-         plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x80 });
-         plateOutline = ColorTint(plateOutline, Color { 0xFF, 0xFF, 0xFF, 0x80 });
+         associationStyle = selectedStyle(associationStyle);
       }
-      if (currentFocus.isAssociation(visibleAssociation.getId()))
+      if (focus.isAssociation(visibleAssociation.getId()))
       {
-         plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x40 });
-         plateOutline = ColorTint(plateOutline, Color { 0xFF, 0xFF, 0xFF, 0x40 });
+         associationStyle = highlightedStyle(associationStyle);
       }
 
-      DrawTriangle(Vector2 { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f },
-         Vector2 { .x = leftCutoff - plateHeight / 2.0f, .y = projectedLocation.y }, Vector2 { .x = leftCutoff, .y = projectedLocation.y + plateHeight / 2.0f },
-         plateBackground);
-      DrawRectangleRec(Rectangle { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f, .width = rightCutoff - leftCutoff, .height = plateHeight },
-         plateBackground);
-      DrawTriangle(Vector2 { .x = rightCutoff, .y = projectedLocation.y - plateHeight / 2.0f },
-         Vector2 { .x = rightCutoff, .y = projectedLocation.y + plateHeight / 2.0f },
-         Vector2 { .x = rightCutoff + plateHeight / 2.0f, .y = projectedLocation.y }, plateBackground);
-
-      {
-         bool hasReifier = visibleAssociation.hasReifier();
-
-         // TODO: outsource this block, also consider a different approach by scaling the inner coordinates to achieve an equal thickness.
-         float half = plateHeight / 2.0f;
-         float thick = 1.0f;
-         float reifierOffset = 2.0f + thick * 2.0f;
-         rlBegin(RL_TRIANGLES);
-
-         rlColor4ub(plateOutline.r, plateOutline.g, plateOutline.b, plateOutline.a);
-
-         std::array<Vector2, 2> tl {
-            Vector2 { .x = leftCutoff, .y = projectedLocation.y - half - thick },
-            Vector2 { .x = leftCutoff, .y = projectedLocation.y - half + thick },
-         };
-         std::array<Vector2, 2> bl {
-            Vector2 { .x = leftCutoff, .y = projectedLocation.y + half + thick },
-            Vector2 { .x = leftCutoff, .y = projectedLocation.y + half - thick },
-         };
-         std::array<Vector2, 2> tr {
-            Vector2 { .x = rightCutoff, .y = projectedLocation.y - half - thick },
-            Vector2 { .x = rightCutoff, .y = projectedLocation.y - half + thick },
-         };
-         std::array<Vector2, 2> br {
-            Vector2 { .x = rightCutoff, .y = projectedLocation.y + half + thick },
-            Vector2 { .x = rightCutoff, .y = projectedLocation.y + half - thick },
-         };
-         std::array<Vector2, 2> r {
-            Vector2 { .x = rightCutoff + half + thick, .y = projectedLocation.y },
-            Vector2 { .x = rightCutoff + half - thick, .y = projectedLocation.y },
-         };
-         std::array<Vector2, 2> l {
-            Vector2 { .x = leftCutoff - half - thick, .y = projectedLocation.y },
-            Vector2 { .x = leftCutoff - half + thick, .y = projectedLocation.y },
-         };
-
-         if (hasReifier)
-         {
-            rlVertex2f(l[0].x - reifierOffset, l[0].y);
-            rlVertex2f(l[1].x - reifierOffset, l[1].y);
-            rlVertex2f(tl[0].x - reifierOffset, tl[0].y);
-
-            rlVertex2f(tl[0].x - reifierOffset, tl[0].y);
-            rlVertex2f(l[1].x - reifierOffset, l[1].y);
-            rlVertex2f(tl[1].x - reifierOffset, tl[1].y);
-         }
-
-         rlVertex2f(l[0].x, l[0].y);
-         rlVertex2f(l[1].x, l[1].y);
-         rlVertex2f(tl[0].x, tl[0].y);
-
-         rlVertex2f(tl[0].x, tl[0].y);
-         rlVertex2f(l[1].x, l[1].y);
-         rlVertex2f(tl[1].x, tl[1].y);
-
-         rlVertex2f(tl[0].x, tl[0].y);
-         rlVertex2f(tl[1].x, tl[1].y);
-         rlVertex2f(tr[0].x, tr[0].y);
-
-         rlVertex2f(tr[0].x, tr[0].y);
-         rlVertex2f(tl[1].x, tl[1].y);
-         rlVertex2f(tr[1].x, tr[1].y);
-
-         rlVertex2f(tr[0].x, tr[0].y);
-         rlVertex2f(tr[1].x, tr[1].y);
-         rlVertex2f(r[0].x, r[0].y);
-
-         rlVertex2f(r[0].x, r[0].y);
-         rlVertex2f(tr[1].x, tr[1].y);
-         rlVertex2f(r[1].x, r[1].y);
-
-         if (hasReifier)
-         {
-            rlVertex2f(tr[0].x + reifierOffset, tr[0].y);
-            rlVertex2f(tr[1].x + reifierOffset, tr[1].y);
-            rlVertex2f(r[0].x + reifierOffset, r[0].y);
-
-            rlVertex2f(r[0].x + reifierOffset, r[0].y);
-            rlVertex2f(tr[1].x + reifierOffset, tr[1].y);
-            rlVertex2f(r[1].x + reifierOffset, r[1].y);
-         }
-
-         if (hasReifier)
-         {
-            rlVertex2f(l[1].x - reifierOffset, l[1].y);
-            rlVertex2f(l[0].x - reifierOffset, l[0].y);
-            rlVertex2f(bl[0].x - reifierOffset, bl[0].y);
-
-            rlVertex2f(bl[0].x - reifierOffset, bl[0].y);
-            rlVertex2f(bl[1].x - reifierOffset, bl[1].y);
-            rlVertex2f(l[1].x - reifierOffset, l[1].y);
-         }
-
-         rlVertex2f(l[1].x, l[1].y);
-         rlVertex2f(l[0].x, l[0].y);
-         rlVertex2f(bl[0].x, bl[0].y);
-
-         rlVertex2f(bl[0].x, bl[0].y);
-         rlVertex2f(bl[1].x, bl[1].y);
-         rlVertex2f(l[1].x, l[1].y);
-
-         rlVertex2f(bl[1].x, bl[1].y);
-         rlVertex2f(bl[0].x, bl[0].y);
-         rlVertex2f(br[1].x, br[1].y);
-
-         rlVertex2f(br[1].x, br[1].y);
-         rlVertex2f(bl[0].x, bl[0].y);
-         rlVertex2f(br[0].x, br[0].y);
-
-         rlVertex2f(br[1].x, br[1].y);
-         rlVertex2f(br[0].x, br[0].y);
-         rlVertex2f(r[1].x, r[1].y);
-
-         rlVertex2f(r[1].x, r[1].y);
-         rlVertex2f(br[0].x, br[0].y);
-         rlVertex2f(r[0].x, r[0].y);
-
-         if (hasReifier)
-         {
-            rlVertex2f(br[1].x + reifierOffset, br[1].y);
-            rlVertex2f(br[0].x + reifierOffset, br[0].y);
-            rlVertex2f(r[1].x + reifierOffset, r[1].y);
-
-            rlVertex2f(r[1].x + reifierOffset, r[1].y);
-            rlVertex2f(br[0].x + reifierOffset, br[0].y);
-            rlVertex2f(r[0].x + reifierOffset, r[0].y);
-         }
-
-         rlEnd();
-      }
-
-      DrawTextEx(font, nameText.c_str(), Vector2 { .x = projectedLocation.x - textSize.x / 2.0f, .y = projectedLocation.y - textSize.y / 2.0f }, fontSize,
-         spacing, Colors::toUiColor(associationStyle.get(Style::ColorType::Text)));
+      renderer.renderAssociationPlate(visibleAssociation.getId(), area, associationStyle, plate, lineThickness, visibleAssociation.hasReifier());
+      renderer.renderText(textArea, Style().with(Style::ColorType::Text, associationStyle.get(Style::ColorType::Text)), nameText, font, fontSize, spacing);
    }
 
    auto visibleTopics = map.find(Topics::thatAreIn(viewScope));
@@ -505,58 +353,22 @@ void MainWindow::drawMap(RenderContext const &context)
                roleTitle = bestTitleFor(typeTopic.value());
             }
 
-            auto associationLocation = associationLocationsById[role.getParent()];
-
-            if (CheckCollisionPointLine(focusCoordinate, projectedLocation, associationLocation, 5))
-            {
-               focus.registerItem(std::make_shared<RoleFocusItem>(role.getId()), 0.0f);
-            }
-
             auto roleStyle = Styles::resolve(role.getAppearance(), role.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
-            Color lineColor = Colors::toUiColor(roleStyle.get(Style::ColorType::Line));
-            Color roleBackground = Colors::toUiColor(roleStyle.get(Style::ColorType::Fill));
-
-            roleBackground = ColorTint(roleBackground, Color { 0xFF, 0xFF, 0xFF, 0x80 });
 
             float thickness = 1.0f;
             if (selection.contains(SelectedType::Role, role.getId()))
             {
-               lineColor = ColorTint(lineColor, Color { 0xFF, 0x00, 0x00, 0x80 });
+               roleStyle = selectedStyle(roleStyle);
                thickness += 2.0f;
             }
-            if (currentFocus.isRole(role.getId()))
+            if (focus.isRole(role.getId()))
             {
-               lineColor = ColorTint(lineColor, Color { 0xFF, 0xFF, 0xFF, 0x40 });
+               roleStyle = highlightedStyle(roleStyle);
                thickness += 0.5f;
             }
 
-            DrawLineEx(projectedLocation, associationLocation, thickness, lineColor);
-            float diffX = projectedLocation.x - associationLocation.x;
-            float diffY = projectedLocation.y - associationLocation.y;
-            float length = Vector2Length(Vector2 { .x = diffX, .y = diffY });
-            if (length > 0.0001f && role.hasReifier())
-            {
-               auto drawWithOffset = [length, projectedLocation, associationLocation, thickness, lineColor](float offset) {
-                  Vector2 shiftedProjected {
-                     .x = projectedLocation.x + offset * (associationLocation.y - projectedLocation.y) / length,
-                     .y = projectedLocation.y + offset * (projectedLocation.x - associationLocation.x) / length,
-                  };
-                  Vector2 shiftedAssociation {
-                     .x = associationLocation.x + offset * (associationLocation.y - projectedLocation.y) / length,
-                     .y = associationLocation.y + offset * (projectedLocation.x - associationLocation.x) / length,
-                  };
-                  float diffX = shiftedAssociation.x - shiftedProjected.x;
-                  float diffY = shiftedAssociation.y - shiftedProjected.y;
-                  shiftedProjected.x += diffX / 3;
-                  shiftedProjected.y += diffY / 3;
-                  shiftedAssociation.x += -diffX / 3;
-                  shiftedAssociation.y += -diffY / 3;
-                  DrawLineEx(shiftedProjected, shiftedAssociation, thickness, lineColor);
-               };
-
-               drawWithOffset(+3.0f);
-               drawWithOffset(-3.0f);
-            }
+            auto associationLocation = associationLocationsById[role.getParent()];
+            renderer.renderRoleLine(role.getId(), projectedLocation, associationLocation, roleStyle, thickness, role.hasReifier());
 
             if (!roleTitle.empty())
             {
@@ -573,9 +385,7 @@ void MainWindow::drawMap(RenderContext const &context)
                   .height = plateHeight,
                };
 
-               DrawRectangleRec(area, roleBackground);
-               DrawTextEx(
-                  font, roleTitle.c_str(), Vector2 { .x = area.x, .y = area.y }, fontSize, spacing, Colors::toUiColor(roleStyle.get(Style::ColorType::Text)));
+               renderer.renderText(area, roleStyle.without(Style::ColorType::Line), roleTitle, font, fontSize, spacing);
             }
          }
 
@@ -583,69 +393,46 @@ void MainWindow::drawMap(RenderContext const &context)
          float fontSize = 16.0f;
          float spacing = 1.0f;
          auto textSize = MeasureTextEx(font, nameText.c_str(), fontSize, spacing);
-         float plateHeight = textSize.y;
 
-         float leftCutoff = projectedLocation.x - textSize.x / 2.0f;
-         float rightCutoff = projectedLocation.x + textSize.x / 2.0f;
+         float lineThickness = 2.0f;
 
-         Rectangle area {
-            .x = leftCutoff - plateHeight / 2.0f,
+         Rectangle textArea {
+            .x = projectedLocation.x - textSize.x / 2.0f,
             .y = projectedLocation.y - textSize.y / 2.0f,
-            .width = textSize.x + plateHeight,
-            .height = plateHeight,
+            .width = textSize.x,
+            .height = textSize.y,
          };
-         if (CheckCollisionPointRec(focusCoordinate, area))
-         {
-            focus.registerItem(std::make_shared<OccurrenceFocusItem>(occurrence.getId()), Vector2Distance(focusCoordinate, projectedLocation));
-         }
+         float platePadding = 2.0f;
+         Rectangle plate {
+            .x = textArea.x - platePadding,
+            .y = textArea.y - platePadding,
+            .width = textArea.width + platePadding * 2.0f,
+            .height = textArea.height + platePadding * 2.0f,
+         };
+         float reifierPadding = 2.0f;
+         float reifierOffset = lineThickness + reifierPadding;
+         Rectangle area {
+            .x = plate.x - reifierOffset - lineThickness,
+            .y = plate.y - lineThickness,
+            .width = plate.width + (reifierOffset * 2.0f) + (lineThickness * 2.0f),
+            .height = plate.height + (lineThickness * 2.0f),
+         };
 
          auto occurrenceStyle
             = Styles::resolve(occurrence.getAppearance(), occurrence.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
-         Color plateBackground = Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Fill));
-         Color plateOutline = Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Line));
-
          if (selection.contains(SelectedType::Occurrence, occurrence.getId()))
          {
-            plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x80 });
-            plateOutline = ColorTint(plateOutline, Color { 0xFF, 0xFF, 0xFF, 0x80 });
+            occurrenceStyle = selectedStyle(occurrenceStyle);
          }
-         if (currentFocus.isOccurrence(occurrence.getId()))
+         if (focus.isOccurrence(occurrence.getId()))
          {
-            plateBackground = ColorTint(plateBackground, Color { 0xFF, 0xFF, 0xFF, 0x40 });
-            plateOutline = ColorTint(plateOutline, Color { 0xFF, 0xFF, 0xFF, 0x40 });
+            occurrenceStyle = highlightedStyle(occurrenceStyle);
          }
 
-         // DrawCircleSector(Vector2 { .x = leftCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 90.0f, 270.0f, 20, plateBackground);
-         DrawRectangleRec(
-            Rectangle { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f, .width = rightCutoff - leftCutoff, .height = plateHeight },
-            plateBackground);
-         // DrawCircleSector(Vector2 { .x = rightCutoff, .y = projectedLocation.y }, plateHeight / 2.0f, 270.0f, 450.0f, 20, plateBackground);
-
-         DrawTextEx(font, nameText.c_str(), Vector2 { .x = projectedLocation.x - textSize.x / 2.0f, .y = projectedLocation.y - textSize.y / 2.0f }, fontSize,
-            spacing, Colors::toUiColor(occurrenceStyle.get(Style::ColorType::Text)));
-
-         // TODO properly use area, better drawing
-         float thick = 2.0f;
-         DrawLineEx(Vector2 { .x = leftCutoff - thick / 2.0f, .y = projectedLocation.y - plateHeight / 2.0f - thick },
-            Vector2 { .x = leftCutoff - thick / 2.0f, .y = projectedLocation.y + plateHeight / 2.0f + thick }, thick, plateOutline);
-         DrawLineEx(Vector2 { .x = leftCutoff, .y = projectedLocation.y - plateHeight / 2.0f - thick / 2.0f },
-            Vector2 { .x = rightCutoff, .y = projectedLocation.y - plateHeight / 2.0f - thick / 2.0f }, thick, plateOutline);
-         DrawLineEx(Vector2 { .x = rightCutoff + thick / 2.0f, .y = projectedLocation.y - plateHeight / 2.0f - thick },
-            Vector2 { .x = rightCutoff + thick / 2.0f, .y = projectedLocation.y + plateHeight / 2.0f + thick }, thick, plateOutline);
-         DrawLineEx(Vector2 { .x = leftCutoff, .y = projectedLocation.y + plateHeight / 2.0f + thick / 2.0f },
-            Vector2 { .x = rightCutoff, .y = projectedLocation.y + plateHeight / 2.0f + thick / 2.0f }, thick, plateOutline);
-
-         if (occurrence.hasReifier())
-         {
-            DrawLineEx(Vector2 { .x = leftCutoff - thick * 1.5f - 2.0f, .y = projectedLocation.y - plateHeight / 2.0f - thick },
-               Vector2 { .x = leftCutoff - thick * 1.5f - 2.0f, .y = projectedLocation.y + plateHeight / 2.0f + thick }, thick, plateOutline);
-            DrawLineEx(Vector2 { .x = rightCutoff + thick * 1.5f + 2.0f, .y = projectedLocation.y - plateHeight / 2.0f - thick },
-               Vector2 { .x = rightCutoff + thick * 1.5f + 2.0f, .y = projectedLocation.y + plateHeight / 2.0f + thick }, thick, plateOutline);
-         }
+         renderer.renderOccurrencePlate(occurrence.getId(), area, occurrenceStyle, plate, lineThickness, occurrence.hasReifier());
+         renderer.renderText(textArea, Style().with(Style::ColorType::Text, occurrenceStyle.get(Style::ColorType::Text)), nameText, font, fontSize, spacing);
       }
    }
-
-   currentFocus = focus;
 }
 
 void MainWindow::drawUserInterface(RenderContext const &context)
@@ -687,6 +474,14 @@ void MainWindow::drawUserInterface(RenderContext const &context)
          .width = iconSize,
          .height = iconSize,
       };
+      GuiSetTooltip("Save map");
+      if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_FILE_SAVE, nullptr)))
+      {
+         requestSave();
+      }
+      leftIconButtonsBounds.x += (iconSize + padding);
+
+      leftIconButtonsBounds.x += (iconSize + padding);
       GuiSetTooltip("Set home view scope");
       if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_HOUSE, nullptr)))
       {
@@ -884,6 +679,21 @@ void MainWindow::drawUserInterface(RenderContext const &context)
    }
 }
 
+void MainWindow::requestSave()
+{
+   if (!currentFilePath.empty())
+   {
+      save();
+   }
+   else
+   {
+      pendingDialog = std::make_unique<contomap::frontend::SaveAsDialog>(environment, layout, "unnamed.contomap.png", [this](std::string const &filePath) {
+         currentFilePath = filePath;
+         save();
+      });
+   }
+}
+
 void MainWindow::closeDialog()
 {
    currentDialog.reset();
@@ -957,6 +767,47 @@ void MainWindow::openEditStyleDialog()
    pendingDialog = std::make_unique<contomap::frontend::StyleDialog>(inputRequestHandler, layout, style.value());
 }
 
+void MainWindow::save()
+{
+   contomap::frontend::MapRenderList renderList;
+   renderMap(renderList, {}, {});
+   contomap::frontend::MapRenderMeasurer measurer;
+   renderList.renderTo(measurer);
+   auto mapArea = measurer.getArea();
+   mapArea.x -= 5.0f;
+   mapArea.y -= 5.0f;
+   mapArea.width += 10.0f;
+   mapArea.height += 10.0f;
+   // The DPI scale is also considered when rendering to texture, so increase its size accordingly.
+   auto dpiScale = GetWindowScaleDPI();
+   auto renderTexture = LoadRenderTexture(std::ceil(mapArea.width * dpiScale.x), std::ceil(mapArea.height * dpiScale.y));
+
+   {
+      DirectMapRenderer directRenderer;
+      BeginTextureMode(renderTexture);
+      drawBackground();
+      MapCamera camera(std::make_unique<MapCamera::ImmediateGearbox>());
+      camera.panTo(Vector2 { .x = mapArea.x + (mapArea.width / 2.0f), .y = mapArea.y + (mapArea.height / 2.0f) });
+      auto projection = camera.beginProjection(Vector2 { mapArea.width, mapArea.height });
+      renderList.renderTo(directRenderer);
+      EndTextureMode();
+   }
+
+   auto image = LoadImageFromTexture(renderTexture.texture);
+   ImageFlipVertical(&image);
+   int fileSize = 0;
+   auto exported = ExportImageToMemory(image, ".png", &fileSize);
+   UnloadImage(image);
+   UnloadRenderTexture(renderTexture);
+   if (exported != nullptr)
+   {
+      SaveFileData(currentFilePath.c_str(), exported, fileSize);
+      RL_FREE(exported);
+
+      environment.fileSaved(currentFilePath);
+   }
+}
+
 SpacialCoordinate MainWindow::spacialCameraLocation()
 {
    auto centerPoint = mapCamera.getCurrentPosition();
@@ -976,6 +827,8 @@ std::vector<std::pair<int, MapCamera::ZoomFactor>> MainWindow::generateZoomLevel
 
 MapCamera::ZoomOperation MainWindow::doubledRelative(bool nearer)
 {
+   static std::vector<std::pair<int, contomap::frontend::MapCamera::ZoomFactor>> const ZOOM_LEVELS(MainWindow::generateZoomLevels());
+
    return [nearer](MapCamera::ZoomFactor currentTarget) {
       float currentRawTarget = currentTarget.raw();
       if (nearer)
@@ -994,4 +847,25 @@ MapCamera::ZoomOperation MainWindow::doubledRelative(bool nearer)
 std::string MainWindow::bestTitleFor(Topic const &topic)
 {
    return Names::forScopedDisplay(topic, view.ofViewScope(), view.ofMap().getDefaultScope())[0];
+}
+
+Style MainWindow::selectedStyle(Style style)
+{
+   float factor = 0.5f;
+   Style copy = std::move(style);
+   return copy.with(Style::ColorType::Fill, brightenColor(copy.get(Style::ColorType::Fill), factor))
+      .with(Style::ColorType::Line, brightenColor(copy.get(Style::ColorType::Line), factor));
+}
+
+Style MainWindow::highlightedStyle(Style style)
+{
+   float factor = 0.75f;
+   Style copy = std::move(style);
+   return copy.with(Style::ColorType::Fill, brightenColor(copy.get(Style::ColorType::Fill), factor))
+      .with(Style::ColorType::Line, brightenColor(copy.get(Style::ColorType::Line), factor));
+}
+
+Style::Color MainWindow::brightenColor(Style::Color base, float factor)
+{
+   return Colors::fromUiColor(ColorBrightness(Colors::toUiColor(base), factor));
 }
