@@ -335,7 +335,7 @@ void MainWindow::drawMap(RenderContext const &context)
       };
 
       associationIds.add(visibleAssociation.getId());
-      associationLocationsById[visibleAssociation.getId()] = projectedLocation; // TODO: store collision area, for intersection later
+      associationLocationsById[visibleAssociation.getId()] = projectedLocation;
 
       if (CheckCollisionPointRec(focusCoordinate, area))
       {
@@ -390,50 +390,20 @@ void MainWindow::drawMap(RenderContext const &context)
             }
 
             auto roleStyle = Styles::resolve(role.getAppearance(), role.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
-            Color lineColor = Colors::toUiColor(roleStyle.get(Style::ColorType::Line));
-            Color roleBackground = Colors::toUiColor(roleStyle.get(Style::ColorType::Fill));
-
-            roleBackground = ColorTint(roleBackground, Color { 0xFF, 0xFF, 0xFF, 0x80 });
 
             float thickness = 1.0f;
             if (selection.contains(SelectedType::Role, role.getId()))
             {
-               lineColor = ColorTint(lineColor, Color { 0xFF, 0x00, 0x00, 0x80 });
+               roleStyle = selectedStyle(roleStyle);
                thickness += 2.0f;
             }
             if (currentFocus.isRole(role.getId()))
             {
-               lineColor = ColorTint(lineColor, Color { 0xFF, 0xFF, 0xFF, 0x40 });
+               roleStyle = highlightedStyle(roleStyle);
                thickness += 0.5f;
             }
 
-            DrawLineEx(projectedLocation, associationLocation, thickness, lineColor);
-            float diffX = projectedLocation.x - associationLocation.x;
-            float diffY = projectedLocation.y - associationLocation.y;
-            float length = Vector2Length(Vector2 { .x = diffX, .y = diffY });
-            if (length > 0.0001f && role.hasReifier())
-            {
-               auto drawWithOffset = [length, projectedLocation, associationLocation, thickness, lineColor](float offset) {
-                  Vector2 shiftedProjected {
-                     .x = projectedLocation.x + offset * (associationLocation.y - projectedLocation.y) / length,
-                     .y = projectedLocation.y + offset * (projectedLocation.x - associationLocation.x) / length,
-                  };
-                  Vector2 shiftedAssociation {
-                     .x = associationLocation.x + offset * (associationLocation.y - projectedLocation.y) / length,
-                     .y = associationLocation.y + offset * (projectedLocation.x - associationLocation.x) / length,
-                  };
-                  float diffX = shiftedAssociation.x - shiftedProjected.x;
-                  float diffY = shiftedAssociation.y - shiftedProjected.y;
-                  shiftedProjected.x += diffX / 3;
-                  shiftedProjected.y += diffY / 3;
-                  shiftedAssociation.x += -diffX / 3;
-                  shiftedAssociation.y += -diffY / 3;
-                  DrawLineEx(shiftedProjected, shiftedAssociation, thickness, lineColor);
-               };
-
-               drawWithOffset(+3.0f);
-               drawWithOffset(-3.0f);
-            }
+            renderer.renderRoleLine(projectedLocation, associationLocation, roleStyle, thickness, role.hasReifier());
 
             if (!roleTitle.empty())
             {
@@ -450,9 +420,7 @@ void MainWindow::drawMap(RenderContext const &context)
                   .height = plateHeight,
                };
 
-               DrawRectangleRec(area, roleBackground);
-               DrawTextEx(
-                  font, roleTitle.c_str(), Vector2 { .x = area.x, .y = area.y }, fontSize, spacing, Colors::toUiColor(roleStyle.get(Style::ColorType::Text)));
+               renderer.renderText(area, roleStyle.without(Style::ColorType::Line), roleTitle, font, fontSize, spacing);
             }
          }
 

@@ -1,7 +1,11 @@
 #include <array>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 #include <raylib.h>
+#include <raymath.h>
 #include <rlgl.h>
+#pragma GCC diagnostic pop
 
 #include "contomap/frontend/Colors.h"
 #include "contomap/frontend/DirectMapRenderer.h"
@@ -10,13 +14,13 @@ using contomap::frontend::Colors;
 using contomap::frontend::DirectMapRenderer;
 using contomap::model::Style;
 
-void DirectMapRenderer::renderText(Rectangle area, contomap::model::Style const &style, std::string const &text, Font font, float fontSize, float spacing)
+void DirectMapRenderer::renderText(Rectangle area, Style const &style, std::string const &text, Font font, float fontSize, float spacing)
 {
    DrawRectangleRec(area, Colors::toUiColor(style.get(Style::ColorType::Fill)));
    DrawTextEx(font, text.c_str(), Vector2 { .x = area.x, .y = area.y }, fontSize, spacing, Colors::toUiColor(style.get(Style::ColorType::Text)));
 }
 
-void DirectMapRenderer::renderOccurrencePlate(Rectangle area, contomap::model::Style const &style, Rectangle plate, float lineThickness, bool reified)
+void DirectMapRenderer::renderOccurrencePlate(Rectangle area, Style const &style, Rectangle plate, float lineThickness, bool reified)
 {
    DrawRectangleRec(plate, Colors::toUiColor(style.get(Style::ColorType::Fill)));
    std::array<Vector2, 10> vertices {
@@ -42,7 +46,7 @@ void DirectMapRenderer::renderOccurrencePlate(Rectangle area, contomap::model::S
    }
 }
 
-void DirectMapRenderer::renderAssociationPlate(Rectangle area, contomap::model::Style const &style, Rectangle plate, float lineThickness, bool reified)
+void DirectMapRenderer::renderAssociationPlate(Rectangle area, Style const &style, Rectangle plate, float lineThickness, bool reified)
 {
    float centerY = plate.y + (plate.height / 2.0f);
    {
@@ -123,6 +127,34 @@ void DirectMapRenderer::renderAssociationPlate(Rectangle area, contomap::model::
    }
 }
 
-void DirectMapRenderer::renderRoleLine(Vector2 a, Vector2 b, contomap::model::Style const &style, float lineThickness, bool reified)
+void DirectMapRenderer::renderRoleLine(Vector2 a, Vector2 b, Style const &style, float lineThickness, bool reified)
 {
+   auto color = Colors::toUiColor(style.get(Style::ColorType::Line));
+   DrawLineEx(a, b, lineThickness, color);
+   float diffX = a.x - b.x;
+   float diffY = a.y - b.y;
+   float length = Vector2Length(Vector2 { .x = diffX, .y = diffY });
+   if ((length > 0.0001f) && reified)
+   {
+      auto drawWithOffset = [length, a, b, lineThickness, color](float offset) {
+         Vector2 shiftedProjected {
+            .x = a.x + offset * (b.y - a.y) / length,
+            .y = a.y + offset * (a.x - b.x) / length,
+         };
+         Vector2 shiftedAssociation {
+            .x = b.x + offset * (b.y - a.y) / length,
+            .y = b.y + offset * (a.x - b.x) / length,
+         };
+         float diffX = shiftedAssociation.x - shiftedProjected.x;
+         float diffY = shiftedAssociation.y - shiftedProjected.y;
+         shiftedProjected.x += diffX / 3;
+         shiftedProjected.y += diffY / 3;
+         shiftedAssociation.x += -diffX / 3;
+         shiftedAssociation.y += -diffY / 3;
+         DrawLineEx(shiftedProjected, shiftedAssociation, lineThickness, color);
+      };
+
+      drawWithOffset(+3.0f);
+      drawWithOffset(-3.0f);
+   }
 }
