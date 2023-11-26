@@ -895,8 +895,9 @@ void MainWindow::drawUserInterface(RenderContext const &context)
 
 void MainWindow::requestSave()
 {
-   // TODO: check for existing name
-   pendingDialog = std::make_unique<contomap::frontend::SaveAsDialog>(environment, layout, "unnamed.contomap.png");
+   // TODO: check for existing name, then save directly
+   pendingDialog = std::make_unique<contomap::frontend::SaveAsDialog>(
+      environment, layout, "unnamed.contomap.png", [this](std::string const &filePath) { saveAs(filePath); });
 }
 
 void MainWindow::closeDialog()
@@ -970,6 +971,35 @@ void MainWindow::openEditStyleDialog()
    }
 
    pendingDialog = std::make_unique<contomap::frontend::StyleDialog>(inputRequestHandler, layout, style.value());
+}
+
+void MainWindow::saveAs(std::string const &filePath)
+{
+   auto renderTexture = LoadRenderTexture(1920, 1080);
+
+   // TODO: pre-render, determine size, then project
+
+   {
+      BeginTextureMode(renderTexture);
+      auto renderContext = RenderContext::fromCurrentState();
+
+      drawBackground();
+      drawMap(renderContext);
+      EndTextureMode();
+   }
+
+   auto image = LoadImageFromTexture(renderTexture.texture);
+   ImageFlipVertical(&image);
+   int fileSize = 0;
+   auto exported = ExportImageToMemory(image, ".png", &fileSize);
+   if (exported != nullptr)
+   {
+      SaveFileData(filePath.c_str(), exported, fileSize);
+      RL_FREE(exported);
+
+      // TODO: inform display environment of saved file -> download in browser environment
+   }
+   UnloadImage(image);
 }
 
 SpacialCoordinate MainWindow::spacialCameraLocation()

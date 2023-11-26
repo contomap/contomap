@@ -257,6 +257,8 @@ private:
    void openSetTopicNameInScopeDialog();
    void openEditStyleDialog();
 
+   void saveAs(std::string const &filePath);
+
    [[nodiscard]] contomap::model::SpacialCoordinate spacialCameraLocation();
    [[nodiscard]] std::string bestTitleFor(contomap::model::Topic const &topic);
 

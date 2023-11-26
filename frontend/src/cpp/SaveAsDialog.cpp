@@ -9,11 +9,14 @@ using contomap::frontend::DisplayEnvironment;
 using contomap::frontend::RenderContext;
 using contomap::frontend::SaveAsDialog;
 
-SaveAsDialog::SaveAsDialog(contomap::frontend::DisplayEnvironment &environment, contomap::frontend::Layout const &layout, std::string const &proposedFilePath)
+SaveAsDialog::SaveAsDialog(contomap::frontend::DisplayEnvironment &environment, contomap::frontend::Layout const &layout, std::string const &proposedFilePath,
+   SaveFunction saveFunction)
    : environment(environment)
    , layout(layout)
    , proposedFilePath(proposedFilePath)
+   , saveFunction(std::move(saveFunction))
 {
+   newFilePath.fill(0x00);
    std::strncpy(newFilePath.data(), proposedFilePath.c_str(), newFilePath.size());
 }
 
@@ -26,6 +29,7 @@ bool SaveAsDialog::draw(RenderContext const &context)
    if (auto result = environment.showSaveAsDialog(title, proposedFilePath, { "*.png" }, "Contomap image files");
        result != DisplayEnvironment::DialogResult::NotSupported)
    {
+      saveFunction(proposedFilePath);
       closeDialog = true;
    }
    else
@@ -71,7 +75,8 @@ bool SaveAsDialog::draw(RenderContext const &context)
       GuiEnable();
       if (requested)
       {
-         closeDialog = true; // TODO tryAccept();
+         saveFunction(newFilePath.data());
+         closeDialog = true;
       }
    }
    return closeDialog;
