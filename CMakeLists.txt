@@ -81,9 +81,9 @@ endif ()
 # This project
 
 file(GLOB_RECURSE LIB_INFRASTRUCTURE_SOURCES "${PROJECT_SOURCE_DIR}/infrastructure/src/cpp/*.cpp")
-add_library(contomap-infrastructure INTERFACE ${LIB_INFRASTRUCTURE_SOURCES})
-target_compile_options(contomap-infrastructure INTERFACE $<$<CXX_COMPILER_ID:GNU>:-fcoroutines>)
-target_include_directories(contomap-infrastructure INTERFACE "${PROJECT_SOURCE_DIR}/infrastructure/src/h")
+add_library(contomap-infrastructure STATIC ${LIB_INFRASTRUCTURE_SOURCES})
+target_compile_options(contomap-infrastructure PUBLIC $<$<CXX_COMPILER_ID:GNU>:-fcoroutines>)
+target_include_directories(contomap-infrastructure PUBLIC "${PROJECT_SOURCE_DIR}/infrastructure/src/h")
 
 file(GLOB_RECURSE LIB_INFRASTRUCTURE_TEST_SUPPORT_SOURCES "${PROJECT_SOURCE_DIR}/infrastructure/test-support/cpp/*.cpp")
 add_library(contomap-infrastructure-test-support STATIC ${LIB_INFRASTRUCTURE_TEST_SUPPORT_SOURCES})
