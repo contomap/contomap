@@ -3,6 +3,7 @@
 #include <ostream>
 #include <set>
 
+#include "contomap/infrastructure/serial/Coder.h"
 #include "contomap/model/Identifier.h"
 
 namespace contomap::model
@@ -84,6 +85,14 @@ public:
     * @return true if all the provided identifier are contained.
     */
    [[nodiscard]] bool contains(Identifiers const &other) const;
+
+   /**
+    * Serializes the identifiers with given coder.
+    *
+    * @param name the name to specify for the entry.
+    * @param coder the coder to use.
+    */
+   void code(std::string const &name, contomap::infrastructure::serial::Coder &coder);
 
    /**
     * Write the given collection to the given stream.

@@ -1,7 +1,11 @@
 #include <gtest/gtest.h>
 
+#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Identifiers.h"
 
+using contomap::infrastructure::serial::Decoder;
+using contomap::infrastructure::serial::Encoder;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 
@@ -97,4 +101,34 @@ TEST(IdentifiersTest, contains)
 
    EXPECT_TRUE(a.contains(Identifiers {}));
    EXPECT_TRUE(Identifiers {}.contains(Identifiers {}));
+}
+
+static void testCode(std::string const &testCase, Identifiers const &source)
+{
+   Encoder encoder;
+   Identifiers encodeCopy = source;
+   encodeCopy.code(testCase, encoder);
+   auto &data = encoder.getData();
+   Decoder decoder(data.data(), data.data() + data.size());
+   Identifiers clone;
+   try
+   {
+      clone.code(testCase, decoder);
+   }
+   catch (std::exception &)
+   {
+   }
+   EXPECT_EQ(source, clone) << "Failed for " << testCase;
+}
+
+TEST(IdentifiersTest, serialization)
+{
+   testCode("empty", Identifiers {});
+   testCode("single", Identifiers::ofSingle(Identifier::random()));
+   Identifiers multiple;
+   multiple.add(Identifier::random());
+   multiple.add(Identifier::random());
+   multiple.add(Identifier::random());
+   multiple.add(Identifier::random());
+   testCode("multiple", multiple);
 }
