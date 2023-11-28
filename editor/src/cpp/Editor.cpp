@@ -391,7 +391,7 @@ void Editor::selectClosestOccurrenceOf(Identifier topicId)
 void Editor::saveState(contomap::infrastructure::serial::Encoder &encoder)
 {
    encoder.code("version", CURRENT_SERIAL_VERSION);
-   map.encode(encoder, CURRENT_SERIAL_VERSION);
+   map.encode(encoder);
    viewScope.encode(encoder, "viewScope");
 }
 
@@ -399,10 +399,26 @@ bool Editor::loadState(contomap::infrastructure::serial::Decoder &decoder)
 {
    contomap::model::Contomap newMap = contomap::model::Contomap::newMap();
    contomap::model::Identifiers newViewScope;
+   uint8_t serialVersion = 0x00;
 
-   // TODO: try/catch ....
-   // TODO: call things...
-   // TODO: assign, reset selection
+   try
+   {
+      decoder.code("version", serialVersion);
+      newMap.decode(decoder, serialVersion);
+      viewScope.decode(decoder, "viewScope");
+   }
+   catch (std::exception &)
+   {
+      return false;
+   }
+
+   // TODO: verify new state is consistent
+
+   // TODO: need to make map a unique_ptr
+   // map = newMap;
+   viewScope = newViewScope;
+   selection.clear();
+   return true;
 }
 
 Identifiers const &Editor::ofViewScope() const

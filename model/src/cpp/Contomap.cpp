@@ -3,6 +3,7 @@
 
 using contomap::infrastructure::Search;
 using contomap::infrastructure::serial::Coder;
+using contomap::infrastructure::serial::Decoder;
 using contomap::infrastructure::serial::Encoder;
 using contomap::model::Association;
 using contomap::model::Contomap;
@@ -246,11 +247,33 @@ void Contomap::deleting(Identifiers &toDelete, Topic &topic)
    }
 }
 
-void Contomap::encode(Encoder &encoder, uint8_t version) const
+void Contomap::encode(Encoder &encoder) const
 {
-   encoder.codeArray("topics", topics.begin(), topics.end(), [version](Encoder &nested, auto const &kvp) {
-      Coder::Scope scope(nested, "");
+   Coder::Scope mapScope(encoder, "contomap");
+   encoder.codeArray("topics", topics.begin(), topics.end(), [](Encoder &nested, auto const &kvp) {
+      Coder::Scope topicScope(nested, "");
       kvp.first.encode(nested, "id");
-      kvp.second->encodeProperties(nested, version);
+      kvp.second->encodeProperties(nested);
    });
+
+   // TODO, in order:
+   // associations
+   // roles
+   // occurrences
+
+   defaultScope.encode(encoder, "defaultScope");
+}
+
+void Contomap::decode(Decoder &decoder, uint8_t version)
+{
+   Coder::Scope mapScope(decoder, "contomap");
+   decoder.codeArray("topics", [this, version](Decoder &nested, size_t) {
+      Coder::Scope topicScope(nested, "");
+      auto id = Identifier::from(nested, "id");
+      auto topic = std::make_unique<Topic>(id);
+      topic->decodeProperties(nested, version);
+      topics.emplace(id, std::move(topic));
+   });
+
+   defaultScope = Identifier::from(decoder, "defaultScope");
 }

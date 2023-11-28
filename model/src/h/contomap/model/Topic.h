@@ -36,9 +36,16 @@ public:
     * Serialize the basic properties of this topic.
     *
     * @param encoder the coder to use.
-    * @param version the overall version to consider.
     */
-   void encodeProperties(contomap::infrastructure::serial::Encoder &encoder, uint8_t version) const;
+   void encodeProperties(contomap::infrastructure::serial::Encoder &encoder) const;
+
+   /**
+    * Deserialize the basic properties of this topic.
+    *
+    * @param decoder the coder to use.
+    * @param version the version to consider.
+    */
+   void decodeProperties(contomap::infrastructure::serial::Decoder &decoder, uint8_t version);
 
    /**
     * @return the unique identifier of this topic instance.

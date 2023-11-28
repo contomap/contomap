@@ -2,6 +2,7 @@
 
 using contomap::infrastructure::Search;
 using contomap::infrastructure::serial::Coder;
+using contomap::infrastructure::serial::Decoder;
 using contomap::infrastructure::serial::Encoder;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
@@ -27,13 +28,23 @@ Topic &Topic::refine()
    return *this;
 }
 
-void Topic::encodeProperties(Encoder &encoder, uint8_t version) const
+void Topic::encodeProperties(Encoder &encoder) const
 {
    Coder::Scope scope(encoder, "properties");
    encoder.codeArray("names", names.begin(), names.end(), [](Encoder &nested, auto const &kvp) {
       Coder::Scope nameScope(nested, "");
       kvp.first.encode(nested, "id");
       // TODO: continue into name...
+   });
+}
+
+void Topic::decodeProperties(Decoder &decoder, uint8_t version)
+{
+   Coder::Scope scope(decoder, "properties");
+   decoder.codeArray("names", [](Decoder &nested, size_t) {
+      Coder::Scope nameScope(nested, "");
+      auto nameId = Identifier::from(nested, "id");
+      // TODO: continue into name - seems like here a TopicName::from(id, nested) fits better...
    });
 }
 
