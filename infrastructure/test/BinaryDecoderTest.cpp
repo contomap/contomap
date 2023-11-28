@@ -1,14 +1,14 @@
 #include <gtest/gtest.h>
 
-#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/BinaryDecoder.h"
 
+using contomap::infrastructure::serial::BinaryDecoder;
 using contomap::infrastructure::serial::Coder;
-using contomap::infrastructure::serial::Decoder;
 
 TEST(DecoderTest, codeChar)
 {
    std::vector<uint8_t> data { 65 };
-   Decoder decoder(data.data(), data.data() + data.size());
+   BinaryDecoder decoder(data.data(), data.data() + data.size());
    Coder &coder = decoder;
    char value = 0;
    coder.code("", value);
@@ -18,7 +18,7 @@ TEST(DecoderTest, codeChar)
 TEST(DecoderTest, codeByte)
 {
    std::vector<uint8_t> data { 0x20 };
-   Decoder decoder(data.data(), data.data() + data.size());
+   BinaryDecoder decoder(data.data(), data.data() + data.size());
    Coder &coder = decoder;
    uint8_t value = 0;
    coder.code("", value);
@@ -28,7 +28,7 @@ TEST(DecoderTest, codeByte)
 TEST(DecoderTest, codeFloatA)
 {
    std::vector<uint8_t> data { 0x00, 0x00, 0x00, 0x00 };
-   Decoder decoder(data.data(), data.data() + data.size());
+   BinaryDecoder decoder(data.data(), data.data() + data.size());
    Coder &coder = decoder;
    float value = 1234.5678f;
    coder.code("", value);
@@ -38,7 +38,7 @@ TEST(DecoderTest, codeFloatA)
 TEST(DecoderTest, codeFloatB)
 {
    std::vector<uint8_t> data { 0x3F, 0x80, 0x00, 0x00 };
-   Decoder decoder(data.data(), data.data() + data.size());
+   BinaryDecoder decoder(data.data(), data.data() + data.size());
    Coder &coder = decoder;
    float value = 1234.5678f;
    coder.code("", value);
@@ -48,7 +48,7 @@ TEST(DecoderTest, codeFloatB)
 TEST(DecoderTest, codeFloatC)
 {
    std::vector<uint8_t> data { 0x34, 0x00, 0x00, 0x00 };
-   Decoder decoder(data.data(), data.data() + data.size());
+   BinaryDecoder decoder(data.data(), data.data() + data.size());
    Coder &coder = decoder;
    float value = 1234.5678f;
    coder.code("", value);
@@ -58,7 +58,7 @@ TEST(DecoderTest, codeFloatC)
 TEST(DecoderTest, codeString)
 {
    std::vector<uint8_t> data { 0x31, 0x32, 0x33, 0x34, 0x00 };
-   Decoder decoder(data.data(), data.data() + data.size());
+   BinaryDecoder decoder(data.data(), data.data() + data.size());
    Coder &coder = decoder;
    std::string value;
    coder.code("", value);
@@ -68,7 +68,7 @@ TEST(DecoderTest, codeString)
 TEST(DecoderTest, codeArray)
 {
    std::vector<uint8_t> data { 0x00, 0x00, 0x03, 0x10, 0x20, 0x30 };
-   Decoder decoder(data.data(), data.data() + data.size());
+   BinaryDecoder decoder(data.data(), data.data() + data.size());
    Coder &coder = decoder;
    std::array<uint8_t, 3> arr { 0x00, 0x00, 0x00 };
    coder.code("", arr.size(), [&arr](size_t index, Coder &c) {
@@ -82,7 +82,7 @@ TEST(DecoderTest, codeArray)
 TEST(DecoderTest, codeScope)
 {
    std::vector<uint8_t> data { 0xFF, 0x00, 0x00, 0x05, 0x31, 0x32, 0x33, 0x34, 0x00, 0xAA };
-   Decoder decoder(data.data(), data.data() + data.size());
+   BinaryDecoder decoder(data.data(), data.data() + data.size());
    Coder &coder = decoder;
 
    uint8_t marker1 = 0x00;
@@ -102,7 +102,7 @@ TEST(DecoderTest, codeScope)
 TEST(DecoderTest, exceptionPastEnd)
 {
    std::vector<uint8_t> data { 0x00 };
-   Decoder decoder(data.data(), data.data() + data.size());
+   BinaryDecoder decoder(data.data(), data.data() + data.size());
    Coder &coder = decoder;
    float value = 0.0f;
    try
@@ -118,7 +118,7 @@ TEST(DecoderTest, exceptionPastEnd)
 TEST(DecoderTest, mismatchedScopesPutStreamToEnd)
 {
    std::vector<uint8_t> data { 0x00, 0x00, 0x05, 0x00, 0x00, 0x01, 0x10, 0x11, 0x12 };
-   Decoder decoder(data.data(), data.data() + data.size());
+   BinaryDecoder decoder(data.data(), data.data() + data.size());
    Coder &coder = decoder;
    auto scope1 = std::make_unique<Coder::Scope>(coder, "");
    auto scope2 = std::make_unique<Coder::Scope>(coder, "");
@@ -139,7 +139,7 @@ TEST(DecoderTest, mismatchedScopesPutStreamToEnd)
 TEST(DecoderTest, guardReadingPastEndFromWrongScopeLength)
 {
    std::vector<uint8_t> data { 0x00, 0x00, 0x05 };
-   Decoder decoder(data.data(), data.data() + data.size());
+   BinaryDecoder decoder(data.data(), data.data() + data.size());
    Coder &coder = decoder;
    auto scope = std::make_unique<Coder::Scope>(coder, "");
    scope.reset();

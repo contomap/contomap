@@ -3,12 +3,12 @@
 
 #include <gtest/gtest.h>
 
-#include "contomap/infrastructure/serial/Decoder.h"
-#include "contomap/infrastructure/serial/Encoder.h"
+#include "contomap/infrastructure/serial/BinaryDecoder.h"
+#include "contomap/infrastructure/serial/BinaryEncoder.h"
 #include "contomap/model/Identifier.h"
 
-using contomap::infrastructure::serial::Decoder;
-using contomap::infrastructure::serial::Encoder;
+using contomap::infrastructure::serial::BinaryDecoder;
+using contomap::infrastructure::serial::BinaryEncoder;
 using contomap::model::Identifier;
 
 TEST(IdentifierTest, randomIdentifierAreUnique)
@@ -34,10 +34,10 @@ TEST(IdentifierTest, shiftToOutputStream)
 TEST(IdentifierTest, serialization)
 {
    auto id = Identifier::random();
-   Encoder encoder;
+   BinaryEncoder encoder;
    id.code("", encoder);
    auto data = encoder.getData();
-   Decoder decoder(data.data(), data.data() + data.size());
+   BinaryDecoder decoder(data.data(), data.data() + data.size());
    auto copy = Identifier::from("", decoder);
    EXPECT_EQ(id, copy);
 }

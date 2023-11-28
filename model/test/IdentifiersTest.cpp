@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 
-#include "contomap/infrastructure/serial/Decoder.h"
-#include "contomap/infrastructure/serial/Encoder.h"
+#include "contomap/infrastructure/serial/BinaryDecoder.h"
+#include "contomap/infrastructure/serial/BinaryEncoder.h"
 #include "contomap/model/Identifiers.h"
 
-using contomap::infrastructure::serial::Decoder;
-using contomap::infrastructure::serial::Encoder;
+using contomap::infrastructure::serial::BinaryDecoder;
+using contomap::infrastructure::serial::BinaryEncoder;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 
@@ -105,11 +105,11 @@ TEST(IdentifiersTest, contains)
 
 static void testCode(std::string const &testCase, Identifiers const &source)
 {
-   Encoder encoder;
+   BinaryEncoder encoder;
    Identifiers encodeCopy = source;
    encodeCopy.code(testCase, encoder);
    auto &data = encoder.getData();
-   Decoder decoder(data.data(), data.data() + data.size());
+   BinaryDecoder decoder(data.data(), data.data() + data.size());
    Identifiers clone;
    try
    {

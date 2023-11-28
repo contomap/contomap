@@ -1,23 +1,22 @@
 #include <bit>
 #include <sstream>
 
-#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/BinaryDecoder.h"
 
-using contomap::infrastructure::serial::Coder;
-using contomap::infrastructure::serial::Decoder;
+using contomap::infrastructure::serial::BinaryDecoder;
 
-Decoder::Decoder(uint8_t const *begin, uint8_t const *end)
+BinaryDecoder::BinaryDecoder(uint8_t const *begin, uint8_t const *end)
    : end(end)
    , current(begin)
 {
 }
 
-void Decoder::code(std::string const &name, uint8_t &value)
+void BinaryDecoder::code(std::string const &name, uint8_t &value)
 {
    value = nextByte();
 }
 
-void Decoder::code(std::string const &name, float &value)
+void BinaryDecoder::code(std::string const &name, float &value)
 {
    auto raw = reinterpret_cast<uint8_t *>(&value);
 
@@ -37,7 +36,7 @@ void Decoder::code(std::string const &name, float &value)
    }
 }
 
-void Decoder::code(std::string const &name, std::string &value)
+void BinaryDecoder::code(std::string const &name, std::string &value)
 {
    std::ostringstream buf;
    for (uint8_t b = nextByte(); b != 0x00; b = nextByte())
@@ -47,29 +46,29 @@ void Decoder::code(std::string const &name, std::string &value)
    value = buf.str();
 }
 
-uintptr_t Decoder::codeScopeBegin(std::string const &name)
+uintptr_t BinaryDecoder::codeScopeBegin(std::string const &name)
 {
    size_t offset = readSize();
    return reinterpret_cast<uintptr_t>(current + offset);
 }
 
-void Decoder::codeScopeEnd(uintptr_t tag)
+void BinaryDecoder::codeScopeEnd(uintptr_t tag)
 {
    auto newEnd = reinterpret_cast<uint8_t const *>(tag);
    current = ((newEnd >= current) && (newEnd <= end)) ? newEnd : end;
 }
 
-uintptr_t Decoder::codeArrayBegin(std::string const &name, size_t &size)
+uintptr_t BinaryDecoder::codeArrayBegin(std::string const &name, size_t &size)
 {
    size = readSize();
    return 0;
 }
 
-void Decoder::codeArrayEnd(uintptr_t)
+void BinaryDecoder::codeArrayEnd(uintptr_t)
 {
 }
 
-size_t Decoder::readSize()
+size_t BinaryDecoder::readSize()
 {
    size_t size = nextByte();
    size <<= 8;
@@ -79,7 +78,7 @@ size_t Decoder::readSize()
    return size;
 }
 
-uint8_t Decoder::nextByte()
+uint8_t BinaryDecoder::nextByte()
 {
    if (current >= end)
    {

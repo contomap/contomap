@@ -8,10 +8,10 @@ namespace contomap::infrastructure::serial
 {
 
 /**
- * Encoder encodes the values into a simple byte array.
+ * BinaryEncoder encodes the values into a simple byte array.
  * It is stored in big-endian notation, and strings are encoded with variable length and a 0x00 terminator.
  */
-class Encoder : public contomap::infrastructure::serial::Coder
+class BinaryEncoder : public contomap::infrastructure::serial::Coder
 {
 public:
    /**

@@ -1,18 +1,18 @@
 #include <gtest/gtest.h>
 
-#include "contomap/infrastructure/serial/Encoder.h"
+#include "contomap/infrastructure/serial/BinaryEncoder.h"
 
+using contomap::infrastructure::serial::BinaryEncoder;
 using contomap::infrastructure::serial::Coder;
-using contomap::infrastructure::serial::Encoder;
 
-static void expectEncoded(Encoder &coder, std::vector<uint8_t> const &expected)
+static void expectEncoded(BinaryEncoder &coder, std::vector<uint8_t> const &expected)
 {
    EXPECT_EQ(expected, coder.getData());
 }
 
 TEST(EncoderTest, codeChar)
 {
-   Encoder encoder;
+   BinaryEncoder encoder;
    Coder &coder = encoder;
    char value = 'A';
    coder.code("", value);
@@ -21,7 +21,7 @@ TEST(EncoderTest, codeChar)
 
 TEST(EncoderTest, codeByte)
 {
-   Encoder coder;
+   BinaryEncoder coder;
 
    uint8_t value = 0xCD;
    coder.code("", value);
@@ -30,7 +30,7 @@ TEST(EncoderTest, codeByte)
 
 TEST(EncoderTest, codeFloatA)
 {
-   Encoder coder;
+   BinaryEncoder coder;
 
    float value = 0.0f;
    coder.code("", value);
@@ -39,7 +39,7 @@ TEST(EncoderTest, codeFloatA)
 
 TEST(EncoderTest, codeFloatB)
 {
-   Encoder coder;
+   BinaryEncoder coder;
 
    float value = 1.0f;
    coder.code("", value);
@@ -48,7 +48,7 @@ TEST(EncoderTest, codeFloatB)
 
 TEST(EncoderTest, codeFloatC)
 {
-   Encoder coder;
+   BinaryEncoder coder;
 
    float value = std::numeric_limits<float>::epsilon();
    coder.code("", value);
@@ -57,7 +57,7 @@ TEST(EncoderTest, codeFloatC)
 
 TEST(EncoderTest, codeString)
 {
-   Encoder coder;
+   BinaryEncoder coder;
 
    std::string value("1234");
    coder.code("", value);
@@ -66,7 +66,7 @@ TEST(EncoderTest, codeString)
 
 TEST(EncoderTest, codeArray)
 {
-   Encoder encoder;
+   BinaryEncoder encoder;
 
    std::array<uint8_t, 3> arr { 0x10, 0x20, 0x30 };
    Coder &coder = encoder;
@@ -76,7 +76,7 @@ TEST(EncoderTest, codeArray)
 
 TEST(EncoderTest, codeScope)
 {
-   Encoder encoder;
+   BinaryEncoder encoder;
    Coder &coder = encoder;
    uint8_t marker = 0xFF;
    coder.code("", marker);

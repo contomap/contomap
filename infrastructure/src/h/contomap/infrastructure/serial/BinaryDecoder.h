@@ -8,9 +8,9 @@ namespace contomap::infrastructure::serial
 {
 
 /**
- * Decoder decodes data from a byte range.
+ * BinaryDecoder decodes data from a byte range.
  */
-class Decoder : public contomap::infrastructure::serial::Coder
+class BinaryDecoder : public contomap::infrastructure::serial::Coder
 {
 public:
    /**
@@ -19,7 +19,7 @@ public:
     * @param begin the first byte to read from.
     * @param end the end marker offset, the first byte after the valid range.
     */
-   Decoder(uint8_t const *begin, uint8_t const *end);
+   BinaryDecoder(uint8_t const *begin, uint8_t const *end);
 
    void code(std::string const &name, uint8_t &value) override;
    void code(std::string const &name, float &value) override;
