@@ -2,6 +2,7 @@
 
 #include <map>
 
+#include "contomap/infrastructure/serial/Coder.h"
 #include "contomap/model/Association.h"
 #include "contomap/model/ContomapView.h"
 #include "contomap/model/Identifier.h"
@@ -109,6 +110,14 @@ public:
     */
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role> findRoles(contomap::model::Identifiers const &ids);
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role const> findRoles(contomap::model::Identifiers const &ids) const override;
+
+   /**
+    * Serializes the map with given coder.
+    *
+    * @param coder the coder to use.
+    * @param version the version to consider.
+    */
+   void code(contomap::infrastructure::serial::Coder &coder, uint8_t version);
 
 private:
    Contomap();

@@ -1,6 +1,7 @@
 #include "contomap/model/Topic.h"
 
 using contomap::infrastructure::Search;
+using contomap::infrastructure::serial::Coder;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 using contomap::model::Occurrence;
@@ -23,6 +24,10 @@ Topic::~Topic()
 Topic &Topic::refine()
 {
    return *this;
+}
+
+void Topic::codeProperties(Coder &coder, uint8_t version)
+{
 }
 
 Identifier Topic::getId() const

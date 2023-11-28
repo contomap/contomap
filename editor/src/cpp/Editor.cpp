@@ -386,6 +386,23 @@ void Editor::selectClosestOccurrenceOf(Identifier topicId)
    selection.setSole(SelectedType::Occurrence, occurrence.getId());
 }
 
+void Editor::saveState(contomap::infrastructure::serial::Coder &coder)
+{
+   static_cast<void>(code(coder, map, viewScope));
+}
+
+bool Editor::loadState(contomap::infrastructure::serial::Coder &coder)
+{
+   contomap::model::Contomap newMap = contomap::model::Contomap::newMap();
+   contomap::model::Identifiers newViewScope;
+
+   if (!code(coder, newMap, newViewScope))
+   {
+      return false;
+   }
+   // TODO: assign, reset selection
+}
+
 Identifiers const &Editor::ofViewScope() const
 {
    return viewScope;
@@ -399,6 +416,28 @@ contomap::model::ContomapView const &Editor::ofMap() const
 contomap::editor::Selection const &Editor::ofSelection() const
 {
    return selection;
+}
+
+bool Editor::code(contomap::infrastructure::serial::Coder &coder, contomap::model::Contomap &map, contomap::model::Identifiers &viewScope)
+{
+   try
+   {
+      uint8_t const CURRENT_VERSION = 0x00; // TODO: constant(s) where?
+      uint8_t version = CURRENT_VERSION;
+      coder.code("version", version);
+      if (version > CURRENT_VERSION)
+      {
+         return false;
+      }
+      map.code(coder, version);
+      viewScope.code("viewScope", coder);
+
+      return true;
+   }
+   catch (std::exception &)
+   {
+      return false;
+   }
 }
 
 void Editor::createAndSelectOccurrence(contomap::model::Topic &topic, contomap::model::SpacialCoordinate location)

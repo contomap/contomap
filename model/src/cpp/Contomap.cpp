@@ -2,6 +2,7 @@
 #include "contomap/model/Filter.h"
 
 using contomap::infrastructure::Search;
+using contomap::infrastructure::serial::Coder;
 using contomap::model::Association;
 using contomap::model::Contomap;
 using contomap::model::Identifier;
@@ -242,4 +243,25 @@ void Contomap::deleting(Identifiers &toDelete, Topic &topic)
          toDelete.add(otherTopic->getId());
       }
    }
+}
+
+void Contomap::code(Coder &coder, uint8_t version)
+{
+   coder.code("topics", topics.size(), [this, version](size_t index, Coder &nested) {
+      Coder::Scope scope(nested, "");
+
+      if (index < topics.size())
+      {
+         auto it = std::next(topics.begin(), index);
+         it->second->getId().code("id", nested);
+         it->second->codeProperties(nested, version);
+      }
+      else
+      {
+         auto id = Identifier::from("id", nested);
+         auto topic = std::make_unique<Topic>(id);
+         topic->codeProperties(nested, version);
+         topics.emplace(id, std::move(topic));
+      }
+   });
 }

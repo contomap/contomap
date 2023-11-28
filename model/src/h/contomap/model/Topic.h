@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "contomap/infrastructure/Generator.h"
+#include "contomap/infrastructure/serial/Coder.h"
 #include "contomap/model/Association.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Occurrence.h"
@@ -30,6 +31,14 @@ public:
    ~Topic() override;
 
    Topic &refine() override;
+
+   /**
+    * Serialize the basic properties of this topic.
+    *
+    * @param coder the coder to use.
+    * @param version the overall version to consider.
+    */
+   void codeProperties(contomap::infrastructure::serial::Coder &coder, uint8_t version);
 
    /**
     * @return the unique identifier of this topic instance.

@@ -2,6 +2,7 @@
 
 #include "contomap/editor/SelectedType.h"
 #include "contomap/editor/SelectionAction.h"
+#include "contomap/infrastructure/serial/Coder.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/SpacialCoordinate.h"
 #include "contomap/model/Style.h"
@@ -178,6 +179,21 @@ public:
     * @param topicId the identifier of the topic to look for.
     */
    virtual void selectClosestOccurrenceOf(contomap::model::Identifier topicId) = 0;
+
+   /**
+    * Requests to save the current state using the given coder.
+    *
+    * @param coder the coder to use.
+    */
+   virtual void saveState(contomap::infrastructure::serial::Coder &coder) = 0;
+
+   /**
+    * Requests to set the state from an encoded form.
+    *
+    * @param coder the coder to read from.
+    * @return whether loading was successful.
+    */
+   [[nodiscard]] virtual bool loadState(contomap::infrastructure::serial::Coder &coder) = 0;
 };
 
 } // namespace contomap::editor
