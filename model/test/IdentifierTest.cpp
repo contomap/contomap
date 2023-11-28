@@ -35,9 +35,9 @@ TEST(IdentifierTest, serialization)
 {
    auto id = Identifier::random();
    BinaryEncoder encoder;
-   id.code("", encoder);
+   id.encode(encoder, "");
    auto data = encoder.getData();
    BinaryDecoder decoder(data.data(), data.data() + data.size());
-   auto copy = Identifier::from("", decoder);
+   auto copy = Identifier::from(decoder, "");
    EXPECT_EQ(id, copy);
 }

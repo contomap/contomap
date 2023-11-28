@@ -4,7 +4,8 @@
 #include <ostream>
 #include <string>
 
-#include "contomap/infrastructure/serial/Coder.h"
+#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/Encoder.h"
 
 namespace contomap::model
 {
@@ -22,11 +23,11 @@ public:
    /**
     * Create an identifier from a saved state.
     *
+    * @param decoder the decoder to use.
     * @param name the name to use for the field.
-    * @param coder the coder to use.
     * @return the deserialized instance.
     */
-   [[nodiscard]] static Identifier from(std::string const &name, contomap::infrastructure::serial::Coder &coder);
+   [[nodiscard]] static Identifier from(contomap::infrastructure::serial::Decoder &decoder, std::string const &name);
 
    /**
     * Create a random identifier.
@@ -68,15 +69,13 @@ public:
    /**
     * Serializes this identifier with given coder.
     *
+    * @param encoder the coder to use.
     * @param name the name to use for the field.
-    * @param coder the coder to use.
     */
-   void code(std::string const &name, contomap::infrastructure::serial::Coder &coder);
+   void encode(contomap::infrastructure::serial::Encoder &encoder, std::string const &name) const;
 
 private:
    explicit Identifier(ValueType const &value);
-
-   static void code(std::string const &name, contomap::infrastructure::serial::Coder &coder, ValueType &value);
 
    static std::string const ALLOWED_CHARACTERS;
 

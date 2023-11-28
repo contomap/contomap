@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "contomap/infrastructure/serial/Coder.h"
+#include "contomap/infrastructure/serial/Decoder.h"
 
 namespace contomap::infrastructure::serial
 {
@@ -10,7 +10,7 @@ namespace contomap::infrastructure::serial
 /**
  * BinaryDecoder decodes data from a byte range.
  */
-class BinaryDecoder : public contomap::infrastructure::serial::Coder
+class BinaryDecoder : public contomap::infrastructure::serial::Decoder
 {
 public:
    /**
@@ -21,20 +21,21 @@ public:
     */
    BinaryDecoder(uint8_t const *begin, uint8_t const *end);
 
+   void code(std::string const &name, char &value) override;
    void code(std::string const &name, uint8_t &value) override;
    void code(std::string const &name, float &value) override;
    void code(std::string const &name, std::string &value) override;
 
 protected:
-   uintptr_t codeScopeBegin(std::string const &name) override;
+   [[nodiscard]] uintptr_t codeScopeBegin(std::string const &name) override;
    void codeScopeEnd(uintptr_t tag) override;
 
-   uintptr_t codeArrayBegin(std::string const &name, size_t &size) override;
+   [[nodiscard]] uintptr_t codeArrayBegin(std::string const &name, size_t &size) override;
    void codeArrayEnd(uintptr_t tag) override;
 
 private:
-   size_t readSize();
-   uint8_t nextByte();
+   [[nodiscard]] size_t readSize();
+   [[nodiscard]] uint8_t nextByte();
 
    uint8_t const *end;
    uint8_t const *current;

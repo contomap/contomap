@@ -3,7 +3,8 @@
 
 #include "contomap/model/Identifier.h"
 
-using contomap::infrastructure::serial::Coder;
+using contomap::infrastructure::serial::Decoder;
+using contomap::infrastructure::serial::Encoder;
 using contomap::model::Identifier;
 
 std::string const Identifier::ALLOWED_CHARACTERS("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
@@ -13,12 +14,17 @@ Identifier::Identifier(ValueType const &value)
 {
 }
 
-Identifier Identifier::from(std::string const &name, Coder &coder)
+Identifier Identifier::from(Decoder &decoder, std::string const &name)
 {
-   ValueType value;
-   value.fill(0x00);
-   code(name, coder, value);
-   return Identifier(value);
+   ValueType temp;
+   temp.fill(0x00);
+   decoder.codeArray(name, [&temp](Decoder &nested, size_t index) {
+      if (index < temp.size())
+      {
+         nested.code("", temp[index]);
+      }
+   });
+   return Identifier(temp);
 }
 
 Identifier Identifier::random()
@@ -47,12 +53,7 @@ Identifier Identifier::random()
    return Identifier(value);
 }
 
-void Identifier::code(std::string const &name, Coder &coder)
+void Identifier::encode(Encoder &encoder, std::string const &name) const
 {
-   code(name, coder, value);
-}
-
-void Identifier::code(std::string const &name, Coder &coder, ValueType &value)
-{
-   coder.code(name, value.size(), [&value](size_t index, Coder &nested) { nested.code("", value[index]); });
+   encoder.codeArray(name, value.begin(), value.end(), [](Encoder &nested, char const &c) { nested.code("", c); });
 }

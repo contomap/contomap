@@ -43,8 +43,8 @@ public:
    void cycleSelectedOccurrenceReverse() override;
    void selectClosestOccurrenceOf(contomap::model::Identifier topicId) override;
 
-   void saveState(contomap::infrastructure::serial::Coder &coder) override;
-   [[nodiscard]] bool loadState(contomap::infrastructure::serial::Coder &coder) override;
+   void saveState(contomap::infrastructure::serial::Encoder &encoder) override;
+   [[nodiscard]] bool loadState(contomap::infrastructure::serial::Decoder &decoder) override;
 
    [[nodiscard]] contomap::model::Identifiers const &ofViewScope() const override;
    [[nodiscard]] contomap::model::ContomapView const &ofMap() const override;
@@ -56,13 +56,13 @@ public:
    [[nodiscard]] static contomap::model::Identifiers scopeForTopicDefaultName();
 
 private:
-   [[nodiscard]] static bool code(contomap::infrastructure::serial::Coder &coder, contomap::model::Contomap &map, contomap::model::Identifiers &viewScope);
-
    void setTopicNameInScope(contomap::model::Identifier topicId, contomap::model::Identifiers const &scope, contomap::model::TopicNameValue value);
    void createAndSelectOccurrence(contomap::model::Topic &topic, contomap::model::SpacialCoordinate location);
    void cycleSelectedOccurrence(bool forward);
    void setViewScopeTo(contomap::model::Identifiers const &ids);
    void verifyViewScopeIsStable();
+
+   static uint8_t const CURRENT_SERIAL_VERSION;
 
    contomap::model::Contomap map;
    contomap::model::Identifiers viewScope;

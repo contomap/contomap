@@ -2,7 +2,8 @@
 
 #include "contomap/editor/SelectedType.h"
 #include "contomap/editor/SelectionAction.h"
-#include "contomap/infrastructure/serial/Coder.h"
+#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/SpacialCoordinate.h"
 #include "contomap/model/Style.h"
@@ -183,17 +184,17 @@ public:
    /**
     * Requests to save the current state using the given coder.
     *
-    * @param coder the coder to use.
+    * @param encoder the coder to use.
     */
-   virtual void saveState(contomap::infrastructure::serial::Coder &coder) = 0;
+   virtual void saveState(contomap::infrastructure::serial::Encoder &encoder) = 0;
 
    /**
     * Requests to set the state from an encoded form.
     *
-    * @param coder the coder to read from.
+    * @param decoder the coder to read from.
     * @return whether loading was successful.
     */
-   [[nodiscard]] virtual bool loadState(contomap::infrastructure::serial::Coder &coder) = 0;
+   [[nodiscard]] virtual bool loadState(contomap::infrastructure::serial::Decoder &decoder) = 0;
 };
 
 } // namespace contomap::editor

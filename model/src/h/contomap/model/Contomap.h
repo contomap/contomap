@@ -2,7 +2,8 @@
 
 #include <map>
 
-#include "contomap/infrastructure/serial/Coder.h"
+#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Association.h"
 #include "contomap/model/ContomapView.h"
 #include "contomap/model/Identifier.h"
@@ -114,10 +115,10 @@ public:
    /**
     * Serializes the map with given coder.
     *
-    * @param coder the coder to use.
+    * @param encoder the encoder to use.
     * @param version the version to consider.
     */
-   void code(contomap::infrastructure::serial::Coder &coder, uint8_t version);
+   void encode(contomap::infrastructure::serial::Encoder &encoder, uint8_t version) const;
 
 private:
    Contomap();

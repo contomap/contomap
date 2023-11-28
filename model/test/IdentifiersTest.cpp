@@ -106,14 +106,13 @@ TEST(IdentifiersTest, contains)
 static void testCode(std::string const &testCase, Identifiers const &source)
 {
    BinaryEncoder encoder;
-   Identifiers encodeCopy = source;
-   encodeCopy.code(testCase, encoder);
+   source.encode(encoder, testCase);
    auto &data = encoder.getData();
    BinaryDecoder decoder(data.data(), data.data() + data.size());
    Identifiers clone;
    try
    {
-      clone.code(testCase, decoder);
+      clone.decode(decoder, testCase);
    }
    catch (std::exception &)
    {

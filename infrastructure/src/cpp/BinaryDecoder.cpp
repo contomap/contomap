@@ -11,6 +11,11 @@ BinaryDecoder::BinaryDecoder(uint8_t const *begin, uint8_t const *end)
 {
 }
 
+void BinaryDecoder::code(std::string const &name, char &value)
+{
+   value = static_cast<char>(nextByte());
+}
+
 void BinaryDecoder::code(std::string const &name, uint8_t &value)
 {
    value = nextByte();

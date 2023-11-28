@@ -2,6 +2,7 @@
 
 using contomap::infrastructure::Search;
 using contomap::infrastructure::serial::Coder;
+using contomap::infrastructure::serial::Encoder;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 using contomap::model::Occurrence;
@@ -26,8 +27,14 @@ Topic &Topic::refine()
    return *this;
 }
 
-void Topic::codeProperties(Coder &coder, uint8_t version)
+void Topic::encodeProperties(Encoder &encoder, uint8_t version) const
 {
+   Coder::Scope scope(encoder, "properties");
+   encoder.codeArray("names", names.begin(), names.end(), [](Encoder &nested, auto const &kvp) {
+      Coder::Scope nameScope(nested, "");
+      kvp.first.encode(nested, "id");
+      // TODO: continue into name...
+   });
 }
 
 Identifier Topic::getId() const
