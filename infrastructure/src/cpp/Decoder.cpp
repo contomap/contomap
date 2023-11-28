@@ -7,8 +7,7 @@ using contomap::infrastructure::serial::Coder;
 using contomap::infrastructure::serial::Decoder;
 
 Decoder::Decoder(uint8_t const *begin, uint8_t const *end)
-   : begin(begin)
-   , end(end)
+   : end(end)
    , current(begin)
 {
 }
@@ -56,7 +55,8 @@ uintptr_t Decoder::codeScopeBegin(std::string const &name)
 
 void Decoder::codeScopeEnd(uintptr_t tag)
 {
-   current = reinterpret_cast<uint8_t const *>(tag);
+   auto newEnd = reinterpret_cast<uint8_t const *>(tag);
+   current = ((newEnd >= current) && (newEnd <= end)) ? newEnd : end;
 }
 
 uintptr_t Decoder::codeArrayBegin(std::string const &name, size_t &size)
@@ -81,5 +81,9 @@ size_t Decoder::readSize()
 
 uint8_t Decoder::nextByte()
 {
+   if (current >= end)
+   {
+      throw std::runtime_error("reading past end");
+   }
    return *current++;
 }

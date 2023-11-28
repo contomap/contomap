@@ -36,7 +36,6 @@ private:
    size_t readSize();
    uint8_t nextByte();
 
-   uint8_t const *begin;
    uint8_t const *end;
    uint8_t const *current;
 };

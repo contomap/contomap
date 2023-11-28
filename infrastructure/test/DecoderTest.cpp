@@ -99,6 +99,57 @@ TEST(DecoderTest, codeScope)
    EXPECT_EQ(0xAA, marker2);
 }
 
-// TODO: tests for wrong offsets
-// - exception when reading past the end
-// - guarding scope end to be outside allowed range
+TEST(DecoderTest, exceptionPastEnd)
+{
+   std::vector<uint8_t> data { 0x00 };
+   Decoder decoder(data.data(), data.data() + data.size());
+   Coder &coder = decoder;
+   float value = 0.0f;
+   try
+   {
+      coder.code("", value);
+      FAIL() << "no exception";
+   }
+   catch (std::exception &)
+   {
+   }
+}
+
+TEST(DecoderTest, mismatchedScopesPutStreamToEnd)
+{
+   std::vector<uint8_t> data { 0x00, 0x00, 0x05, 0x00, 0x00, 0x01, 0x10, 0x11, 0x12 };
+   Decoder decoder(data.data(), data.data() + data.size());
+   Coder &coder = decoder;
+   auto scope1 = std::make_unique<Coder::Scope>(coder, "");
+   auto scope2 = std::make_unique<Coder::Scope>(coder, "");
+   scope1.reset();
+   uint8_t value = 0x00;
+   coder.code("", value);
+   scope2.reset();
+   try
+   {
+      coder.code("", value);
+      FAIL() << "no exception";
+   }
+   catch (std::exception &)
+   {
+   }
+}
+
+TEST(DecoderTest, guardReadingPastEndFromWrongScopeLength)
+{
+   std::vector<uint8_t> data { 0x00, 0x00, 0x05 };
+   Decoder decoder(data.data(), data.data() + data.size());
+   Coder &coder = decoder;
+   auto scope = std::make_unique<Coder::Scope>(coder, "");
+   scope.reset();
+   try
+   {
+      uint8_t value = 0xFF;
+      coder.code("", value);
+      FAIL() << "no exception";
+   }
+   catch (std::exception &)
+   {
+   }
+}
