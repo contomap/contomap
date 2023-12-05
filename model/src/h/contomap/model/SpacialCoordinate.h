@@ -1,5 +1,8 @@
 #pragma once
 
+#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/Encoder.h"
+
 namespace contomap::model
 {
 
@@ -33,6 +36,23 @@ public:
       [[nodiscard]] static AbsolutePoint at(CoordinateType x, CoordinateType y);
 
       /**
+       * Deserializes the coordinates.
+       *
+       * @param coder the coder to use.
+       * @param name the name to use for the scope.
+       * @return the decoded instance.
+       */
+      [[nodiscard]] static AbsolutePoint from(contomap::infrastructure::serial::Decoder &coder, std::string const &name);
+
+      /**
+       * Serializes the coordinates.
+       *
+       * @param coder the coder to use.
+       * @param name the name to use for the scope.
+       */
+      void encode(contomap::infrastructure::serial::Encoder &coder, std::string const &name) const;
+
+      /**
        * @return the X coordinate.
        */
       [[nodiscard]] CoordinateType X() const
@@ -62,6 +82,23 @@ public:
     * @return the resulting instance.
     */
    [[nodiscard]] static SpacialCoordinate absoluteAt(CoordinateType x, CoordinateType y);
+
+   /**
+    * Serializes the coordinates.
+    *
+    * @param coder the coder to use.
+    * @param name the name to use for the scope.
+    */
+   void encode(contomap::infrastructure::serial::Encoder &coder, std::string const &name) const;
+
+   /**
+    * Deserializes the coordinates.
+    *
+    * @param coder the coder to use.
+    * @param name the name to use for the scope.
+    * @param version the version to consider.
+    */
+   void decode(contomap::infrastructure::serial::Decoder &coder, std::string const &name, uint8_t version);
 
    /**
     * @param point the new absolute reference point.

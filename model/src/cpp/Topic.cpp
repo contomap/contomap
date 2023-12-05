@@ -34,17 +34,18 @@ void Topic::encodeProperties(Encoder &encoder) const
    encoder.codeArray("names", names.begin(), names.end(), [](Encoder &nested, auto const &kvp) {
       Coder::Scope nameScope(nested, "");
       kvp.first.encode(nested, "id");
-      // TODO: continue into name...
+      kvp.second.encode(nested);
    });
 }
 
 void Topic::decodeProperties(Decoder &decoder, uint8_t version)
 {
    Coder::Scope scope(decoder, "properties");
-   decoder.codeArray("names", [](Decoder &nested, size_t) {
+   decoder.codeArray("names", [this, version](Decoder &nested, size_t) {
       Coder::Scope nameScope(nested, "");
       auto nameId = Identifier::from(nested, "id");
-      // TODO: continue into name - seems like here a TopicName::from(id, nested) fits better...
+      auto name = TopicName::from(nested, version, nameId);
+      names.emplace(nameId, name);
    });
 }
 
@@ -106,15 +107,15 @@ bool Topic::removeOccurrence(Identifier occurrenceId)
 Role &Topic::newRole(Association &association)
 {
    auto const &seed = association.addRole();
-   auto it = roles.emplace(seed.getId(), seed);
-   return it.first->second;
+   auto it = roles.emplace(seed.getId(), std::make_unique<Role>(seed));
+   return *it.first->second;
 }
 
 void Topic::removeRolesOf(Association &association)
 {
    for (auto it = roles.begin(); it != roles.end();)
    {
-      if (association.removeRole(it->second))
+      if (association.removeRole(*it->second))
       {
          it = roles.erase(it);
       }
@@ -131,7 +132,7 @@ void Topic::removeRole(Association &association, Identifier roleId)
    {
       return;
    }
-   association.removeRole(roles.at(roleId));
+   association.removeRole(*roles.at(roleId));
    roles.erase(roleId);
 }
 
@@ -240,9 +241,9 @@ Search<Role const> Topic::rolesAssociatedWith(Identifiers associations) const //
 {
    for (auto const &[_, role] : roles)
    {
-      if (associations.contains(role.getParent()))
+      if (associations.contains(role->getParent()))
       {
-         co_yield role;
+         co_yield *role;
       }
    }
 }
@@ -253,7 +254,7 @@ Search<Role const> Topic::findRoles(contomap::model::Identifiers const &ids) con
    {
       if (ids.contains(roleId))
       {
-         co_yield role;
+         co_yield *role;
       }
    }
 }
@@ -264,7 +265,7 @@ Search<Role> Topic::findRoles(contomap::model::Identifiers const &ids) // NOLINT
    {
       if (ids.contains(roleId))
       {
-         co_yield role;
+         co_yield *role;
       }
    }
 }
@@ -289,10 +290,10 @@ void Topic::removeTopicReferences(Identifier topicId)
    }
    for (auto &[_, role] : roles)
    {
-      auto typeId = role.getType();
+      auto typeId = role->getType();
       if (typeId.isAssigned() && (typeId.value() == topicId))
       {
-         role.clearType();
+         role->clearType();
       }
    }
 }

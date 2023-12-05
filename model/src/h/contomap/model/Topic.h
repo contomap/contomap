@@ -239,7 +239,7 @@ private:
 
    std::map<contomap::model::Identifier, contomap::model::TopicName> names;
    std::map<contomap::model::Identifier, std::unique_ptr<contomap::model::Occurrence>> occurrences;
-   std::map<contomap::model::Identifier, contomap::model::Role> roles;
+   std::map<contomap::model::Identifier, std::unique_ptr<contomap::model::Role>> roles;
 
    std::optional<std::reference_wrapper<contomap::model::Reified>> reified;
 };

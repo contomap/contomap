@@ -1,5 +1,8 @@
 #pragma once
 
+#include <functional>
+#include <memory>
+
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
 #include "contomap/model/OptionalIdentifier.h"
@@ -74,6 +77,23 @@ public:
     * @param seed the properties for creating a new Role. Retrieve a new instance from an Association.
     */
    explicit Role(Seed const &seed);
+
+   /**
+    * Deserializes the role.
+    *
+    * @param coder the coder to use.
+    * @param version the version to consider.
+    */
+   [[nodiscard]] static std::unique_ptr<Role> from(contomap::infrastructure::serial::Decoder &coder, uint8_t version, contomap::model::Identifier id,
+      std::function<std::optional<std::reference_wrapper<Topic>>(contomap::model::Identifier)> const &topicResolver,
+      std::function<std::optional<std::reference_wrapper<Association>>(contomap::model::Identifier)> const &associationResolver);
+
+   /**
+    * Serializes the role.
+    *
+    * @param coder the coder to use.
+    */
+   void encode(contomap::infrastructure::serial::Encoder &coder) const;
 
    /**
     * @return the primary identifier of this role.

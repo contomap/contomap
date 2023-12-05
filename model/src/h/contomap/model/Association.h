@@ -1,5 +1,6 @@
 #pragma once
 
+#include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Coordinates.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
@@ -23,10 +24,31 @@ public:
     * Constructor.
     *
     * @param id the primary identifier of this association.
+    */
+   explicit Association(contomap::model::Identifier id);
+   /**
+    * Constructor.
+    *
+    * @param id the primary identifier of this association.
     * @param scope the scope within which this association is valid.
     * @param spacial the known, initial point where the association is happening.
     */
    Association(contomap::model::Identifier id, contomap::model::Identifiers scope, contomap::model::SpacialCoordinate spacial);
+
+   /**
+    * Serializes the properties of the association.
+    *
+    * @param coder the coder to use.
+    */
+   void encodeProperties(contomap::infrastructure::serial::Encoder &coder) const;
+
+   /**
+    * Deserializes the properties of the association.
+    *
+    * @param coder the coder to use.
+    * @param version the version to consider.
+    */
+   void decodeProperties(contomap::infrastructure::serial::Decoder &coder, uint8_t version);
 
    /**
     * @return the unique identifier of this association instance.

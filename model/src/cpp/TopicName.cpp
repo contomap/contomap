@@ -2,6 +2,8 @@
 
 #include "contomap/model/TopicName.h"
 
+using contomap::infrastructure::serial::Coder;
+using contomap::infrastructure::serial::Encoder;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 using contomap::model::TopicName;
@@ -12,6 +14,22 @@ TopicName::TopicName(Identifier id, Identifiers scope, TopicNameValue value)
    , scope(std::move(scope))
    , value(std::move(value))
 {
+}
+
+TopicName TopicName::from(contomap::infrastructure::serial::Decoder &decoder, uint8_t, contomap::model::Identifier id)
+{
+   Coder::Scope nameScope(decoder, "topicName");
+   Identifiers scope;
+   scope.decode(decoder, "scope");
+   auto value = TopicNameValue::from(decoder);
+   return { id, scope, value };
+}
+
+void TopicName::encode(Encoder &encoder) const
+{
+   Coder::Scope nameScope(encoder, "topicName");
+   scope.encode(encoder, "scope");
+   value.encode(encoder);
 }
 
 Identifier TopicName::getId() const

@@ -1,8 +1,31 @@
 #include "contomap/model/Style.h"
 
+using contomap::infrastructure::serial::Coder;
+using contomap::infrastructure::serial::Decoder;
+using contomap::infrastructure::serial::Encoder;
 using contomap::model::Style;
 
 Style::Color const Style::DEFAULT_COLOR { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0x00 };
+
+Style::Color Style::Color::from(Decoder &coder, std::string const &name)
+{
+   Coder::Scope scope(coder, name);
+   Color instance { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0x00 };
+   coder.code("r", instance.red);
+   coder.code("g", instance.green);
+   coder.code("b", instance.blue);
+   coder.code("a", instance.alpha);
+   return instance;
+}
+
+void Style::Color::encode(Encoder &coder, std::string const &name) const
+{
+   Coder::Scope scope(coder, name);
+   coder.code("r", red);
+   coder.code("g", green);
+   coder.code("b", blue);
+   coder.code("a", alpha);
+}
 
 Style Style::averageOf(std::vector<Style> const &styles)
 {
@@ -49,6 +72,28 @@ Style Style::averageOf(std::vector<Style> const &styles)
    return result;
 }
 
+void Style::encode(Encoder &coder, std::string const &name) const
+{
+   Coder::Scope scope(coder, name);
+   coder.codeArray("colors", colors.begin(), colors.end(), [](Encoder &nested, auto const &kvp) {
+      Coder::Scope nestedScope(nested, "");
+      nested.code("type", typeToSerial(kvp.first));
+      kvp.second.encode(nested, "color");
+   });
+}
+
+void Style::decode(Decoder &coder, std::string const &name, uint8_t)
+{
+   Coder::Scope scope(coder, name);
+   coder.codeArray("colors", [this](Decoder &nested, size_t) {
+      Coder::Scope nestedScope(nested, "");
+      uint8_t serialType = 0x00;
+      nested.code("type", serialType);
+      auto color = Color::from(nested, "color");
+      colors.emplace(typeFromSerial(serialType), color);
+   });
+}
+
 Style Style::withDefaultsFrom(Style const &other) const
 {
    Style copy(*this);
@@ -85,4 +130,16 @@ Style::Color Style::get(ColorType type, Color defaultColor) const
 {
    auto it = colors.find(type);
    return (it != colors.end()) ? it->second : defaultColor;
+}
+
+Style::ColorType Style::typeFromSerial(uint8_t value)
+{
+   static std::map<uint8_t, ColorType> CONSTANTS { { 0x01, ColorType::Line }, { 0x02, ColorType::Fill }, { 0x03, ColorType::Text } };
+   return CONSTANTS.at(value);
+}
+
+uint8_t Style::typeToSerial(ColorType type)
+{
+   static std::map<ColorType, uint8_t> CONSTANTS { { ColorType::Line, 0x01 }, { ColorType::Fill, 0x02 }, { ColorType::Text, 0x03 } };
+   return CONSTANTS.at(type);
 }

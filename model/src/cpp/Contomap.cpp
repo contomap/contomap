@@ -255,11 +255,15 @@ void Contomap::encode(Encoder &encoder) const
       kvp.first.encode(nested, "id");
       kvp.second->encodeProperties(nested);
    });
-
+   encoder.codeArray("associations", associations.begin(), associations.end(), [](Encoder &nested, auto const &kvp) {
+      Coder::Scope associationScope(nested, "");
+      kvp.first.encode(nested, "id");
+      kvp.second.encodeProperties(nested);
+   });
    // TODO, in order:
-   // associations
    // roles
    // occurrences
+   // topic resolver (type, reifications)
 
    defaultScope.encode(encoder, "defaultScope");
 }
@@ -274,6 +278,29 @@ void Contomap::decode(Decoder &decoder, uint8_t version)
       topic->decodeProperties(nested, version);
       topics.emplace(id, std::move(topic));
    });
+   decoder.codeArray("associations", [this, version](Decoder &nested, size_t) {
+      Coder::Scope associationScope(nested, "");
+      auto id = Identifier::from(nested, "id");
+      Association association(id);
+      association.decodeProperties(nested, version);
+      associations.emplace(id, association);
+   });
+   auto topicResolver = [this](Identifier id) -> std::optional<std::reference_wrapper<Topic>> {
+      auto it = topics.find(id);
+      if (it == topics.end())
+      {
+         return {};
+      }
+      return *it->second;
+   };
+   auto associationResolver = [this](Identifier id) -> std::optional<std::reference_wrapper<Association>> {
+      auto it = associations.find(id);
+      if (it == associations.end())
+      {
+         return {};
+      }
+      return it->second;
+   };
 
    defaultScope = Identifier::from(decoder, "defaultScope");
 }

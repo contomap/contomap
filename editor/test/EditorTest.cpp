@@ -331,6 +331,8 @@ public:
 
    ViewFixture &view()
    {
+      // TODO: consider save/load state in here - implicitly testing state serialization
+
       return viewFixture;
    }
 

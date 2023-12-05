@@ -3,6 +3,9 @@
 #include <string>
 #include <variant>
 
+#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/Encoder.h"
+
 namespace contomap::model
 {
 
@@ -28,6 +31,21 @@ public:
     * @return either the right type of the created name, or an error instead.
     */
    [[nodiscard]] static std::variant<std::monostate, TopicNameValue> from(std::string value);
+
+   /**
+    * Deserialize the topic name value.
+    *
+    * @param decoder the decoder to use.
+    * @return the decoded instance
+    */
+   [[nodiscard]] static TopicNameValue from(contomap::infrastructure::serial::Decoder &decoder);
+
+   /**
+    * Serialize the topic name value.
+    *
+    * @param encoder the coder to use.
+    */
+   void encode(contomap::infrastructure::serial::Encoder &encoder) const;
 
    /**
     * Spaceship operator.

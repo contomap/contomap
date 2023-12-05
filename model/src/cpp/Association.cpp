@@ -1,6 +1,8 @@
 #include "contomap/model/Association.h"
 #include "contomap/model/Role.h"
 
+using contomap::infrastructure::serial::Coder;
+using contomap::infrastructure::serial::Encoder;
 using contomap::model::Association;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
@@ -9,11 +11,34 @@ using contomap::model::Role;
 using contomap::model::SpacialCoordinate;
 using contomap::model::Style;
 
+Association::Association(Identifier id)
+   : id(id)
+{
+}
+
 Association::Association(Identifier id, Identifiers scope, SpacialCoordinate spacial)
    : id(id)
    , scope(std::move(scope))
    , location(spacial)
 {
+}
+
+void Association::encodeProperties(Encoder &coder) const
+{
+   Coder::Scope propertiesScope(coder, "properties");
+   scope.encode(coder, "scope");
+   type.encode(coder, "type");
+   appearance.encode(coder, "appearance");
+   location.encode(coder, "location");
+}
+
+void Association::decodeProperties(contomap::infrastructure::serial::Decoder &coder, uint8_t version)
+{
+   Coder::Scope propertiesScope(coder, "properties");
+   scope.decode(coder, "scope");
+   type = OptionalIdentifier::from(coder, "type");
+   appearance.decode(coder, "appearance", version);
+   location.decode(coder, "location", version);
 }
 
 Identifier Association::getId() const
