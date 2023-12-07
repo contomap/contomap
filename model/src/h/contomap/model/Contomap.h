@@ -138,7 +138,7 @@ private:
    void deleting(contomap::model::Identifiers &toDelete, contomap::model::Topic &topic);
 
    std::map<contomap::model::Identifier, std::unique_ptr<contomap::model::Topic>> topics;
-   std::map<contomap::model::Identifier, contomap::model::Association> associations;
+   std::map<contomap::model::Identifier, std::unique_ptr<contomap::model::Association>> associations;
    contomap::model::Identifier defaultScope;
 };
 

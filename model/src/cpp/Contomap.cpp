@@ -36,8 +36,8 @@ Topic &Contomap::newTopic()
 Association &Contomap::newAssociation(Identifiers scope, SpacialCoordinate location)
 {
    auto id = Identifier::random();
-   auto it = associations.emplace(id, Association(id, std::move(scope), location));
-   return it.first->second;
+   auto it = associations.emplace(id, std::make_unique<Association>(id, std::move(scope), location));
+   return *it.first->second;
 }
 
 void Contomap::deleteRoles(Identifiers const &ids)
@@ -95,9 +95,9 @@ contomap::infrastructure::Search<contomap::model::Association const> Contomap::f
 {
    for (auto const &[_, association] : associations)
    {
-      if (filter->matches(association, *this))
+      if (filter->matches(*association, *this))
       {
-         co_yield association;
+         co_yield *association;
       }
    }
 }
@@ -105,14 +105,14 @@ contomap::infrastructure::Search<contomap::model::Association const> Contomap::f
 std::optional<std::reference_wrapper<Association const>> Contomap::findAssociation(Identifier id) const
 {
    auto it = associations.find(id);
-   return (it != associations.end()) ? std::optional<std::reference_wrapper<Association const>>(it->second)
+   return (it != associations.end()) ? std::optional<std::reference_wrapper<Association const>>(*it->second)
                                      : std::optional<std::reference_wrapper<Association const>>();
 }
 
 std::optional<std::reference_wrapper<Association>> Contomap::findAssociation(Identifier id)
 {
    auto it = associations.find(id);
-   return (it != associations.end()) ? std::optional<std::reference_wrapper<Association>>(it->second) : std::optional<std::reference_wrapper<Association>>();
+   return (it != associations.end()) ? std::optional<std::reference_wrapper<Association>>(*it->second) : std::optional<std::reference_wrapper<Association>>();
 }
 
 contomap::infrastructure::Search<contomap::model::Occurrence const> Contomap::findOccurrences(Identifiers const &ids) const // NOLINT
@@ -163,11 +163,11 @@ void Contomap::deleteRole(Identifier id)
 {
    for (auto &[associationId, association] : associations)
    {
-      if (association.hasRole(id))
+      if (association->hasRole(id))
       {
          for (auto &[topicId, topic] : topics)
          {
-            topic->removeRole(association, id);
+            topic->removeRole(*association, id);
          }
       }
    }
@@ -182,7 +182,7 @@ void Contomap::deleteAssociation(Identifier id)
    auto &association = associations.at(id);
    for (auto &[_, topic] : topics)
    {
-      topic->removeRolesOf(association);
+      topic->removeRolesOf(*association);
    }
    associations.erase(id);
 }
@@ -228,11 +228,11 @@ void Contomap::deleting(Identifiers &toDelete, Topic &topic)
    Identifiers associationsToDelete;
    for (auto &[_, association] : associations)
    {
-      topic.removeRolesOf(association);
-      association.removeTopicReferences(topic.getId());
-      if (association.isWithoutScope())
+      topic.removeRolesOf(*association);
+      association->removeTopicReferences(topic.getId());
+      if (association->isWithoutScope())
       {
-         associationsToDelete.add(association.getId());
+         associationsToDelete.add(association->getId());
       }
    }
    deleteAssociations(associationsToDelete);
@@ -258,7 +258,7 @@ void Contomap::encode(Encoder &encoder) const
    encoder.codeArray("associations", associations.begin(), associations.end(), [](Encoder &nested, auto const &kvp) {
       Coder::Scope associationScope(nested, "");
       kvp.first.encode(nested, "id");
-      kvp.second.encodeProperties(nested);
+      kvp.second->encodeProperties(nested);
    });
    // TODO, in order:
    // roles
@@ -281,9 +281,9 @@ void Contomap::decode(Decoder &decoder, uint8_t version)
    decoder.codeArray("associations", [this, version](Decoder &nested, size_t) {
       Coder::Scope associationScope(nested, "");
       auto id = Identifier::from(nested, "id");
-      Association association(id);
-      association.decodeProperties(nested, version);
-      associations.emplace(id, association);
+      auto association = std::make_unique<Association>(id);
+      association->decodeProperties(nested, version);
+      associations.emplace(id, std::move(association));
    });
    auto topicResolver = [this](Identifier id) -> std::optional<std::reference_wrapper<Topic>> {
       auto it = topics.find(id);
@@ -299,7 +299,7 @@ void Contomap::decode(Decoder &decoder, uint8_t version)
       {
          return {};
       }
-      return it->second;
+      return *it->second;
    };
 
    defaultScope = Identifier::from(decoder, "defaultScope");
