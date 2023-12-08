@@ -106,10 +106,9 @@ public:
    /**
     * Removes the role with given identifier from this topic.
     *
-    * @param association the association this topic has the given role in.
     * @param roleId the role to remove.
     */
-   void removeRole(contomap::model::Association &association, contomap::model::Identifier roleId);
+   void removeRole(contomap::model::Identifier roleId);
 
    /**
     * @return a Search for all names in the topic.

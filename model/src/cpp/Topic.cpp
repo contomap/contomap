@@ -108,9 +108,9 @@ bool Topic::removeOccurrence(Identifier occurrenceId)
 
 Role &Topic::newRole(Association &association)
 {
-   auto const &seed = association.addRole();
-   auto role = std::make_unique<Role>(seed.getId(), *this, association);
-   auto it = roles.find(seed.getId());
+   auto roleId = Identifier::random();
+   auto role = std::make_unique<Role>(roleId, *this, association);
+   auto it = roles.find(roleId);
    it->second->own(std::move(role));
    return it->second->role();
 }
@@ -125,26 +125,22 @@ std::unique_ptr<Link<Topic>> Topic::link(Role &role, std::function<void()> topic
 
 void Topic::removeRolesOf(Association &association)
 {
-   for (auto it = roles.begin(); it != roles.end();)
+   Identifiers toRemove;
+   for (auto const &[roleId, entry] : roles)
    {
-      if (association.removeRole(it->second->role()))
+      if (entry->role().getParent() == association.getId())
       {
-         it = roles.erase(it);
-      }
-      else
-      {
-         ++it;
+         toRemove.add(roleId);
       }
    }
+   std::erase_if(roles, [&toRemove](auto const &kvp) {
+      auto const &[_, entry] = kvp;
+      return toRemove.contains(entry->role().getId());
+   });
 }
 
-void Topic::removeRole(Association &association, Identifier roleId)
+void Topic::removeRole(Identifier roleId)
 {
-   if (!roles.contains(roleId))
-   {
-      return;
-   }
-   association.removeRole(roles.at(roleId)->role());
    roles.erase(roleId);
 }
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "contomap/infrastructure/Link.h"
 #include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Coordinates.h"
 #include "contomap/model/Identifier.h"
@@ -81,11 +82,13 @@ public:
    [[nodiscard]] bool isWithoutScope() const;
 
    /**
-    * Adds a new role to the association.
+    * Establishes a link with given role.
     *
-    * @return the created role details. Use the result as a template for storing the concrete instance somewhere.
+    * @param role the role instance to link with.
+    * @param associationUnlinked the function to pass on to the returned link.
+    * @return the link that refers to this instance.
     */
-   [[nodiscard]] Role::Seed addRole();
+   [[nodiscard]] std::unique_ptr<contomap::infrastructure::Link<Association>> link(contomap::model::Role &role, std::function<void()> associationUnlinked);
 
    /**
     * Removes given role from the association.
@@ -140,6 +143,23 @@ public:
    [[nodiscard]] contomap::model::OptionalIdentifier getType() const;
 
 private:
+   class RoleEntry
+   {
+   public:
+      RoleEntry(std::unique_ptr<contomap::infrastructure::Link<contomap::model::Role>> link)
+         : link(std::move(link))
+      {
+      }
+
+      contomap::model::Role &role()
+      {
+         return link->getLinked();
+      }
+
+   private:
+      std::unique_ptr<contomap::infrastructure::Link<contomap::model::Role>> link;
+   };
+
    contomap::model::Identifier id;
    contomap::model::Identifiers scope;
 
@@ -148,7 +168,7 @@ private:
    contomap::model::Style appearance;
    contomap::model::Coordinates location;
 
-   contomap::model::Identifiers roles;
+   std::map<contomap::model::Identifier, std::unique_ptr<RoleEntry>> roles;
 };
 
 }

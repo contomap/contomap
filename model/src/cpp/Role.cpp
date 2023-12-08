@@ -12,27 +12,22 @@ using contomap::model::Role;
 using contomap::model::Style;
 using contomap::model::Topic;
 
-Role::Role(Seed const &seed)
-   : id(seed.id)
-   , parent(seed.parent)
-{
-}
-
 Role::Role(Identifier id, Topic &topic, Association &association)
    : id(id)
-   , parent(association.getId())
    , topic(topic.link(*this, [this]() { unlink(); }))
+   , association(association.link(*this, [this]() { unlink(); }))
 {
 }
 
 std::unique_ptr<Role> Role::from(contomap::infrastructure::serial::Decoder &coder, uint8_t version, contomap::model::Identifier id,
-   std::function<std::optional<std::reference_wrapper<Topic>>(contomap::model::Identifier)> const &,
-   std::function<std::optional<std::reference_wrapper<Association>>(contomap::model::Identifier)> const &)
+   std::function<std::optional<std::reference_wrapper<Topic>>(contomap::model::Identifier)> const &topicResolver,
+   std::function<std::optional<std::reference_wrapper<Association>>(contomap::model::Identifier)> const &associationResolver)
 {
    Coder::Scope scope(coder, "role");
-   auto parent = Identifier::from(coder, "parent");
-   // TODO: throw if associationResolver can not find parent
-   auto role = std::make_unique<Role>(Seed(id, parent));
+   auto topicId = Identifier::from(coder, "topic");
+   auto associationId = Identifier::from(coder, "association");
+
+   auto role = std::make_unique<Role>(id, topicResolver(topicId).value(), associationResolver(associationId).value());
    role->type = OptionalIdentifier::from(coder, "type");
    // TODO: throw if topicResolver can not find parent
    role->appearance.decode(coder, "appearance", version);
@@ -42,7 +37,8 @@ std::unique_ptr<Role> Role::from(contomap::infrastructure::serial::Decoder &code
 void Role::encode(contomap::infrastructure::serial::Encoder &coder) const
 {
    Coder::Scope scope(coder, "role");
-   parent.encode(coder, "parent");
+   topic->getLinked().getId().encode(coder, "topic");
+   association->getLinked().getId().encode(coder, "association");
    type.encode(coder, "type");
    appearance.encode(coder, "appearance");
 }
@@ -54,7 +50,7 @@ Identifier Role::getId() const
 
 Identifier Role::getParent() const
 {
-   return parent;
+   return association->getLinked().getId();
 }
 
 void Role::setAppearance(Style style)

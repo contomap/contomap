@@ -161,29 +161,14 @@ contomap::infrastructure::Search<contomap::model::Role> Contomap::findRoles(Iden
 
 void Contomap::deleteRole(Identifier id)
 {
-   for (auto &[associationId, association] : associations)
+   for (auto &[topicId, topic] : topics)
    {
-      if (association->hasRole(id))
-      {
-         for (auto &[topicId, topic] : topics)
-         {
-            topic->removeRole(*association, id);
-         }
-      }
+      topic->removeRole(id);
    }
 }
 
 void Contomap::deleteAssociation(Identifier id)
 {
-   if (!associations.contains(id))
-   {
-      return;
-   }
-   auto &association = associations.at(id);
-   for (auto &[_, topic] : topics)
-   {
-      topic->removeRolesOf(*association);
-   }
    associations.erase(id);
 }
 

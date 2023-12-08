@@ -1,6 +1,8 @@
 #include "contomap/model/Association.h"
 #include "contomap/model/Role.h"
 
+using contomap::infrastructure::Link;
+using contomap::infrastructure::Links;
 using contomap::infrastructure::serial::Coder;
 using contomap::infrastructure::serial::Encoder;
 using contomap::model::Association;
@@ -66,16 +68,17 @@ bool Association::isWithoutScope() const
    return scope.empty();
 }
 
-Role::Seed Association::addRole()
+std::unique_ptr<Link<Association>> Association::link(Role &role, std::function<void()> topicUnlinked)
 {
-   auto roleId = Identifier::random();
-   roles.add(roleId);
-   return { roleId, getId() };
+   Identifier roleId = role.getId();
+   auto links = Links::between(*this, std::move(topicUnlinked), role, [this, roleId]() { roles.erase(roleId); });
+   roles.emplace(roleId, std::make_unique<RoleEntry>(std::move(links.second)));
+   return std::move(links.first);
 }
 
 bool Association::removeRole(Role const &role)
 {
-   return roles.remove(role.getId());
+   return roles.erase(role.getId());
 }
 
 bool Association::hasRole(Identifier roleId) const
