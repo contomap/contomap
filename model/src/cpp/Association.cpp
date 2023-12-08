@@ -76,16 +76,6 @@ std::unique_ptr<Link<Association>> Association::link(Role &role, std::function<v
    return std::move(links.first);
 }
 
-bool Association::removeRole(Role const &role)
-{
-   return roles.erase(role.getId());
-}
-
-bool Association::hasRole(Identifier roleId) const
-{
-   return roles.contains(roleId);
-}
-
 bool Association::hasRoles() const
 {
    return !roles.empty();

@@ -91,20 +91,6 @@ public:
    [[nodiscard]] std::unique_ptr<contomap::infrastructure::Link<Association>> link(contomap::model::Role &role, std::function<void()> associationUnlinked);
 
    /**
-    * Removes given role from the association.
-    *
-    * @param role the role to remove.
-    * @return true if the role was part of this association.
-    */
-   bool removeRole(contomap::model::Role const &role);
-
-   /**
-    * @param roleId the identifier to check.
-    * @return true if the association has the role with given identifier.
-    */
-   [[nodiscard]] bool hasRole(contomap::model::Identifier roleId) const;
-
-   /**
     * @return true if the association has at least one role.
     */
    [[nodiscard]] bool hasRoles() const;
