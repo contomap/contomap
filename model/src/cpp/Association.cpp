@@ -1,5 +1,6 @@
 #include "contomap/model/Association.h"
 #include "contomap/model/Role.h"
+#include "contomap/model/Topic.h"
 
 using contomap::infrastructure::Link;
 using contomap::infrastructure::Links;
@@ -12,6 +13,7 @@ using contomap::model::OptionalIdentifier;
 using contomap::model::Role;
 using contomap::model::SpacialCoordinate;
 using contomap::model::Style;
+using contomap::model::Topic;
 
 Association::Association(Identifier id)
    : id(id)
@@ -32,15 +34,18 @@ void Association::encodeProperties(Encoder &coder) const
    type.encode(coder, "type");
    appearance.encode(coder, "appearance");
    location.encode(coder, "location");
+   encodeReifiable(coder);
 }
 
-void Association::decodeProperties(contomap::infrastructure::serial::Decoder &coder, uint8_t version)
+void Association::decodeProperties(contomap::infrastructure::serial::Decoder &coder, uint8_t version,
+   std::function<std::optional<std::reference_wrapper<Topic>>(Identifier)> const &topicResolver)
 {
    Coder::Scope propertiesScope(coder, "properties");
    scope.decode(coder, "scope");
    type = OptionalIdentifier::from(coder, "type");
    appearance.decode(coder, "appearance", version);
    location.decode(coder, "location", version);
+   decodeReifiable(coder, topicResolver);
 }
 
 Identifier Association::getId() const

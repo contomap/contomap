@@ -1,5 +1,7 @@
 #pragma once
 
+#include "contomap/model/Identifier.h"
+
 namespace contomap::model
 {
 
@@ -13,6 +15,11 @@ class Reified;
 template <typename T> class Reifier
 {
 public:
+   /**
+    * @return the unique identifier of the reifier.
+    */
+   [[nodiscard]] virtual contomap::model::Identifier getId() const = 0;
+
    /**
     * @return the refined reference to this instance.
     */

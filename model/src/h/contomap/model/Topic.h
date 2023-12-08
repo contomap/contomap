@@ -48,10 +48,7 @@ public:
     */
    void decodeProperties(contomap::infrastructure::serial::Decoder &decoder, uint8_t version);
 
-   /**
-    * @return the unique identifier of this topic instance.
-    */
-   [[nodiscard]] contomap::model::Identifier getId() const;
+   [[nodiscard]] contomap::model::Identifier getId() const override;
 
    /**
     * Adds a new name to the topic.

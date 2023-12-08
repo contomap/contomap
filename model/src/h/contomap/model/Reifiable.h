@@ -2,6 +2,8 @@
 
 #include <optional>
 
+#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Reified.h"
 #include "contomap/model/Reifier.h"
 
@@ -71,6 +73,39 @@ public:
       auto &old = *reifier;
       reifier = nullptr;
       old.clearReified();
+   }
+
+   /**
+    * Serializes the reference of the reifier.
+    *
+    * @param coder the coder to use.
+    */
+   void encodeReifiable(contomap::infrastructure::serial::Encoder &coder) const
+   {
+      uint8_t marker = hasReifier() ? 0x01 : 0x00;
+      coder.code("hasReifier", marker);
+      if (marker != 0x00)
+      {
+         reifier->getId().encode(coder, "reifier");
+      }
+   }
+
+   /**
+    * Deserializes the reference to a reifier.
+    *
+    * @param coder the coder to use.
+    * @param resolver the function to resolve the instance of the referenced reifier.
+    */
+   void decodeReifiable(contomap::infrastructure::serial::Decoder &coder,
+      std::function<std::optional<std::reference_wrapper<Reifier<T>>>(contomap::model::Identifier)> const &resolver)
+   {
+      uint8_t marker = 0x00;
+      coder.code("hasReifier", marker);
+      if (marker != 0x00)
+      {
+         auto reifierId = contomap::model::Identifier::from(coder, "reifier");
+         setReifier(resolver(reifierId).value());
+      }
    }
 
 protected:

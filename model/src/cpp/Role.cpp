@@ -29,7 +29,7 @@ std::unique_ptr<Role> Role::from(contomap::infrastructure::serial::Decoder &code
 
    auto role = std::make_unique<Role>(id, topicResolver(topicId).value(), associationResolver(associationId).value());
    role->type = OptionalIdentifier::from(coder, "type");
-   // TODO: throw if topicResolver can not find parent
+   // TODO: throw if topicResolver can not find type
    role->appearance.decode(coder, "appearance", version);
    return role;
 }

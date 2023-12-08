@@ -3,6 +3,7 @@
 #include "contomap/model/Reifiable.h"
 #include "contomap/model/Reifier.h"
 
+using contomap::model::Identifier;
 using contomap::model::Reifiable;
 using contomap::model::Reified;
 using contomap::model::Reifier;
@@ -15,6 +16,11 @@ public:
    class MockedReifier : public Reifier<MockedReifier>
    {
    public:
+      Identifier getId() const override
+      {
+         return Identifier::random();
+      }
+
       MockedReifier &refine() override
       {
          return *this;

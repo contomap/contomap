@@ -263,13 +263,6 @@ void Contomap::decode(Decoder &decoder, uint8_t version)
       topic->decodeProperties(nested, version);
       topics.emplace(id, std::move(topic));
    });
-   decoder.codeArray("associations", [this, version](Decoder &nested, size_t) {
-      Coder::Scope associationScope(nested, "");
-      auto id = Identifier::from(nested, "id");
-      auto association = std::make_unique<Association>(id);
-      association->decodeProperties(nested, version);
-      associations.emplace(id, std::move(association));
-   });
    auto topicResolver = [this](Identifier id) -> std::optional<std::reference_wrapper<Topic>> {
       auto it = topics.find(id);
       if (it == topics.end())
@@ -278,6 +271,13 @@ void Contomap::decode(Decoder &decoder, uint8_t version)
       }
       return *it->second;
    };
+   decoder.codeArray("associations", [this, version, &topicResolver](Decoder &nested, size_t) {
+      Coder::Scope associationScope(nested, "");
+      auto id = Identifier::from(nested, "id");
+      auto association = std::make_unique<Association>(id);
+      association->decodeProperties(nested, version, topicResolver);
+      associations.emplace(id, std::move(association));
+   });
    auto associationResolver = [this](Identifier id) -> std::optional<std::reference_wrapper<Association>> {
       auto it = associations.find(id);
       if (it == associations.end())
