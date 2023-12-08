@@ -68,10 +68,10 @@ bool Association::isWithoutScope() const
    return scope.empty();
 }
 
-std::unique_ptr<Link<Association>> Association::link(Role &role, std::function<void()> topicUnlinked)
+std::unique_ptr<Link<Association>> Association::link(Role &role, std::function<void()> associationUnlinked)
 {
    Identifier roleId = role.getId();
-   auto links = Links::between(*this, std::move(topicUnlinked), role, [this, roleId]() { roles.erase(roleId); });
+   auto links = Links::between(*this, std::move(associationUnlinked), role, [this, roleId]() { roles.erase(roleId); });
    roles.emplace(roleId, std::make_unique<RoleEntry>(std::move(links.second)));
    return std::move(links.first);
 }
