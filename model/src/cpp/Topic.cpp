@@ -1,5 +1,7 @@
 #include "contomap/model/Topic.h"
 
+using contomap::infrastructure::Link;
+using contomap::infrastructure::Links;
 using contomap::infrastructure::Search;
 using contomap::infrastructure::serial::Coder;
 using contomap::infrastructure::serial::Decoder;
@@ -107,15 +109,25 @@ bool Topic::removeOccurrence(Identifier occurrenceId)
 Role &Topic::newRole(Association &association)
 {
    auto const &seed = association.addRole();
-   auto it = roles.emplace(seed.getId(), std::make_unique<Role>(seed));
-   return *it.first->second;
+   auto role = std::make_unique<Role>(seed.getId(), *this, association);
+   auto it = roles.find(seed.getId());
+   it->second->role = std::move(role);
+   return *it->second->role;
+}
+
+std::unique_ptr<Link<Topic>> Topic::link(Role &role, std::function<void()> topicUnlinked)
+{
+   Identifier roleId = role.getId();
+   auto links = Links::between(*this, std::move(topicUnlinked), role, [this, roleId]() { roles.erase(roleId); });
+   roles.emplace(roleId, std::make_unique<RoleEntry>(std::move(links.second)));
+   return std::move(links.first);
 }
 
 void Topic::removeRolesOf(Association &association)
 {
    for (auto it = roles.begin(); it != roles.end();)
    {
-      if (association.removeRole(*it->second))
+      if (association.removeRole(*it->second->role))
       {
          it = roles.erase(it);
       }
@@ -132,7 +144,7 @@ void Topic::removeRole(Association &association, Identifier roleId)
    {
       return;
    }
-   association.removeRole(*roles.at(roleId));
+   association.removeRole(*roles.at(roleId)->role);
    roles.erase(roleId);
 }
 
@@ -241,9 +253,9 @@ Search<Role const> Topic::rolesAssociatedWith(Identifiers associations) const //
 {
    for (auto const &[_, role] : roles)
    {
-      if (associations.contains(role->getParent()))
+      if (associations.contains(role->role->getParent()))
       {
-         co_yield *role;
+         co_yield *role->role;
       }
    }
 }
@@ -254,7 +266,7 @@ Search<Role const> Topic::findRoles(contomap::model::Identifiers const &ids) con
    {
       if (ids.contains(roleId))
       {
-         co_yield *role;
+         co_yield *role->role;
       }
    }
 }
@@ -265,7 +277,7 @@ Search<Role> Topic::findRoles(contomap::model::Identifiers const &ids) // NOLINT
    {
       if (ids.contains(roleId))
       {
-         co_yield *role;
+         co_yield *role->role;
       }
    }
 }
@@ -290,10 +302,10 @@ void Topic::removeTopicReferences(Identifier topicId)
    }
    for (auto &[_, role] : roles)
    {
-      auto typeId = role->getType();
+      auto typeId = role->role->getType();
       if (typeId.isAssigned() && (typeId.value() == topicId))
       {
-         role->clearType();
+         role->role->clearType();
       }
    }
 }

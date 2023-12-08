@@ -1,16 +1,27 @@
 #include "contomap/model/Role.h"
+#include "contomap/model/Association.h"
+#include "contomap/model/Topic.h"
 
 using contomap::infrastructure::serial::Coder;
 using contomap::infrastructure::serial::Decoder;
 using contomap::infrastructure::serial::Encoder;
+using contomap::model::Association;
 using contomap::model::Identifier;
 using contomap::model::OptionalIdentifier;
 using contomap::model::Role;
 using contomap::model::Style;
+using contomap::model::Topic;
 
 Role::Role(Seed const &seed)
    : id(seed.id)
    , parent(seed.parent)
+{
+}
+
+Role::Role(Identifier id, Topic &topic, Association &association)
+   : id(id)
+   , parent(association.getId())
+   , topic(topic.link(*this, [this]() { unlink(); }))
 {
 }
 
@@ -69,4 +80,10 @@ void Role::clearType()
 OptionalIdentifier Role::getType() const
 {
    return type;
+}
+
+void Role::unlink()
+{
+   association.reset();
+   topic.reset();
 }

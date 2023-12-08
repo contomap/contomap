@@ -3,6 +3,7 @@
 #include <functional>
 #include <memory>
 
+#include "contomap/infrastructure/Link.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
 #include "contomap/model/OptionalIdentifier.h"
@@ -79,6 +80,15 @@ public:
    explicit Role(Seed const &seed);
 
    /**
+    * Constructor.
+    *
+    * @param id the unique identifier of this role.
+    * @param topic the topic to represent in the association.
+    * @param association the association the role is part of.
+    */
+   Role(contomap::model::Identifier id, contomap::model::Topic &topic, contomap::model::Association &association);
+
+   /**
     * Deserializes the role.
     *
     * @param coder the coder to use.
@@ -132,12 +142,17 @@ public:
    [[nodiscard]] contomap::model::OptionalIdentifier getType() const;
 
 private:
+   void unlink();
+
    contomap::model::Identifier id;
    contomap::model::Identifier parent;
 
    contomap::model::OptionalIdentifier type;
 
    contomap::model::Style appearance;
+
+   std::unique_ptr<contomap::infrastructure::Link<contomap::model::Topic>> topic;
+   std::unique_ptr<contomap::infrastructure::Link<contomap::model::Association>> association;
 };
 
 }

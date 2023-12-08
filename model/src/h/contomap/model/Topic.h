@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "contomap/infrastructure/Generator.h"
+#include "contomap/infrastructure/Link.h"
 #include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Association.h"
 #include "contomap/model/Identifier.h"
@@ -85,6 +86,15 @@ public:
     * @return the created instance.
     */
    [[nodiscard]] contomap::model::Role &newRole(contomap::model::Association &association);
+
+   /**
+    * Establishes a link with given role.
+    *
+    * @param role the role instance to link with.
+    * @param topicUnlinked the function to pass on to the returned link.
+    * @return the link that refers to this instance.
+    */
+   [[nodiscard]] std::unique_ptr<contomap::infrastructure::Link<Topic>> link(contomap::model::Role &role, std::function<void()> topicUnlinked);
 
    /**
     * Remove all the roles for given association.
@@ -233,13 +243,24 @@ public:
    void clearReified() final;
 
 private:
+   struct RoleEntry
+   {
+      std::unique_ptr<contomap::model::Role> role;
+      std::unique_ptr<contomap::infrastructure::Link<contomap::model::Role>> link;
+
+      RoleEntry(std::unique_ptr<contomap::infrastructure::Link<contomap::model::Role>> link)
+         : link(std::move(link))
+      {
+      }
+   };
+
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::TopicName>> findNameByScope(contomap::model::Identifiers const &scope);
 
    contomap::model::Identifier id;
 
    std::map<contomap::model::Identifier, contomap::model::TopicName> names;
    std::map<contomap::model::Identifier, std::unique_ptr<contomap::model::Occurrence>> occurrences;
-   std::map<contomap::model::Identifier, std::unique_ptr<contomap::model::Role>> roles;
+   std::map<contomap::model::Identifier, std::unique_ptr<RoleEntry>> roles;
 
    std::optional<std::reference_wrapper<contomap::model::Reified>> reified;
 };
