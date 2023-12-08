@@ -111,8 +111,8 @@ Role &Topic::newRole(Association &association)
    auto const &seed = association.addRole();
    auto role = std::make_unique<Role>(seed.getId(), *this, association);
    auto it = roles.find(seed.getId());
-   it->second->role = std::move(role);
-   return *it->second->role;
+   it->second->own(std::move(role));
+   return it->second->role();
 }
 
 std::unique_ptr<Link<Topic>> Topic::link(Role &role, std::function<void()> topicUnlinked)
@@ -127,7 +127,7 @@ void Topic::removeRolesOf(Association &association)
 {
    for (auto it = roles.begin(); it != roles.end();)
    {
-      if (association.removeRole(*it->second->role))
+      if (association.removeRole(it->second->role()))
       {
          it = roles.erase(it);
       }
@@ -144,7 +144,7 @@ void Topic::removeRole(Association &association, Identifier roleId)
    {
       return;
    }
-   association.removeRole(*roles.at(roleId)->role);
+   association.removeRole(roles.at(roleId)->role());
    roles.erase(roleId);
 }
 
@@ -251,33 +251,33 @@ Search<Occurrence> Topic::findOccurrences(Identifiers const &ids) // NOLINT
 
 Search<Role const> Topic::rolesAssociatedWith(Identifiers associations) const // NOLINT
 {
-   for (auto const &[_, role] : roles)
+   for (auto const &[_, entry] : roles)
    {
-      if (associations.contains(role->role->getParent()))
+      if (associations.contains(entry->role().getParent()))
       {
-         co_yield *role->role;
+         co_yield entry->role();
       }
    }
 }
 
 Search<Role const> Topic::findRoles(contomap::model::Identifiers const &ids) const // NOLINT
 {
-   for (auto const &[roleId, role] : roles)
+   for (auto const &[roleId, entry] : roles)
    {
       if (ids.contains(roleId))
       {
-         co_yield *role->role;
+         co_yield entry->role();
       }
    }
 }
 
 Search<Role> Topic::findRoles(contomap::model::Identifiers const &ids) // NOLINT
 {
-   for (auto &[roleId, role] : roles)
+   for (auto &[roleId, entry] : roles)
    {
       if (ids.contains(roleId))
       {
-         co_yield *role->role;
+         co_yield entry->role();
       }
    }
 }
@@ -300,12 +300,13 @@ void Topic::removeTopicReferences(Identifier topicId)
          occurrence->clearType();
       }
    }
-   for (auto &[_, role] : roles)
+   for (auto &[_, entry] : roles)
    {
-      auto typeId = role->role->getType();
+      auto &role = entry->role();
+      auto typeId = role.getType();
       if (typeId.isAssigned() && (typeId.value() == topicId))
       {
-         role->role->clearType();
+         role.clearType();
       }
    }
 }

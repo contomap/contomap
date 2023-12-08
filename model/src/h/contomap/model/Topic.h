@@ -243,15 +243,27 @@ public:
    void clearReified() final;
 
 private:
-   struct RoleEntry
+   class RoleEntry
    {
-      std::unique_ptr<contomap::model::Role> role;
-      std::unique_ptr<contomap::infrastructure::Link<contomap::model::Role>> link;
-
+   public:
       RoleEntry(std::unique_ptr<contomap::infrastructure::Link<contomap::model::Role>> link)
          : link(std::move(link))
       {
       }
+
+      contomap::model::Role &role()
+      {
+         return link->getLinked();
+      }
+
+      void own(std::unique_ptr<contomap::model::Role> role)
+      {
+         ownedRole = std::move(role);
+      }
+
+   private:
+      std::unique_ptr<contomap::model::Role> ownedRole;
+      std::unique_ptr<contomap::infrastructure::Link<contomap::model::Role>> link;
    };
 
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::TopicName>> findNameByScope(contomap::model::Identifiers const &scope);
