@@ -51,7 +51,7 @@ public:
     * @param topicResolver the function to use for resolving topic references.
     */
    void decodeProperties(contomap::infrastructure::serial::Decoder &coder, uint8_t version,
-      std::function<std::optional<std::reference_wrapper<contomap::model::Topic>>(contomap::model::Identifier)> const &topicResolver);
+      std::function<contomap::model::Topic &(contomap::model::Identifier)> const &topicResolver);
 
    /**
     * @return the unique identifier of this association instance.

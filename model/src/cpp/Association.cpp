@@ -37,8 +37,7 @@ void Association::encodeProperties(Encoder &coder) const
    encodeReifiable(coder);
 }
 
-void Association::decodeProperties(contomap::infrastructure::serial::Decoder &coder, uint8_t version,
-   std::function<std::optional<std::reference_wrapper<Topic>>(Identifier)> const &topicResolver)
+void Association::decodeProperties(contomap::infrastructure::serial::Decoder &coder, uint8_t version, std::function<Topic &(Identifier)> const &topicResolver)
 {
    Coder::Scope propertiesScope(coder, "properties");
    scope.decode(coder, "scope");

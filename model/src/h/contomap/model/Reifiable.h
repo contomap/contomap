@@ -96,15 +96,14 @@ public:
     * @param coder the coder to use.
     * @param resolver the function to resolve the instance of the referenced reifier.
     */
-   void decodeReifiable(contomap::infrastructure::serial::Decoder &coder,
-      std::function<std::optional<std::reference_wrapper<Reifier<T>>>(contomap::model::Identifier)> const &resolver)
+   void decodeReifiable(contomap::infrastructure::serial::Decoder &coder, std::function<Reifier<T> &(contomap::model::Identifier)> const &resolver)
    {
       uint8_t marker = 0x00;
       coder.code("hasReifier", marker);
       if (marker != 0x00)
       {
          auto reifierId = contomap::model::Identifier::from(coder, "reifier");
-         setReifier(resolver(reifierId).value());
+         setReifier(resolver(reifierId));
       }
    }
 

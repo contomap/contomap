@@ -1,3 +1,5 @@
+#include <exception>
+
 #include "contomap/model/Contomap.h"
 #include "contomap/model/Filter.h"
 
@@ -263,11 +265,11 @@ void Contomap::decode(Decoder &decoder, uint8_t version)
       topic->decodeProperties(nested, version);
       topics.emplace(id, std::move(topic));
    });
-   auto topicResolver = [this](Identifier id) -> std::optional<std::reference_wrapper<Topic>> {
+   auto topicResolver = [this](Identifier id) -> Topic & {
       auto it = topics.find(id);
       if (it == topics.end())
       {
-         return {};
+         throw std::runtime_error("topic not found");
       }
       return *it->second;
    };
@@ -278,11 +280,11 @@ void Contomap::decode(Decoder &decoder, uint8_t version)
       association->decodeProperties(nested, version, topicResolver);
       associations.emplace(id, std::move(association));
    });
-   auto associationResolver = [this](Identifier id) -> std::optional<std::reference_wrapper<Association>> {
+   auto associationResolver = [this](Identifier id) -> Association & {
       auto it = associations.find(id);
       if (it == associations.end())
       {
-         return {};
+         throw std::runtime_error("association not found");
       }
       return *it->second;
    };
