@@ -247,6 +247,11 @@ void Contomap::encode(Encoder &encoder) const
       kvp.first.encode(nested, "id");
       kvp.second->encodeProperties(nested);
    });
+   encoder.codeArray("topicRelated", topics.begin(), topics.end(), [](Encoder &nested, auto const &kvp) {
+      Coder::Scope topicScope(nested, "");
+      kvp.first.encode(nested, "id");
+      kvp.second->encodeRelated(nested);
+   });
    // TODO, in order:
    // roles
    // occurrences
@@ -288,6 +293,12 @@ void Contomap::decode(Decoder &decoder, uint8_t version)
       }
       return *it->second;
    };
+   decoder.codeArray("topicRelated", [version, &topicResolver, &associationResolver](Decoder &nested, size_t) {
+      Coder::Scope topicScope(nested, "");
+      Identifier topicId = Identifier::from(nested, "id");
+      auto &topic = topicResolver(topicId);
+      topic.decodeRelated(nested, version, topicResolver, associationResolver);
+   });
 
    defaultScope = Identifier::from(decoder, "defaultScope");
 }

@@ -20,17 +20,18 @@ Role::Role(Identifier id, Topic &topic, Association &association)
 }
 
 std::unique_ptr<Role> Role::from(contomap::infrastructure::serial::Decoder &coder, uint8_t version, contomap::model::Identifier id,
-   std::function<std::optional<std::reference_wrapper<Topic>>(contomap::model::Identifier)> const &topicResolver,
-   std::function<std::optional<std::reference_wrapper<Association>>(contomap::model::Identifier)> const &associationResolver)
+   std::function<Topic &(contomap::model::Identifier)> const &topicResolver,
+   std::function<Association &(contomap::model::Identifier)> const &associationResolver)
 {
    Coder::Scope scope(coder, "role");
    auto topicId = Identifier::from(coder, "topic");
    auto associationId = Identifier::from(coder, "association");
 
-   auto role = std::make_unique<Role>(id, topicResolver(topicId).value(), associationResolver(associationId).value());
+   auto role = std::make_unique<Role>(id, topicResolver(topicId), associationResolver(associationId));
    role->type = OptionalIdentifier::from(coder, "type");
    // TODO: throw if topicResolver can not find type
    role->appearance.decode(coder, "appearance", version);
+   role->decodeReifiable(coder, topicResolver);
    return role;
 }
 
@@ -41,6 +42,7 @@ void Role::encode(contomap::infrastructure::serial::Encoder &coder) const
    association->getLinked().getId().encode(coder, "association");
    type.encode(coder, "type");
    appearance.encode(coder, "appearance");
+   encodeReifiable(coder);
 }
 
 Identifier Role::getId() const

@@ -48,6 +48,24 @@ public:
     */
    void decodeProperties(contomap::infrastructure::serial::Decoder &decoder, uint8_t version);
 
+   /**
+    * Serialize the related items of this topic.
+    *
+    * @param encoder the coder to use.
+    */
+   void encodeRelated(contomap::infrastructure::serial::Encoder &encoder) const;
+
+   /**
+    * Deserialize the related items of this topic.
+    *
+    * @param decoder the coder to use.
+    * @param version the version to consider.
+    * @param topicResolver the function to use for resolving topic references.
+    * @param associationResolver the function to use for resolving association references.
+    */
+   void decodeRelated(contomap::infrastructure::serial::Decoder &decoder, uint8_t version, std::function<Topic &(contomap::model::Identifier)> topicResolver,
+      std::function<Association &(contomap::model::Identifier)> associationResolver);
+
    [[nodiscard]] contomap::model::Identifier getId() const override;
 
    /**

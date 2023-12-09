@@ -38,8 +38,8 @@ public:
     * @param version the version to consider.
     */
    [[nodiscard]] static std::unique_ptr<Role> from(contomap::infrastructure::serial::Decoder &coder, uint8_t version, contomap::model::Identifier id,
-      std::function<std::optional<std::reference_wrapper<Topic>>(contomap::model::Identifier)> const &topicResolver,
-      std::function<std::optional<std::reference_wrapper<Association>>(contomap::model::Identifier)> const &associationResolver);
+      std::function<Topic &(contomap::model::Identifier)> const &topicResolver,
+      std::function<Association &(contomap::model::Identifier)> const &associationResolver);
 
    /**
     * Serializes the role.
