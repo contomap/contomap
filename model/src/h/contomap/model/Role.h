@@ -4,6 +4,8 @@
 #include <memory>
 
 #include "contomap/infrastructure/Link.h"
+#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
 #include "contomap/model/OptionalIdentifier.h"
@@ -36,6 +38,8 @@ public:
     *
     * @param coder the coder to use.
     * @param version the version to consider.
+    * @param topicResolver the function to use for resolving topic references.
+    * @param associationResolver the function to use for resolving association references.
     */
    [[nodiscard]] static std::unique_ptr<Role> from(contomap::infrastructure::serial::Decoder &coder, uint8_t version, contomap::model::Identifier id,
       std::function<Topic &(contomap::model::Identifier)> const &topicResolver,

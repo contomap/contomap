@@ -1,5 +1,9 @@
 #pragma once
 
+#include <memory>
+
+#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Coordinates.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
@@ -28,6 +32,23 @@ public:
     */
    Occurrence(
       contomap::model::Identifier id, contomap::model::Identifier topicId, contomap::model::Identifiers scope, contomap::model::SpacialCoordinate spacial);
+
+   /**
+    * Deserializes the occurrence.
+    *
+    * @param coder the coder to use.
+    * @param version the version to consider.
+    * @param topicResolver the function to use for resolving topic references.
+    */
+   [[nodiscard]] static std::unique_ptr<Occurrence> from(contomap::infrastructure::serial::Decoder &coder, uint8_t version, contomap::model::Identifier id,
+      std::function<Topic &(contomap::model::Identifier)> const &topicResolver);
+
+   /**
+    * Serializes the occurrence.
+    *
+    * @param coder the coder to use.
+    */
+   void encode(contomap::infrastructure::serial::Encoder &coder) const;
 
    /**
     * @return the unique identifier of this occurrence instance.
@@ -107,14 +128,16 @@ public:
    [[nodiscard]] contomap::model::OptionalIdentifier getType() const;
 
 private:
+   Occurrence(contomap::model::Identifier id, contomap::model::Identifier topicId);
+
    contomap::model::Identifier id;
    contomap::model::Identifier topicId;
    contomap::model::Identifiers scope;
 
-   contomap::model::Style appearance;
    contomap::model::Coordinates location;
 
    contomap::model::OptionalIdentifier type;
+   contomap::model::Style appearance;
 };
 
 }

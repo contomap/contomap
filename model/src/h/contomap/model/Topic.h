@@ -34,21 +34,6 @@ public:
    Topic &refine() override;
 
    /**
-    * Serialize the basic properties of this topic.
-    *
-    * @param encoder the coder to use.
-    */
-   void encodeProperties(contomap::infrastructure::serial::Encoder &encoder) const;
-
-   /**
-    * Deserialize the basic properties of this topic.
-    *
-    * @param decoder the coder to use.
-    * @param version the version to consider.
-    */
-   void decodeProperties(contomap::infrastructure::serial::Decoder &decoder, uint8_t version);
-
-   /**
     * Serialize the related items of this topic.
     *
     * @param encoder the coder to use.
