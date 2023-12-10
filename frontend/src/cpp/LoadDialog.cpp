@@ -32,54 +32,24 @@ bool LoadDialog::draw(RenderContext const &context)
    else
    {
       auto contentSize = context.getContentSize();
-      // auto padding = layout.padding();
       Vector2 windowSize { 320, 200 };
       Vector2 windowPos { contentSize.x / 2 - windowSize.x / 2, contentSize.y / 2 - windowSize.y / 2 };
 
-      closeDialog = GuiWindowBox(Rectangle { windowPos.x, windowPos.y, windowSize.x, windowSize.y }, title.c_str());
+      closeDialog = GuiMessageBox(Rectangle { windowPos.x, windowPos.y, windowSize.x, windowSize.y }, title.c_str(),
+                       "Please drag'n'drop a Contomap .png file into the window.", "Cancel")
+         >= 0;
       if (IsKeyPressed(KEY_ESCAPE))
       {
          closeDialog = true;
       }
 
-      // TODO: Probably wait for file dropped.
-
-      /*
-      auto height = layout.lineHeight();
-      Rectangle inputBounds {
-         .x = windowPos.x + padding,
-         .y = windowPos.y + layout.windowTitleHeight() + padding,
-         .width = windowSize.x - padding * 2,
-         .height = height,
-      };
-
-      auto requested = GuiTextBox(inputBounds, newFilePath.data(), static_cast<int>(newFilePath.size()), true);
-
-      float buttonsHeight = layout.buttonHeight() + padding * 2;
-      float buttonsY = windowPos.y + windowSize.y - buttonsHeight;
-      Rectangle buttonBounds {
-         .x = inputBounds.x,
-         .y = buttonsY + padding,
-         .width = 150.0f,
-         .height = layout.buttonHeight(),
-      };
-
-      bool isNameEmpty = (newFilePath[0] == 0x00);
-      if (isNameEmpty)
+      if (IsFileDropped())
       {
-         GuiDisable();
-      }
-      if (GuiButton(buttonBounds, "Load"))
-      {
-         requested = true;
-      }
-      GuiEnable();
-      if (requested)
-      {
-         loadFunction(newFilePath.data());
+         FilePathList droppedFiles = LoadDroppedFiles();
+         loadFunction(droppedFiles.paths[0]);
+         UnloadDroppedFiles(droppedFiles);
          closeDialog = true;
       }
-      */
    }
    return closeDialog;
 }
