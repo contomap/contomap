@@ -134,7 +134,7 @@ private:
    class RoleEntry
    {
    public:
-      RoleEntry(std::unique_ptr<contomap::infrastructure::Link<contomap::model::Role>> link)
+      explicit RoleEntry(std::unique_ptr<contomap::infrastructure::Link<contomap::model::Role>> link)
          : link(std::move(link))
       {
       }
