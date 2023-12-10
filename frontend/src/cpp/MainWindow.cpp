@@ -11,6 +11,7 @@
 #include "contomap/frontend/DirectMapRenderer.h"
 #include "contomap/frontend/FocusInterceptor.h"
 #include "contomap/frontend/HelpDialog.h"
+#include "contomap/frontend/LoadDialog.h"
 #include "contomap/frontend/LocateTopicAndActDialog.h"
 #include "contomap/frontend/MainWindow.h"
 #include "contomap/frontend/MapRenderList.h"
@@ -478,6 +479,12 @@ void MainWindow::drawUserInterface(RenderContext const &context)
          .width = iconSize,
          .height = iconSize,
       };
+      GuiSetTooltip("Load map");
+      if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_FILE_OPEN, nullptr)))
+      {
+         requestLoad();
+      }
+      leftIconButtonsBounds.x += (iconSize + padding);
       GuiSetTooltip("Save map");
       if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_FILE_SAVE, nullptr)))
       {
@@ -683,6 +690,11 @@ void MainWindow::drawUserInterface(RenderContext const &context)
    }
 }
 
+void MainWindow::requestLoad()
+{
+   pendingDialog = std::make_unique<contomap::frontend::LoadDialog>(environment, layout, [this](std::string const &filePath) { load(filePath); });
+}
+
 void MainWindow::requestSave()
 {
    if (!currentFilePath.empty())
@@ -769,6 +781,22 @@ void MainWindow::openEditStyleDialog()
    }
 
    pendingDialog = std::make_unique<contomap::frontend::StyleDialog>(inputRequestHandler, layout, style.value());
+}
+
+void MainWindow::load(std::string const &filePath)
+{
+   auto chunk = rpng_chunk_read(filePath.c_str(), "cMAP");
+   if (chunk.length == 0)
+   {
+      return;
+   }
+   contomap::infrastructure::serial::BinaryDecoder decoder(chunk.data, chunk.data + chunk.length);
+   if (inputRequestHandler.loadState(decoder))
+   {
+      mapCamera.panTo(MapCamera::HOME_POSITION);
+   }
+
+   RPNG_FREE(chunk.data);
 }
 
 void MainWindow::save()

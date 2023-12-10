@@ -136,6 +136,7 @@ private:
 
    void renderMap(contomap::frontend::MapRenderer &renderer, contomap::editor::Selection const &selection, Focus const &focus);
 
+   void requestLoad();
    void requestSave();
 
    void closeDialog();
@@ -147,6 +148,7 @@ private:
    void openSetTopicNameInScopeDialog();
    void openEditStyleDialog();
 
+   void load(std::string const &filePath);
    void save();
 
    [[nodiscard]] static contomap::model::Style selectedStyle(contomap::model::Style style);

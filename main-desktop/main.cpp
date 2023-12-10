@@ -17,6 +17,24 @@ public:
       shouldClose = true;
    }
 
+   DialogResult showLoadDialog(std::string const &title, std::string &filePath, std::vector<std::string> const &filter, std::string const &description) override
+   {
+      std::vector<char const *> filterPointers;
+      for (auto const &f : filter)
+      {
+         filterPointers.emplace_back(f.c_str());
+      }
+      int allowMultiSelects = 0;
+      auto tempPath = tinyfd_openFileDialog(
+         title.c_str(), filePath.c_str(), static_cast<int>(filterPointers.size()), filterPointers.data(), description.c_str(), allowMultiSelects);
+      if (tempPath == nullptr)
+      {
+         return DialogResult::Cancelled;
+      }
+      filePath = tempPath;
+      return DialogResult::Confirmed;
+   }
+
    DialogResult showSaveAsDialog(
       std::string const &title, std::string &filePath, std::vector<std::string> const &filter, std::string const &description) override
    {
