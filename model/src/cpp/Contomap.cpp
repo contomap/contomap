@@ -257,6 +257,9 @@ void Contomap::encode(Encoder &encoder) const
 
 void Contomap::decode(Decoder &decoder, uint8_t version)
 {
+   associations.clear();
+   topics.clear();
+
    Coder::Scope mapScope(decoder, "contomap");
    decoder.codeArray("topics", [this](Decoder &nested, size_t) {
       Coder::Scope nestedScope(nested, "");

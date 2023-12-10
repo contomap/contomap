@@ -1,6 +1,8 @@
 #include <gmock/gmock.h>
 
 #include "contomap/editor/Editor.h"
+#include "contomap/infrastructure/serial/BinaryDecoder.h"
+#include "contomap/infrastructure/serial/BinaryEncoder.h"
 
 #include "contomap/test/fixtures/ContomapViewFixture.h"
 #include "contomap/test/matchers/Coordinates.h"
@@ -18,6 +20,8 @@ using contomap::editor::InputRequestHandler;
 using contomap::editor::SelectedType;
 using contomap::editor::Selection;
 using contomap::editor::SelectionAction;
+using contomap::infrastructure::serial::BinaryDecoder;
+using contomap::infrastructure::serial::BinaryEncoder;
 using contomap::model::Association;
 using contomap::model::ContomapView;
 using contomap::model::Filter;
@@ -40,7 +44,7 @@ using contomap::test::matchers::isCloseTo;
 using contomap::test::samples::someNameValue;
 using contomap::test::samples::someSpacialCoordinate;
 
-class EditorTest : public testing::Test, public contomap::test::Steps<EditorTest>
+class EditorTest : public testing::TestWithParam<bool>, public contomap::test::Steps<EditorTest>
 {
 public:
    class NewTopicRequest
@@ -331,8 +335,7 @@ public:
 
    ViewFixture &view()
    {
-      // TODO: consider save/load state in here - implicitly testing state serialization
-
+      saveAndLoadState();
       return viewFixture;
    }
 
@@ -368,23 +371,40 @@ public:
    }
 
 private:
+   void saveAndLoadState()
+   {
+      bool withSerialization = GetParam();
+      if (withSerialization)
+      {
+         BinaryEncoder encoder;
+         instance.saveState(encoder, true);
+         auto const &data = encoder.getData();
+         BinaryDecoder decoder(data.data(), data.data() + data.size());
+         bool result = instance.loadState(decoder);
+         ASSERT_TRUE(result) << "could not properly restore state by itself";
+      }
+   }
+
    Editor instance;
    UserFixture userFixture;
    ViewFixture viewFixture;
 };
 
-TEST_F(EditorTest, initialStateHasOneTopic)
+INSTANTIATE_TEST_SUITE_P(ParameterizedEditorTest, EditorTest, testing::Values(false, true),
+   [](testing::TestParamInfo<EditorTest::ParamType> const &info) { return std::string("WithSerialization_") + (info.param ? "Yes" : "No"); });
+
+TEST_P(EditorTest, initialStateHasOneTopic)
 {
    then().view().ofMap().shouldHaveTopicCountOf(1);
 }
 
-TEST_F(EditorTest, newTopicsCanBeCreated)
+TEST_P(EditorTest, newTopicsCanBeCreated)
 {
    when().user().requestsANewTopic();
    then().view().ofMap().shouldHaveTopicCountOf(2);
 }
 
-TEST_F(EditorTest, newTopicsKeepTheirProperties)
+TEST_P(EditorTest, newTopicsKeepTheirProperties)
 {
    auto position = someSpacialCoordinate();
    auto name = someNameValue();
@@ -399,7 +419,7 @@ TEST_F(EditorTest, newTopicsKeepTheirProperties)
    });
 }
 
-TEST_F(EditorTest, topicsCanReceiveNewOccurrences)
+TEST_P(EditorTest, topicsCanReceiveNewOccurrences)
 {
    Identifier id = given().user().requestsANewTopic();
    when().user().requestsANewOccurrence(id);
@@ -410,7 +430,7 @@ TEST_F(EditorTest, topicsCanReceiveNewOccurrences)
    });
 }
 
-TEST_F(EditorTest, newAssociationsKeepTheirProperties)
+TEST_P(EditorTest, newAssociationsKeepTheirProperties)
 {
    auto position = someSpacialCoordinate();
    Identifier id = when().user().requestsANewAssociation().at(position);
@@ -420,7 +440,7 @@ TEST_F(EditorTest, newAssociationsKeepTheirProperties)
    });
 }
 
-TEST_F(EditorTest, rolesCanBeCreatedBetweenTopicsAndAssociationsByLinkingThroughSelection)
+TEST_P(EditorTest, rolesCanBeCreatedBetweenTopicsAndAssociationsByLinkingThroughSelection)
 {
    Identifier topicId = given().user().requestsANewTopic();
    Identifier associationId = given().user().requestsANewAssociation();
@@ -435,7 +455,7 @@ TEST_F(EditorTest, rolesCanBeCreatedBetweenTopicsAndAssociationsByLinkingThrough
    });
 }
 
-TEST_F(EditorTest, newAssociationsIsCreatedBetweenSelectedTopicsByLinkingThroughSelection)
+TEST_P(EditorTest, newAssociationsIsCreatedBetweenSelectedTopicsByLinkingThroughSelection)
 {
    Identifier topicId1 = given().user().requestsANewTopic();
    Identifier topicId2 = given().user().requestsANewTopic();
@@ -456,7 +476,7 @@ TEST_F(EditorTest, newAssociationsIsCreatedBetweenSelectedTopicsByLinkingThrough
    });
 }
 
-TEST_F(EditorTest, newAssociationsCreatedByLinkingThroughSelectionIsCentredBetweenParticipants)
+TEST_P(EditorTest, newAssociationsCreatedByLinkingThroughSelectionIsCentredBetweenParticipants)
 {
    Identifier topicId1 = given().user().requestsANewTopic().at(SpacialCoordinate::absoluteAt(-5.0f, 10.0f));
    Identifier topicId2 = given().user().requestsANewTopic().at(SpacialCoordinate::absoluteAt(0.0f, 20.0f));
@@ -466,7 +486,7 @@ TEST_F(EditorTest, newAssociationsCreatedByLinkingThroughSelectionIsCentredBetwe
    then().view().ofMap().shouldHaveOneAssociationNear(SpacialCoordinate::absoluteAt(-2.5f, 15.0f));
 }
 
-TEST_F(EditorTest, newAssociationsCreatedByLinkingThroughSelectionIsCentredBetweenAllOccurrences)
+TEST_P(EditorTest, newAssociationsCreatedByLinkingThroughSelectionIsCentredBetweenAllOccurrences)
 {
    Identifier topicId1 = given().user().requestsANewTopic().at(SpacialCoordinate::absoluteAt(-5.0f, 10.0f));
    Identifier topicId2 = given().user().requestsANewTopic().at(SpacialCoordinate::absoluteAt(0.0f, 20.0f));
@@ -477,7 +497,7 @@ TEST_F(EditorTest, newAssociationsCreatedByLinkingThroughSelectionIsCentredBetwe
    then().view().ofMap().shouldHaveOneAssociationNear(SpacialCoordinate::absoluteAt(-5.0f, 11.0f));
 }
 
-TEST_F(EditorTest, newTopicHasItsOccurrenceSelected)
+TEST_P(EditorTest, newTopicHasItsOccurrenceSelected)
 {
    when().user().requestsANewTopic();
    then().view().ofSelection().should([](Selection const &selection) {
@@ -487,7 +507,7 @@ TEST_F(EditorTest, newTopicHasItsOccurrenceSelected)
    });
 }
 
-TEST_F(EditorTest, newAssociationHasItSelected)
+TEST_P(EditorTest, newAssociationHasItSelected)
 {
    when().user().requestsANewAssociation();
    then().view().ofSelection().should([](Selection const &selection) {
@@ -497,7 +517,7 @@ TEST_F(EditorTest, newAssociationHasItSelected)
    });
 }
 
-TEST_F(EditorTest, newAssociationThroughLinkingHasItSelected)
+TEST_P(EditorTest, newAssociationThroughLinkingHasItSelected)
 {
    Identifier topicId1 = given().user().requestsANewTopic().at(SpacialCoordinate::absoluteAt(-5.0f, 10.0f));
    Identifier topicId2 = given().user().requestsANewTopic().at(SpacialCoordinate::absoluteAt(0.0f, 20.0f));
@@ -511,7 +531,7 @@ TEST_F(EditorTest, newAssociationThroughLinkingHasItSelected)
    });
 }
 
-TEST_F(EditorTest, deletingAssociationRemovesTheAssociationAndRoles)
+TEST_P(EditorTest, deletingAssociationRemovesTheAssociationAndRoles)
 {
    Identifier topicId = given().user().requestsANewTopic();
    Identifier associationId = given().user().requestsANewAssociation();
@@ -525,7 +545,7 @@ TEST_F(EditorTest, deletingAssociationRemovesTheAssociationAndRoles)
       [](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Association), testing::Eq(Identifiers {})) << "Association is still selected"; });
 }
 
-TEST_F(EditorTest, deletingLastOccurrenceRemovesTopic)
+TEST_P(EditorTest, deletingLastOccurrenceRemovesTopic)
 {
    Identifier topicId = given().user().requestsANewTopic();
    Identifier occurrenceId = occurrenceOf(topicId).getId();
@@ -540,7 +560,7 @@ TEST_F(EditorTest, deletingLastOccurrenceRemovesTopic)
       [](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers {})) << "Occurrence is still selected"; });
 }
 
-TEST_F(EditorTest, deletingRoleRemovesIt)
+TEST_P(EditorTest, deletingRoleRemovesIt)
 {
    Identifier topicId = given().user().requestsANewTopic();
    Identifier associationId = given().user().requestsANewAssociation();
@@ -560,7 +580,7 @@ TEST_F(EditorTest, deletingRoleRemovesIt)
       [](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Role), testing::Eq(Identifiers {})) << "Role is still selected"; });
 }
 
-TEST_F(EditorTest, setViewScopeFromSelectionClearsSelection)
+TEST_P(EditorTest, setViewScopeFromSelectionClearsSelection)
 {
    Identifier topicId = given().user().requestsANewTopic();
    given().user().selects(SelectedType::Occurrence, occurrenceOf(topicId).getId());
@@ -569,7 +589,7 @@ TEST_F(EditorTest, setViewScopeFromSelectionClearsSelection)
       [](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers {})) << "Occurrence is still selected"; });
 }
 
-TEST_F(EditorTest, newOccurrencesAreInNewViewScope)
+TEST_P(EditorTest, newOccurrencesAreInNewViewScope)
 {
    Identifier scopeTopicId = given().user().requestsANewTopic();
    given().user().selects(SelectedType::Occurrence, occurrenceOf(scopeTopicId).getId());
@@ -579,14 +599,14 @@ TEST_F(EditorTest, newOccurrencesAreInNewViewScope)
       topicId, [this](Topic const &topic) { EXPECT_TRUE(topic.isIn(viewScope())) << "Topic has no occurrence in this new scope"; });
 }
 
-TEST_F(EditorTest, setViewScopeToSingleTopic)
+TEST_P(EditorTest, setViewScopeToSingleTopic)
 {
    Identifier scopeTopicId = given().user().requestsANewTopic();
    when().user().setsTheViewScopeToBe(scopeTopicId);
    then().view().ofViewScope().shouldBe(Identifiers::ofSingle(scopeTopicId));
 }
 
-TEST_F(EditorTest, unknownTopicsCanNotBeSetToBeTheViewScope)
+TEST_P(EditorTest, unknownTopicsCanNotBeSetToBeTheViewScope)
 {
    Identifiers originalScope = viewScope();
    Identifier unknownId = Identifier::random();
@@ -594,7 +614,7 @@ TEST_F(EditorTest, unknownTopicsCanNotBeSetToBeTheViewScope)
    then().view().ofViewScope().shouldBe(originalScope);
 }
 
-TEST_F(EditorTest, addViewScopeOfSingleTopic)
+TEST_P(EditorTest, addViewScopeOfSingleTopic)
 {
    Identifier scopeTopicId = given().user().requestsANewTopic();
    when().user().addsToTheViewScope(scopeTopicId);
@@ -602,7 +622,7 @@ TEST_F(EditorTest, addViewScopeOfSingleTopic)
    asWellAs().view().ofViewScope().shouldContain(defaultViewScope());
 }
 
-TEST_F(EditorTest, unknownTopicsCanNotBeAddedToTheViewScope)
+TEST_P(EditorTest, unknownTopicsCanNotBeAddedToTheViewScope)
 {
    Identifiers originalScope = viewScope();
    Identifier unknownId = Identifier::random();
@@ -610,7 +630,7 @@ TEST_F(EditorTest, unknownTopicsCanNotBeAddedToTheViewScope)
    then().view().ofViewScope().shouldBe(originalScope);
 }
 
-TEST_F(EditorTest, removeSingleTopicFromViewScope)
+TEST_P(EditorTest, removeSingleTopicFromViewScope)
 {
    Identifier scopeTopicId = given().user().requestsANewTopic();
    given().user().addsToTheViewScope(scopeTopicId);
@@ -618,7 +638,7 @@ TEST_F(EditorTest, removeSingleTopicFromViewScope)
    then().view().ofViewScope().shouldBe(Identifiers::ofSingle(scopeTopicId));
 }
 
-TEST_F(EditorTest, removingLastTopicFromViewScopeResetsToDefault)
+TEST_P(EditorTest, removingLastTopicFromViewScopeResetsToDefault)
 {
    Identifier scopeTopicId = given().user().requestsANewTopic();
    given().user().addsToTheViewScope(scopeTopicId);
@@ -627,7 +647,7 @@ TEST_F(EditorTest, removingLastTopicFromViewScopeResetsToDefault)
    then().view().ofViewScope().shouldBe(Identifiers::ofSingle(defaultViewScope()));
 }
 
-TEST_F(EditorTest, deletingTopicOfCurrentViewScopeRemovesItFromViewScope)
+TEST_P(EditorTest, deletingTopicOfCurrentViewScopeRemovesItFromViewScope)
 {
    Identifier scopeTopicId = given().user().requestsANewTopic();
    Identifier firstOccurrenceIdOfScopeTopic = occurrenceOf(scopeTopicId).getId();
@@ -642,7 +662,7 @@ TEST_F(EditorTest, deletingTopicOfCurrentViewScopeRemovesItFromViewScope)
    then().view().ofViewScope().shouldBe(Identifiers::ofSingle(defaultViewScope()));
 }
 
-TEST_F(EditorTest, cyclingThroughOccurrencesSingleForward)
+TEST_P(EditorTest, cyclingThroughOccurrencesSingleForward)
 {
    Identifier topicId = given().user().requestsANewTopic();
    Identifier occurrenceId = occurrenceOf(topicId).getId();
@@ -652,7 +672,7 @@ TEST_F(EditorTest, cyclingThroughOccurrencesSingleForward)
       [occurrenceId](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers::ofSingle(occurrenceId))); });
 }
 
-TEST_F(EditorTest, cyclingThroughOccurrencesSingleReverse)
+TEST_P(EditorTest, cyclingThroughOccurrencesSingleReverse)
 {
    Identifier topicId = given().user().requestsANewTopic();
    Identifier occurrenceId = occurrenceOf(topicId).getId();
@@ -662,7 +682,7 @@ TEST_F(EditorTest, cyclingThroughOccurrencesSingleReverse)
       [occurrenceId](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers::ofSingle(occurrenceId))); });
 }
 
-TEST_F(EditorTest, cyclingThroughOccurrencesToSecondInSameScopeForward)
+TEST_P(EditorTest, cyclingThroughOccurrencesToSecondInSameScopeForward)
 {
    Identifier topicId = given().user().requestsANewTopic();
    Identifier occurrenceId = occurrenceOf(topicId).getId();
@@ -675,7 +695,7 @@ TEST_F(EditorTest, cyclingThroughOccurrencesToSecondInSameScopeForward)
    });
 }
 
-TEST_F(EditorTest, cyclingThroughOccurrencesToSecondInSameScopeReverse)
+TEST_P(EditorTest, cyclingThroughOccurrencesToSecondInSameScopeReverse)
 {
    Identifier topicId = given().user().requestsANewTopic();
    Identifier occurrenceId = occurrenceOf(topicId).getId();
@@ -690,7 +710,7 @@ TEST_F(EditorTest, cyclingThroughOccurrencesToSecondInSameScopeReverse)
    });
 }
 
-TEST_F(EditorTest, cyclingThroughOccurrencesBackToOriginalInSameScope)
+TEST_P(EditorTest, cyclingThroughOccurrencesBackToOriginalInSameScope)
 {
    Identifier topicId = given().user().requestsANewTopic();
    Identifier occurrenceId = occurrenceOf(topicId).getId();
@@ -702,7 +722,7 @@ TEST_F(EditorTest, cyclingThroughOccurrencesBackToOriginalInSameScope)
       [occurrenceId](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::Eq(Identifiers::ofSingle(occurrenceId))); });
 }
 
-TEST_F(EditorTest, cyclingThroughOccurrencesIsIgnoredIfMoreThanOneOccurrenceSelected)
+TEST_P(EditorTest, cyclingThroughOccurrencesIsIgnoredIfMoreThanOneOccurrenceSelected)
 {
    Identifier topicId1 = given().user().requestsANewTopic();
    Identifier occurrenceId1 = occurrenceOf(topicId1).getId();
@@ -715,7 +735,7 @@ TEST_F(EditorTest, cyclingThroughOccurrencesIsIgnoredIfMoreThanOneOccurrenceSele
    then().view().ofSelection().should([](Selection const &selection) { EXPECT_THAT(selection.of(SelectedType::Occurrence), testing::SizeIs(2)); });
 }
 
-TEST_F(EditorTest, cyclingThroughOccurrencesToSecondInOtherScope)
+TEST_P(EditorTest, cyclingThroughOccurrencesToSecondInOtherScope)
 {
    Identifier scopeTopicId = given().user().requestsANewTopic();
    Identifier topicId = given().user().requestsANewTopic();
@@ -732,7 +752,7 @@ TEST_F(EditorTest, cyclingThroughOccurrencesToSecondInOtherScope)
    asWellAs().view().ofViewScope().shouldBe(Identifiers::ofSingle(scopeTopicId));
 }
 
-TEST_F(EditorTest, defaultTopicNameCanBeChanged)
+TEST_P(EditorTest, defaultTopicNameCanBeChanged)
 {
    Identifier topicId = given().user().requestsANewTopic();
    auto newName = someNameValue();
@@ -743,7 +763,7 @@ TEST_F(EditorTest, defaultTopicNameCanBeChanged)
    });
 }
 
-TEST_F(EditorTest, scopedTopicNameCanBeSet)
+TEST_P(EditorTest, scopedTopicNameCanBeSet)
 {
    Identifier scopeTopicId = given().user().requestsANewTopic();
    Identifier topicId = given().user().requestsANewTopic();
@@ -756,7 +776,7 @@ TEST_F(EditorTest, scopedTopicNameCanBeSet)
    });
 }
 
-TEST_F(EditorTest, scopedTopicNameCanBeChanged)
+TEST_P(EditorTest, scopedTopicNameCanBeChanged)
 {
    Identifier scopeTopicId = given().user().requestsANewTopic();
    Identifier topicId = given().user().requestsANewTopic();
@@ -770,7 +790,7 @@ TEST_F(EditorTest, scopedTopicNameCanBeChanged)
    });
 }
 
-TEST_F(EditorTest, scopedTopicNameCanBeRemoved)
+TEST_P(EditorTest, scopedTopicNameCanBeRemoved)
 {
    Identifier scopeTopicId = given().user().requestsANewTopic();
    std::string defaultName("defaultName");
@@ -784,7 +804,7 @@ TEST_F(EditorTest, scopedTopicNameCanBeRemoved)
    });
 }
 
-TEST_F(EditorTest, scopedTopicNameIsRemovedIfScopeIsDeleted)
+TEST_P(EditorTest, scopedTopicNameIsRemovedIfScopeIsDeleted)
 {
    Identifier scopeTopicId = given().user().requestsANewTopic();
    std::string defaultName("defaultName");
@@ -800,7 +820,7 @@ TEST_F(EditorTest, scopedTopicNameIsRemovedIfScopeIsDeleted)
    });
 }
 
-TEST_F(EditorTest, settingTypeOfOccurrence)
+TEST_P(EditorTest, settingTypeOfOccurrence)
 {
    Identifier typeTopicId = given().user().requestsANewTopic();
    Identifier topicId = given().user().requestsANewTopic();
@@ -814,7 +834,7 @@ TEST_F(EditorTest, settingTypeOfOccurrence)
    });
 }
 
-TEST_F(EditorTest, clearingTypeOfOccurrence)
+TEST_P(EditorTest, clearingTypeOfOccurrence)
 {
    Identifier typeTopicId = given().user().requestsANewTopic();
    Identifier topicId = given().user().requestsANewTopic();
@@ -828,7 +848,7 @@ TEST_F(EditorTest, clearingTypeOfOccurrence)
    });
 }
 
-TEST_F(EditorTest, deletingTypeOfOccurrenceClearsIt)
+TEST_P(EditorTest, deletingTypeOfOccurrenceClearsIt)
 {
    Identifier typeTopicId = given().user().requestsANewTopic();
    Identifier topicId = given().user().requestsANewTopic();
@@ -843,7 +863,7 @@ TEST_F(EditorTest, deletingTypeOfOccurrenceClearsIt)
    });
 }
 
-TEST_F(EditorTest, typeOfOccurrenceCanNotBeSetToUnknownId)
+TEST_P(EditorTest, typeOfOccurrenceCanNotBeSetToUnknownId)
 {
    Identifier typeTopicId = Identifier::random();
    Identifier topicId = given().user().requestsANewTopic();
@@ -856,7 +876,7 @@ TEST_F(EditorTest, typeOfOccurrenceCanNotBeSetToUnknownId)
    });
 }
 
-TEST_F(EditorTest, settingTypeOfAssociation)
+TEST_P(EditorTest, settingTypeOfAssociation)
 {
    Identifier typeTopicId = given().user().requestsANewTopic();
    Identifier associationId = given().user().requestsANewAssociation();
@@ -869,7 +889,7 @@ TEST_F(EditorTest, settingTypeOfAssociation)
    });
 }
 
-TEST_F(EditorTest, clearingTypeOfAssociation)
+TEST_P(EditorTest, clearingTypeOfAssociation)
 {
    Identifier typeTopicId = given().user().requestsANewTopic();
    Identifier associationId = given().user().requestsANewAssociation();
@@ -882,7 +902,7 @@ TEST_F(EditorTest, clearingTypeOfAssociation)
    });
 }
 
-TEST_F(EditorTest, deletingTypeOfAssociationClearsIt)
+TEST_P(EditorTest, deletingTypeOfAssociationClearsIt)
 {
    Identifier typeTopicId = given().user().requestsANewTopic();
    Identifier associationId = given().user().requestsANewAssociation();
@@ -896,7 +916,7 @@ TEST_F(EditorTest, deletingTypeOfAssociationClearsIt)
    });
 }
 
-TEST_F(EditorTest, typeOfAssociationCanNotBeSetToUnknownId)
+TEST_P(EditorTest, typeOfAssociationCanNotBeSetToUnknownId)
 {
    Identifier typeTopicId = Identifier::random();
    Identifier associationId = given().user().requestsANewAssociation();
@@ -908,7 +928,7 @@ TEST_F(EditorTest, typeOfAssociationCanNotBeSetToUnknownId)
    });
 }
 
-TEST_F(EditorTest, settingTypeOfRole)
+TEST_P(EditorTest, settingTypeOfRole)
 {
    Identifier typeTopicId = given().user().requestsANewTopic();
    Identifier topicId = given().user().requestsANewTopic();
@@ -927,7 +947,7 @@ TEST_F(EditorTest, settingTypeOfRole)
    });
 }
 
-TEST_F(EditorTest, clearingTypeOfRole)
+TEST_P(EditorTest, clearingTypeOfRole)
 {
    Identifier typeTopicId = given().user().requestsANewTopic();
    Identifier topicId = given().user().requestsANewTopic();
@@ -946,7 +966,7 @@ TEST_F(EditorTest, clearingTypeOfRole)
    });
 }
 
-TEST_F(EditorTest, deletingTypeOfRoleClearsIt)
+TEST_P(EditorTest, deletingTypeOfRoleClearsIt)
 {
    Identifier typeTopicId = given().user().requestsANewTopic();
    Identifier topicId = given().user().requestsANewTopic();
@@ -966,7 +986,7 @@ TEST_F(EditorTest, deletingTypeOfRoleClearsIt)
    });
 }
 
-TEST_F(EditorTest, typeOfRoleCanNotBeSetToUnknownId)
+TEST_P(EditorTest, typeOfRoleCanNotBeSetToUnknownId)
 {
    Identifier typeTopicId = Identifier::random();
    Identifier topicId = given().user().requestsANewTopic();
