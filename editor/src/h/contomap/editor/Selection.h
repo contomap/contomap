@@ -7,8 +7,8 @@
 #include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Association.h"
 #include "contomap/model/Identifiers.h"
+#include "contomap/model/Occurrence.h"
 #include "contomap/model/Role.h"
-#include "contomap/model/Topic.h"
 
 namespace contomap::editor
 {
@@ -29,13 +29,13 @@ public:
     *
     * @param coder the coder to use.
     * @param version the version to consider.
-    * @param topicResolver function to return a known topic.
+    * @param occurrenceResolver function to return a known occurrence.
     * @param associationResolver function to return a known association.
     * @param roleResolver function to return a known role.
     * @return the decoded selection instance.
     */
    [[nodiscard]] static Selection from(contomap::infrastructure::serial::Decoder &coder, uint8_t version,
-      std::function<contomap::model::Topic &(contomap::model::Identifier)> const &topicResolver,
+      std::function<contomap::model::Occurrence &(contomap::model::Identifier)> const &occurrenceResolver,
       std::function<contomap::model::Association &(contomap::model::Identifier)> const &associationResolver,
       std::function<contomap::model::Role &(contomap::model::Identifier)> const &roleResolver);
 
@@ -104,9 +104,6 @@ public:
    [[nodiscard]] contomap::model::Identifiers const &of(contomap::editor::SelectedType type) const;
 
 private:
-   [[nodiscard]] static contomap::editor::SelectedType typeFromSerial(uint8_t value);
-   [[nodiscard]] static uint8_t typeToSerial(contomap::editor::SelectedType type);
-
    std::map<contomap::editor::SelectedType, contomap::model::Identifiers> identifiers;
 };
 

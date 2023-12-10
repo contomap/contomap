@@ -425,10 +425,10 @@ bool Editor::loadState(Decoder &decoder)
          decoder.code("present", selectionFlag);
          if (selectionFlag != 0x00)
          {
-            auto topicResolver = [&newMap](Identifier id) { return newMap.findTopic(id).value(); };
+            auto occurrenceResolver = [&newMap](Identifier id) { return *newMap.findOccurrences(Identifiers::ofSingle(id)).begin(); };
             auto associationResolver = [&newMap](Identifier id) { return newMap.findAssociation(id).value(); };
             auto roleResolver = [&newMap](Identifier id) { return *newMap.findRoles(Identifiers::ofSingle(id)).begin(); };
-            newSelection = Selection::from(decoder, serialVersion, topicResolver, associationResolver, roleResolver);
+            newSelection = Selection::from(decoder, serialVersion, occurrenceResolver, associationResolver, roleResolver);
          }
       }
    }
