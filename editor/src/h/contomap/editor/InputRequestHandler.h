@@ -185,11 +185,14 @@ public:
     * Requests to save the current state using the given coder.
     *
     * @param encoder the coder to use.
+    * @param withSelection whether the selection shall be included in the serialization.
     */
-   virtual void saveState(contomap::infrastructure::serial::Encoder &encoder) = 0;
+   virtual void saveState(contomap::infrastructure::serial::Encoder &encoder, bool withSelection) = 0;
 
    /**
     * Requests to set the state from an encoded form.
+    * If the serialized state contains a selection, it will be applied. If it does not contain it, the selection
+    * will be empty.
     *
     * @param decoder the coder to read from.
     * @return whether loading was successful.

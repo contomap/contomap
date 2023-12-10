@@ -4,8 +4,40 @@
 
 using contomap::editor::SelectedType;
 using contomap::editor::Selection;
+using contomap::infrastructure::serial::Coder;
+using contomap::infrastructure::serial::Decoder;
+using contomap::infrastructure::serial::Encoder;
+using contomap::model::Association;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
+using contomap::model::Role;
+using contomap::model::Topic;
+
+Selection Selection::from(Decoder &coder, uint8_t, std::function<Topic &(Identifier)> const &, std::function<Association &(Identifier)> const &,
+   std::function<Role &(Identifier)> const &)
+{
+   Selection instance;
+   Coder::Scope scope(coder, "selection");
+   coder.codeArray("identifiers", [&instance](Decoder &nested, size_t) {
+      Coder::Scope entryScope(nested, "");
+      uint8_t serialType = 0x00;
+      nested.code("type", serialType);
+      Identifiers ids;
+      ids.decode(nested, "ids");
+      instance.identifiers.emplace(typeFromSerial(serialType), ids);
+   });
+   return instance;
+}
+
+void Selection::encode(Encoder &coder) const
+{
+   Coder::Scope scope(coder, "selection");
+   coder.codeArray("identifiers", identifiers.begin(), identifiers.end(), [](Encoder &nested, auto const &kvp) {
+      Coder::Scope entryScope(nested, "");
+      nested.code("type", typeToSerial(kvp.first));
+      kvp.second.encode(nested, "ids");
+   });
+}
 
 bool Selection::empty() const
 {
@@ -77,4 +109,16 @@ Identifiers const &Selection::of(SelectedType type) const
    static Identifiers const empty;
    auto it = identifiers.find(type);
    return (it != identifiers.end()) ? it->second : empty;
+}
+
+SelectedType Selection::typeFromSerial(uint8_t value)
+{
+   static std::map<uint8_t, SelectedType> CONSTANTS { { 0x01, SelectedType::Association }, { 0x02, SelectedType::Occurrence }, { 0x03, SelectedType::Role } };
+   return CONSTANTS.at(value);
+}
+
+uint8_t Selection::typeToSerial(SelectedType type)
+{
+   static std::map<SelectedType, uint8_t> CONSTANTS { { SelectedType::Association, 0x01 }, { SelectedType::Occurrence, 0x02 }, { SelectedType::Role, 0x03 } };
+   return CONSTANTS.at(type);
 }

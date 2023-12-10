@@ -5,6 +5,9 @@
 using contomap::editor::Editor;
 using contomap::editor::SelectedType;
 using contomap::editor::SelectionAction;
+using contomap::infrastructure::serial::Coder;
+using contomap::infrastructure::serial::Decoder;
+using contomap::infrastructure::serial::Encoder;
 using contomap::model::Association;
 using contomap::model::Contomap;
 using contomap::model::Identifier;
@@ -388,24 +391,46 @@ void Editor::selectClosestOccurrenceOf(Identifier topicId)
    selection.setSole(SelectedType::Occurrence, occurrence.getId());
 }
 
-void Editor::saveState(contomap::infrastructure::serial::Encoder &encoder)
+void Editor::saveState(Encoder &encoder, bool withSelection)
 {
    encoder.code("version", CURRENT_SERIAL_VERSION);
    map.encode(encoder);
    viewScope.encode(encoder, "viewScope");
+   {
+      Coder::Scope selectionScope(encoder, "selection");
+      uint8_t selectionFlag = withSelection ? 0x01 : 0x00;
+      encoder.code("present", selectionFlag);
+      if (selectionFlag != 0x00)
+      {
+         selection.encode(encoder);
+      }
+   }
 }
 
-bool Editor::loadState(contomap::infrastructure::serial::Decoder &decoder)
+bool Editor::loadState(Decoder &decoder)
 {
-   contomap::model::Contomap newMap = contomap::model::Contomap::newMap();
-   contomap::model::Identifiers newViewScope;
+   Contomap newMap = contomap::model::Contomap::newMap();
+   Identifiers newViewScope;
+   Selection newSelection;
    uint8_t serialVersion = 0x00;
 
    try
    {
       decoder.code("version", serialVersion);
       newMap.decode(decoder, serialVersion);
-      viewScope.decode(decoder, "viewScope");
+      newViewScope.decode(decoder, "viewScope");
+      {
+         Coder::Scope selectionScope(decoder, "selection");
+         uint8_t selectionFlag = 0x00;
+         decoder.code("present", selectionFlag);
+         if (selectionFlag != 0x00)
+         {
+            auto topicResolver = [&newMap](Identifier id) { return newMap.findTopic(id).value(); };
+            auto associationResolver = [&newMap](Identifier id) { return newMap.findAssociation(id).value(); };
+            auto roleResolver = [&newMap](Identifier id) { return *newMap.findRoles(Identifiers::ofSingle(id)).begin(); };
+            newSelection = Selection::from(decoder, serialVersion, topicResolver, associationResolver, roleResolver);
+         }
+      }
    }
    catch (std::exception &)
    {
@@ -414,10 +439,9 @@ bool Editor::loadState(contomap::infrastructure::serial::Decoder &decoder)
 
    // TODO: verify new state is consistent
 
-   // TODO: need to make map a unique_ptr
-   // map = newMap;
+   map = std::move(newMap);
    viewScope = newViewScope;
-   selection.clear();
+   selection = newSelection;
    return true;
 }
 

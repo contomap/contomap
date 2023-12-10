@@ -3,6 +3,8 @@
 #include "contomap/editor/InputRequestHandler.h"
 #include "contomap/editor/Selection.h"
 #include "contomap/editor/View.h"
+#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Contomap.h"
 #include "contomap/model/Identifiers.h"
 
@@ -43,7 +45,7 @@ public:
    void cycleSelectedOccurrenceReverse() override;
    void selectClosestOccurrenceOf(contomap::model::Identifier topicId) override;
 
-   void saveState(contomap::infrastructure::serial::Encoder &encoder) override;
+   void saveState(contomap::infrastructure::serial::Encoder &encoder, bool withSelection) override;
    [[nodiscard]] bool loadState(contomap::infrastructure::serial::Decoder &decoder) override;
 
    [[nodiscard]] contomap::model::Identifiers const &ofViewScope() const override;
