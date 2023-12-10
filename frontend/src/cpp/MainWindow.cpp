@@ -794,6 +794,7 @@ void MainWindow::load(std::string const &filePath)
    if (inputRequestHandler.loadState(decoder))
    {
       mapCamera.panTo(MapCamera::HOME_POSITION);
+      currentFilePath = filePath;
    }
 
    RPNG_FREE(chunk.data);
