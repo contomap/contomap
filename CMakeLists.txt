@@ -49,6 +49,15 @@ target_include_directories(raygui
 target_link_libraries(raygui PUBLIC raylib)
 target_compile_definitions(raygui PRIVATE RAYGUI_IMPLEMENTATION)
 
+add_library(rpng STATIC "${PROJECT_SOURCE_DIR}/vendor/rpng/src/rpng.c")
+target_include_directories(rpng
+        PRIVATE
+        "${PROJECT_SOURCE_DIR}/vendor/rpng/include/rpng"
+        PUBLIC
+        "${PROJECT_SOURCE_DIR}/vendor/rpng/include"
+)
+target_compile_definitions(rpng PRIVATE RPNG_IMPLEMENTATION)
+
 
 find_package(Git)
 execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD OUTPUT_VARIABLE GIT_REVISION ERROR_QUIET)
@@ -167,6 +176,7 @@ target_include_directories(contomap-frontend PUBLIC "${PROJECT_SOURCE_DIR}/front
 target_link_libraries(contomap-frontend
         PRIVATE
         all_warnings
+        rpng
         PUBLIC
         contomap-editor
         raygui

@@ -1,7 +1,9 @@
 #include <cmath>
+#include <memory.h>
 #include <sstream>
 
 #include <raygui/raygui.h>
+#include <rpng/rpng.h>
 
 #include "contomap/editor/Selections.h"
 #include "contomap/editor/Styles.h"
@@ -18,6 +20,8 @@
 #include "contomap/frontend/RenameTopicDialog.h"
 #include "contomap/frontend/SaveAsDialog.h"
 #include "contomap/frontend/StyleDialog.h"
+#include "contomap/infrastructure/serial/BinaryDecoder.h"
+#include "contomap/infrastructure/serial/BinaryEncoder.h"
 #include "contomap/model/Associations.h"
 #include "contomap/model/Topics.h"
 
@@ -799,10 +803,30 @@ void MainWindow::save()
    auto exported = ExportImageToMemory(image, ".png", &fileSize);
    UnloadImage(image);
    UnloadRenderTexture(renderTexture);
+   if (exported == nullptr)
+   {
+      return;
+   }
+   {
+      int outputSize = 0;
+      contomap::infrastructure::serial::BinaryEncoder encoder;
+      rpng_chunk chunk;
+      memset(&chunk, 0x00, sizeof(chunk));
+      inputRequestHandler.saveState(encoder, false);
+      auto const &data = encoder.getData();
+      chunk.data = const_cast<uint8_t *>(data.data());
+      chunk.length = static_cast<int>(data.size());
+      memcpy(chunk.type, "cMAP", 4);
+
+      auto newExported = rpng_chunk_write_from_memory(reinterpret_cast<char const *>(exported), chunk, &outputSize);
+      RL_FREE(exported);
+      exported = reinterpret_cast<uint8_t *>(newExported);
+      fileSize = outputSize;
+   }
    if (exported != nullptr)
    {
       SaveFileData(currentFilePath.c_str(), exported, fileSize);
-      RL_FREE(exported);
+      RPNG_FREE(exported);
 
       environment.fileSaved(currentFilePath);
    }
