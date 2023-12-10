@@ -11,25 +11,25 @@ using contomap::model::OptionalIdentifier;
 using contomap::model::Style;
 using contomap::model::Topic;
 
-Occurrence::Occurrence(Identifier id, Identifier topicId, Identifiers scope, SpacialCoordinate spacial)
+Occurrence::Occurrence(Identifier id, Topic &topic, Identifiers scope, SpacialCoordinate spacial)
    : id(id)
-   , topicId(topicId)
+   , topic(topic)
    , scope(std::move(scope))
    , location(spacial)
 {
 }
 
-Occurrence::Occurrence(Identifier id, Identifier topicId)
+Occurrence::Occurrence(Identifier id, Topic &topic)
    : id(id)
-   , topicId(topicId)
+   , topic(topic)
 {
 }
 
-std::unique_ptr<Occurrence> Occurrence::from(contomap::infrastructure::serial::Decoder &coder, uint8_t version, contomap::model::Identifier id,
+std::unique_ptr<Occurrence> Occurrence::from(contomap::infrastructure::serial::Decoder &coder, uint8_t version, contomap::model::Identifier id, Topic &topic,
    std::function<Topic &(contomap::model::Identifier)> const &topicResolver)
 {
    Coder::Scope serialScope(coder, "occurrence");
-   std::unique_ptr<Occurrence> occurrence(new Occurrence(id, Identifier::from(coder, "topicId")));
+   std::unique_ptr<Occurrence> occurrence(new Occurrence(id, topic));
    occurrence->scope.decode(coder, "scope");
    occurrence->location.decode(coder, "location", version);
    occurrence->type = OptionalIdentifier::from(coder, "type");
@@ -42,7 +42,6 @@ std::unique_ptr<Occurrence> Occurrence::from(contomap::infrastructure::serial::D
 void Occurrence::encode(Encoder &coder) const
 {
    Coder::Scope serialScope(coder, "occurrence");
-   topicId.encode(coder, "topicId");
    scope.encode(coder, "scope");
    location.encode(coder, "location");
    type.encode(coder, "type");
@@ -55,9 +54,9 @@ Identifier Occurrence::getId() const
    return id;
 }
 
-Identifier Occurrence::getTopicId() const
+Topic const &Occurrence::getTopic() const
 {
-   return topicId;
+   return topic;
 }
 
 Identifiers const &Occurrence::getScope() const

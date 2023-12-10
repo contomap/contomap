@@ -2,12 +2,19 @@
 
 #include "contomap/model/Topic.h"
 
+#include "contomap/test/matchers/Coordinates.h"
+#include "contomap/test/printers/model.h"
+#include "contomap/test/samples/CoordinateSamples.h"
+#include "contomap/test/samples/ScopeSamples.h"
 #include "contomap/test/samples/TopicNameSamples.h"
 #include "contomap/test/samples/TopicSamples.h"
 
 using contomap::model::Topic;
 
+using contomap::test::matchers::isCloseTo;
 using contomap::test::samples::someNameValue;
+using contomap::test::samples::someNonEmptyScope;
+using contomap::test::samples::someSpacialCoordinate;
 using contomap::test::samples::someTopic;
 
 using testing::NiceMock;
@@ -73,4 +80,16 @@ TEST_F(TopicTest, clearingReifiedGuardsAgainstCallback)
    }));
    topic.clearReified();
    EXPECT_EQ(times, 1);
+}
+
+TEST_F(TopicTest, occurrenceBaseProperties)
+{
+   auto topic = someTopic();
+   auto scope = someNonEmptyScope();
+   auto position = someSpacialCoordinate();
+   auto &occurrence = topic.newOccurrence(scope, position);
+   EXPECT_EQ(&topic, &occurrence.getTopic());
+   EXPECT_TRUE(occurrence.isIn(scope));
+   EXPECT_FALSE(occurrence.isIn({}));
+   EXPECT_THAT(occurrence.getLocation().getSpacial(), isCloseTo(position));
 }

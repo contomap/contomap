@@ -26,22 +26,22 @@ public:
     * Constructor.
     *
     * @param id the primary identifier of this occurrence.
-    * @param topicId the primary identifier of the topic this occurrence represents.
+    * @param topic the reference to the topic this occurrence represents.
     * @param scope the scope within which this occurrence is valid.
     * @param spacial the known, initial point where the occurrence is happening.
     */
-   Occurrence(
-      contomap::model::Identifier id, contomap::model::Identifier topicId, contomap::model::Identifiers scope, contomap::model::SpacialCoordinate spacial);
+   Occurrence(contomap::model::Identifier id, contomap::model::Topic &topic, contomap::model::Identifiers scope, contomap::model::SpacialCoordinate spacial);
 
    /**
     * Deserializes the occurrence.
     *
     * @param coder the coder to use.
     * @param version the version to consider.
+    * @param topic the topic this occurrence represents.
     * @param topicResolver the function to use for resolving topic references.
     */
    [[nodiscard]] static std::unique_ptr<Occurrence> from(contomap::infrastructure::serial::Decoder &coder, uint8_t version, contomap::model::Identifier id,
-      std::function<Topic &(contomap::model::Identifier)> const &topicResolver);
+      Topic &topic, std::function<Topic &(contomap::model::Identifier)> const &topicResolver);
 
    /**
     * Serializes the occurrence.
@@ -56,9 +56,9 @@ public:
    [[nodiscard]] contomap::model::Identifier getId() const;
 
    /**
-    * @return the unique identifier of the topic this occurrence represents.
+    * @return the topic this occurrence represents.
     */
-   [[nodiscard]] contomap::model::Identifier getTopicId() const;
+   [[nodiscard]] contomap::model::Topic const &getTopic() const;
 
    /**
     * @return the scope of this occurrence.
@@ -128,10 +128,10 @@ public:
    [[nodiscard]] contomap::model::OptionalIdentifier getType() const;
 
 private:
-   Occurrence(contomap::model::Identifier id, contomap::model::Identifier topicId);
+   Occurrence(contomap::model::Identifier id, contomap::model::Topic &topic);
 
    contomap::model::Identifier id;
-   contomap::model::Identifier topicId;
+   contomap::model::Topic &topic;
    contomap::model::Identifiers scope;
 
    contomap::model::Coordinates location;

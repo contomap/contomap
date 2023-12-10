@@ -64,7 +64,7 @@ void Topic::decodeRelated(
    decoder.codeArray("occurrences", [this, version, &topicResolver](Decoder &nested, size_t) {
       Coder::Scope nestedScope(nested, "");
       Identifier occurrenceId = Identifier::from(nested, "id");
-      occurrences.emplace(occurrenceId, Occurrence::from(nested, version, occurrenceId, topicResolver));
+      occurrences.emplace(occurrenceId, Occurrence::from(nested, version, occurrenceId, *this, topicResolver));
    });
    decoder.codeArray("roles", [this, version, &topicResolver, &associationResolver](Decoder &nested, size_t) {
       Coder::Scope nestedScope(nested, "");
@@ -121,7 +121,7 @@ void Topic::removeNameInScope(Identifiers const &scope)
 Occurrence &Topic::newOccurrence(Identifiers scope, SpacialCoordinate location)
 {
    auto occurrenceId = Identifier::random();
-   auto it = occurrences.emplace(occurrenceId, std::make_unique<Occurrence>(occurrenceId, id, std::move(scope), location));
+   auto it = occurrences.emplace(occurrenceId, std::make_unique<Occurrence>(occurrenceId, *this, std::move(scope), location));
    return *it.first->second;
 }
 
