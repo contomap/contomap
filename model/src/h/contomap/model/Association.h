@@ -151,10 +151,10 @@ private:
    contomap::model::Identifier id;
    contomap::model::Identifiers scope;
 
-   contomap::model::OptionalIdentifier type;
-
-   contomap::model::Style appearance;
    contomap::model::Coordinates location;
+
+   contomap::model::OptionalIdentifier type;
+   contomap::model::Style appearance;
 
    std::map<contomap::model::Identifier, std::unique_ptr<RoleEntry>> roles;
 };

@@ -31,9 +31,9 @@ void Association::encodeProperties(Encoder &coder) const
 {
    Coder::Scope propertiesScope(coder, "properties");
    scope.encode(coder, "scope");
+   location.encode(coder, "location");
    type.encode(coder, "type");
    appearance.encode(coder, "appearance");
-   location.encode(coder, "location");
    encodeReifiable(coder);
 }
 
@@ -41,9 +41,9 @@ void Association::decodeProperties(contomap::infrastructure::serial::Decoder &co
 {
    Coder::Scope propertiesScope(coder, "properties");
    scope.decode(coder, "scope");
+   location.decode(coder, "location", version);
    type = OptionalIdentifier::from(coder, "type");
    appearance.decode(coder, "appearance", version);
-   location.decode(coder, "location", version);
    decodeReifiable(coder, topicResolver);
 }
 

@@ -94,7 +94,6 @@ private:
    contomap::model::Identifier id;
 
    contomap::model::OptionalIdentifier type;
-
    contomap::model::Style appearance;
 
    std::unique_ptr<contomap::infrastructure::Link<contomap::model::Topic>> topic;
