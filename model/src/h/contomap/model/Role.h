@@ -38,8 +38,10 @@ public:
     *
     * @param coder the coder to use.
     * @param version the version to consider.
+    * @param id the unique identifier of the role.
     * @param topicResolver the function to use for resolving topic references.
     * @param associationResolver the function to use for resolving association references.
+    * @return the decoded role.
     */
    [[nodiscard]] static std::unique_ptr<Role> from(contomap::infrastructure::serial::Decoder &coder, uint8_t version, contomap::model::Identifier id,
       std::function<Topic &(contomap::model::Identifier)> const &topicResolver,

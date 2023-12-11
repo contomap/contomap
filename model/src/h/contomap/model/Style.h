@@ -53,7 +53,7 @@ public:
       /**
        * Deserialize a color value.
        *
-       * @param decoder the decoder to use.
+       * @param coder the decoder to use.
        * @param name the name for the scope.
        * @return the decoded instance
        */
@@ -62,7 +62,7 @@ public:
       /**
        * Serialize the color value.
        *
-       * @param encoder the coder to use.
+       * @param coder the encoder to use.
        * @param name the name for the scope.
        */
       void encode(contomap::infrastructure::serial::Encoder &coder, std::string const &name) const;
@@ -81,7 +81,7 @@ public:
    /**
     * Serialize the style.
     *
-    * @param encoder the coder to use.
+    * @param coder the coder to use.
     * @param name the name for the scope.
     */
    void encode(contomap::infrastructure::serial::Encoder &coder, std::string const &name) const;
@@ -89,9 +89,9 @@ public:
    /**
     * Deserialize the style.
     *
-    * @param encoder the coder to use.
-    * @param version the version to consider.
+    * @param coder the coder to use.
     * @param name the name for the scope.
+    * @param version the version to consider.
     */
    void decode(contomap::infrastructure::serial::Decoder &coder, std::string const &name, uint8_t version);
 

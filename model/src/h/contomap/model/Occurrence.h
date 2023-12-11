@@ -37,8 +37,10 @@ public:
     *
     * @param coder the coder to use.
     * @param version the version to consider.
+    * @param id the primary identifier of this occurrence.
     * @param topic the topic this occurrence represents.
     * @param topicResolver the function to use for resolving topic references.
+    * @return the decoded instance.
     */
    [[nodiscard]] static std::unique_ptr<Occurrence> from(contomap::infrastructure::serial::Decoder &coder, uint8_t version, contomap::model::Identifier id,
       Topic &topic, std::function<Topic &(contomap::model::Identifier)> const &topicResolver);

@@ -49,7 +49,6 @@ public:
     * the function needs to create a necessary instance, and then serialize this value.
     *
     * @param name the name of the array.
-    * @param count the current number of entries.
     * @param deferrer called to serialize an element of the array.
     */
    void codeArray(std::string const &name, std::function<void(Decoder &, size_t)> const &deferrer)

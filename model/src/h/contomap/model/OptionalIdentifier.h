@@ -33,7 +33,8 @@ public:
    /**
     * Deserialize an optional identifier.
     *
-    * @param decoder the decoder to use.
+    * @param coder the decoder to use.
+    * @param name the name to use for the scope.
     * @return the decoded instance
     */
    [[nodiscard]] static OptionalIdentifier from(contomap::infrastructure::serial::Decoder &coder, std::string const &name);
@@ -41,7 +42,8 @@ public:
    /**
     * Serialize the optional identifier value.
     *
-    * @param encoder the coder to use.
+    * @param coder the coder to use.
+    * @param name the name to use for the scope.
     */
    void encode(contomap::infrastructure::serial::Encoder &coder, std::string const &name) const;
 

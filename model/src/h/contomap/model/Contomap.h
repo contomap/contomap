@@ -116,13 +116,12 @@ public:
     * Serializes the map with given coder.
     *
     * @param encoder the encoder to use.
-    * @param version the version to consider.
     */
    void encode(contomap::infrastructure::serial::Encoder &encoder) const;
    /**
     * Deserializes the map with given coder.
     *
-    * @param encoder the encoder to use.
+    * @param decoder the decoder to use.
     * @param version the version to consider.
     */
    void decode(contomap::infrastructure::serial::Decoder &decoder, uint8_t version);
