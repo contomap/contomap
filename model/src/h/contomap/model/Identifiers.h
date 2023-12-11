@@ -90,17 +90,17 @@ public:
    /**
     * Serializes the identifiers with given coder.
     *
-    * @param encoder the encoder to use.
+    * @param coder the encoder to use.
     * @param name the name to specify for the entry.
     */
-   void encode(contomap::infrastructure::serial::Encoder &encoder, std::string const &name) const;
+   void encode(contomap::infrastructure::serial::Encoder &coder, std::string const &name) const;
    /**
     * Deserializes the identifiers with given coder.
     *
-    * @param decoder the encoder to use.
+    * @param coder the decoder to use.
     * @param name the name to specify for the entry.
     */
-   void decode(contomap::infrastructure::serial::Decoder &decoder, std::string const &name);
+   void decode(contomap::infrastructure::serial::Decoder &coder, std::string const &name);
 
    /**
     * Write the given collection to the given stream.

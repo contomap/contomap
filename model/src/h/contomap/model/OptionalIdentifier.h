@@ -42,7 +42,7 @@ public:
    /**
     * Serialize the optional identifier value.
     *
-    * @param coder the coder to use.
+    * @param coder the encoder to use.
     * @param name the name to use for the scope.
     */
    void encode(contomap::infrastructure::serial::Encoder &coder, std::string const &name) const;

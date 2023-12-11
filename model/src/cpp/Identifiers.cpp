@@ -60,12 +60,12 @@ bool Identifiers::contains(Identifiers const &other) const
    return std::all_of(other.begin(), other.end(), [this](auto const &id) { return set.contains(id); });
 }
 
-void Identifiers::encode(Encoder &encoder, std::string const &name) const
+void Identifiers::encode(Encoder &coder, std::string const &name) const
 {
-   encoder.codeArray(name, set.begin(), set.end(), [](Encoder &nested, Identifier const &id) { id.encode(nested, ""); });
+   coder.codeArray(name, set.begin(), set.end(), [](Encoder &nested, Identifier const &id) { id.encode(nested, ""); });
 }
 
-void Identifiers::decode(Decoder &decoder, std::string const &name)
+void Identifiers::decode(Decoder &coder, std::string const &name)
 {
-   decoder.codeArray(name, [this](Decoder &nested, size_t) { set.emplace(Identifier::from(nested, "")); });
+   coder.codeArray(name, [this](Decoder &nested, size_t) { set.emplace(Identifier::from(nested, "")); });
 }

@@ -16,20 +16,20 @@ TopicName::TopicName(Identifier id, Identifiers scope, TopicNameValue value)
 {
 }
 
-TopicName TopicName::from(contomap::infrastructure::serial::Decoder &decoder, uint8_t, contomap::model::Identifier id)
+TopicName TopicName::from(contomap::infrastructure::serial::Decoder &coder, uint8_t, contomap::model::Identifier id)
 {
-   Coder::Scope nameScope(decoder, "topicName");
+   Coder::Scope nameScope(coder, "topicName");
    Identifiers scope;
-   scope.decode(decoder, "scope");
-   auto value = TopicNameValue::from(decoder);
+   scope.decode(coder, "scope");
+   auto value = TopicNameValue::from(coder);
    return { id, scope, value };
 }
 
-void TopicName::encode(Encoder &encoder) const
+void TopicName::encode(Encoder &coder) const
 {
-   Coder::Scope nameScope(encoder, "topicName");
-   scope.encode(encoder, "scope");
-   value.encode(encoder);
+   Coder::Scope nameScope(coder, "topicName");
+   scope.encode(coder, "scope");
+   value.encode(coder);
 }
 
 Identifier TopicName::getId() const

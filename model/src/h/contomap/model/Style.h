@@ -81,7 +81,7 @@ public:
    /**
     * Serialize the style.
     *
-    * @param coder the coder to use.
+    * @param coder the encoder to use.
     * @param name the name for the scope.
     */
    void encode(contomap::infrastructure::serial::Encoder &coder, std::string const &name) const;
@@ -89,7 +89,7 @@ public:
    /**
     * Deserialize the style.
     *
-    * @param coder the coder to use.
+    * @param coder the decoder to use.
     * @param name the name for the scope.
     * @param version the version to consider.
     */

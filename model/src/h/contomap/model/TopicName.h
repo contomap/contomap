@@ -28,19 +28,19 @@ public:
    /**
     * Deserialize the topic name value.
     *
-    * @param decoder the decoder to use.
+    * @param coder the decoder to use.
     * @param version the version to consider.
     * @param id the identifier of the instance.
     * @return the decoded instance
     */
-   [[nodiscard]] static TopicName from(contomap::infrastructure::serial::Decoder &decoder, uint8_t version, contomap::model::Identifier id);
+   [[nodiscard]] static TopicName from(contomap::infrastructure::serial::Decoder &coder, uint8_t version, contomap::model::Identifier id);
 
    /**
     * Serialize the topic name.
     *
-    * @param encoder the coder to use.
+    * @param coder the encoder to use.
     */
-   void encode(contomap::infrastructure::serial::Encoder &encoder) const;
+   void encode(contomap::infrastructure::serial::Encoder &coder) const;
 
    /**
     * @return the unique identifier of this name.

@@ -14,11 +14,11 @@ Identifier::Identifier(ValueType const &value)
 {
 }
 
-Identifier Identifier::from(Decoder &decoder, std::string const &name)
+Identifier Identifier::from(Decoder &coder, std::string const &name)
 {
    ValueType temp;
    temp.fill(0x00);
-   decoder.codeArray(name, [&temp](Decoder &nested, size_t index) {
+   coder.codeArray(name, [&temp](Decoder &nested, size_t index) {
       if (index < temp.size())
       {
          nested.code("", temp[index]);
@@ -53,7 +53,7 @@ Identifier Identifier::random()
    return Identifier(value);
 }
 
-void Identifier::encode(Encoder &encoder, std::string const &name) const
+void Identifier::encode(Encoder &coder, std::string const &name) const
 {
-   encoder.codeArray(name, value.begin(), value.end(), [](Encoder &nested, char const &c) { nested.code("", c); });
+   coder.codeArray(name, value.begin(), value.end(), [](Encoder &nested, char const &c) { nested.code("", c); });
 }

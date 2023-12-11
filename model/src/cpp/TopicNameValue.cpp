@@ -18,10 +18,10 @@ std::variant<std::monostate, TopicNameValue> TopicNameValue::from(std::string va
    return TopicNameValue(std::move(value));
 }
 
-TopicNameValue TopicNameValue::from(contomap::infrastructure::serial::Decoder &decoder)
+TopicNameValue TopicNameValue::from(contomap::infrastructure::serial::Decoder &coder)
 {
    std::string value;
-   decoder.code("value", value);
+   coder.code("value", value);
    auto result = from(value);
    if (!std::holds_alternative<TopicNameValue>(result))
    {
@@ -30,9 +30,9 @@ TopicNameValue TopicNameValue::from(contomap::infrastructure::serial::Decoder &d
    return std::get<TopicNameValue>(result);
 }
 
-void TopicNameValue::encode(contomap::infrastructure::serial::Encoder &encoder) const
+void TopicNameValue::encode(contomap::infrastructure::serial::Encoder &coder) const
 {
-   encoder.code("value", value);
+   coder.code("value", value);
 }
 
 std::string TopicNameValue::raw() const

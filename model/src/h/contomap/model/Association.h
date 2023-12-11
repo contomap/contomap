@@ -39,14 +39,14 @@ public:
    /**
     * Serializes the properties of the association.
     *
-    * @param coder the coder to use.
+    * @param coder the encoder to use.
     */
    void encodeProperties(contomap::infrastructure::serial::Encoder &coder) const;
 
    /**
     * Deserializes the properties of the association.
     *
-    * @param coder the coder to use.
+    * @param coder the decoder to use.
     * @param version the version to consider.
     * @param topicResolver the function to use for resolving topic references.
     */

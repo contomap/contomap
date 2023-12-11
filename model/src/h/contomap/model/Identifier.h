@@ -23,11 +23,11 @@ public:
    /**
     * Create an identifier from a saved state.
     *
-    * @param decoder the decoder to use.
+    * @param coder the decoder to use.
     * @param name the name to use for the field.
     * @return the deserialized instance.
     */
-   [[nodiscard]] static Identifier from(contomap::infrastructure::serial::Decoder &decoder, std::string const &name);
+   [[nodiscard]] static Identifier from(contomap::infrastructure::serial::Decoder &coder, std::string const &name);
 
    /**
     * Create a random identifier.
@@ -69,10 +69,10 @@ public:
    /**
     * Serializes this identifier with given coder.
     *
-    * @param encoder the coder to use.
+    * @param coder the encoder to use.
     * @param name the name to use for the field.
     */
-   void encode(contomap::infrastructure::serial::Encoder &encoder, std::string const &name) const;
+   void encode(contomap::infrastructure::serial::Encoder &coder, std::string const &name) const;
 
 private:
    explicit Identifier(ValueType const &value);

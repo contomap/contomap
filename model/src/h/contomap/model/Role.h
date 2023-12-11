@@ -36,7 +36,7 @@ public:
    /**
     * Deserializes the role.
     *
-    * @param coder the coder to use.
+    * @param coder the decoder to use.
     * @param version the version to consider.
     * @param id the unique identifier of the role.
     * @param topicResolver the function to use for resolving topic references.
@@ -50,7 +50,7 @@ public:
    /**
     * Serializes the role.
     *
-    * @param coder the coder to use.
+    * @param coder the encoder to use.
     */
    void encode(contomap::infrastructure::serial::Encoder &coder) const;
 

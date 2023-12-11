@@ -234,34 +234,34 @@ void Contomap::deleting(Identifiers &toDelete, Topic &topic)
    }
 }
 
-void Contomap::encode(Encoder &encoder) const
+void Contomap::encode(Encoder &coder) const
 {
-   Coder::Scope mapScope(encoder, "contomap");
-   encoder.codeArray("topics", topics.begin(), topics.end(), [](Encoder &nested, auto const &kvp) {
+   Coder::Scope mapScope(coder, "contomap");
+   coder.codeArray("topics", topics.begin(), topics.end(), [](Encoder &nested, auto const &kvp) {
       Coder::Scope nestedScope(nested, "");
       kvp.first.encode(nested, "id");
    });
-   encoder.codeArray("associations", associations.begin(), associations.end(), [](Encoder &nested, auto const &kvp) {
+   coder.codeArray("associations", associations.begin(), associations.end(), [](Encoder &nested, auto const &kvp) {
       Coder::Scope nestedScope(nested, "");
       kvp.first.encode(nested, "id");
       kvp.second->encodeProperties(nested);
    });
-   encoder.codeArray("topicRelated", topics.begin(), topics.end(), [](Encoder &nested, auto const &kvp) {
+   coder.codeArray("topicRelated", topics.begin(), topics.end(), [](Encoder &nested, auto const &kvp) {
       Coder::Scope nestedScope(nested, "");
       kvp.first.encode(nested, "id");
       kvp.second->encodeRelated(nested);
    });
 
-   defaultScope.encode(encoder, "defaultScope");
+   defaultScope.encode(coder, "defaultScope");
 }
 
-void Contomap::decode(Decoder &decoder, uint8_t version)
+void Contomap::decode(Decoder &coder, uint8_t version)
 {
    associations.clear();
    topics.clear();
 
-   Coder::Scope mapScope(decoder, "contomap");
-   decoder.codeArray("topics", [this](Decoder &nested, size_t) {
+   Coder::Scope mapScope(coder, "contomap");
+   coder.codeArray("topics", [this](Decoder &nested, size_t) {
       Coder::Scope nestedScope(nested, "");
       auto id = Identifier::from(nested, "id");
       topics.emplace(id, std::make_unique<Topic>(id));
@@ -274,7 +274,7 @@ void Contomap::decode(Decoder &decoder, uint8_t version)
       }
       return *it->second;
    };
-   decoder.codeArray("associations", [this, version, &topicResolver](Decoder &nested, size_t) {
+   coder.codeArray("associations", [this, version, &topicResolver](Decoder &nested, size_t) {
       Coder::Scope nestedScope(nested, "");
       auto id = Identifier::from(nested, "id");
       auto association = std::make_unique<Association>(id);
@@ -289,12 +289,12 @@ void Contomap::decode(Decoder &decoder, uint8_t version)
       }
       return *it->second;
    };
-   decoder.codeArray("topicRelated", [version, &topicResolver, &associationResolver](Decoder &nested, size_t) {
+   coder.codeArray("topicRelated", [version, &topicResolver, &associationResolver](Decoder &nested, size_t) {
       Coder::Scope nestedScope(nested, "");
       Identifier topicId = Identifier::from(nested, "id");
       auto &topic = topicResolver(topicId);
       topic.decodeRelated(nested, version, topicResolver, associationResolver);
    });
 
-   defaultScope = Identifier::from(decoder, "defaultScope");
+   defaultScope = Identifier::from(coder, "defaultScope");
 }

@@ -31,20 +31,20 @@ Topic &Topic::refine()
    return *this;
 }
 
-void Topic::encodeRelated(Encoder &encoder) const
+void Topic::encodeRelated(Encoder &coder) const
 {
-   Coder::Scope scope(encoder, "related");
-   encoder.codeArray("names", names.begin(), names.end(), [](Encoder &nested, auto const &kvp) {
+   Coder::Scope scope(coder, "related");
+   coder.codeArray("names", names.begin(), names.end(), [](Encoder &nested, auto const &kvp) {
       Coder::Scope nameScope(nested, "");
       kvp.first.encode(nested, "id");
       kvp.second.encode(nested);
    });
-   encoder.codeArray("occurrences", occurrences.begin(), occurrences.end(), [](Encoder &nested, auto const &kvp) {
+   coder.codeArray("occurrences", occurrences.begin(), occurrences.end(), [](Encoder &nested, auto const &kvp) {
       Coder::Scope nestedScope(nested, "");
       kvp.first.encode(nested, "id");
       kvp.second->encode(nested);
    });
-   encoder.codeArray("roles", roles.begin(), roles.end(), [](Encoder &nested, auto const &kvp) {
+   coder.codeArray("roles", roles.begin(), roles.end(), [](Encoder &nested, auto const &kvp) {
       Coder::Scope nestedScope(nested, "");
       kvp.first.encode(nested, "id");
       kvp.second->role().encode(nested);
@@ -52,21 +52,21 @@ void Topic::encodeRelated(Encoder &encoder) const
 }
 
 void Topic::decodeRelated(
-   Decoder &decoder, uint8_t version, std::function<Topic &(Identifier)> topicResolver, std::function<Association &(Identifier)> associationResolver)
+   Decoder &coder, uint8_t version, std::function<Topic &(Identifier)> topicResolver, std::function<Association &(Identifier)> associationResolver)
 {
-   Coder::Scope scope(decoder, "related");
-   decoder.codeArray("names", [this, version](Decoder &nested, size_t) {
+   Coder::Scope scope(coder, "related");
+   coder.codeArray("names", [this, version](Decoder &nested, size_t) {
       Coder::Scope nameScope(nested, "");
       auto nameId = Identifier::from(nested, "id");
       auto name = TopicName::from(nested, version, nameId);
       names.emplace(nameId, name);
    });
-   decoder.codeArray("occurrences", [this, version, &topicResolver](Decoder &nested, size_t) {
+   coder.codeArray("occurrences", [this, version, &topicResolver](Decoder &nested, size_t) {
       Coder::Scope nestedScope(nested, "");
       Identifier occurrenceId = Identifier::from(nested, "id");
       occurrences.emplace(occurrenceId, Occurrence::from(nested, version, occurrenceId, *this, topicResolver));
    });
-   decoder.codeArray("roles", [this, version, &topicResolver, &associationResolver](Decoder &nested, size_t) {
+   coder.codeArray("roles", [this, version, &topicResolver, &associationResolver](Decoder &nested, size_t) {
       Coder::Scope nestedScope(nested, "");
       Identifier roleId = Identifier::from(nested, "id");
       auto role = Role::from(nested, version, roleId, topicResolver, associationResolver);

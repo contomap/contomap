@@ -78,7 +78,7 @@ public:
    /**
     * Serializes the reference of the reifier.
     *
-    * @param coder the coder to use.
+    * @param coder the encoder to use.
     */
    void encodeReifiable(contomap::infrastructure::serial::Encoder &coder) const
    {
@@ -93,7 +93,7 @@ public:
    /**
     * Deserializes the reference to a reifier.
     *
-    * @param coder the coder to use.
+    * @param coder the decoder to use.
     * @param resolver the function to resolve the instance of the referenced reifier.
     */
    void decodeReifiable(contomap::infrastructure::serial::Decoder &coder, std::function<Reifier<T> &(contomap::model::Identifier)> const &resolver)

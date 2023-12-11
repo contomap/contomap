@@ -35,17 +35,17 @@ public:
    /**
     * Deserialize the topic name value.
     *
-    * @param decoder the decoder to use.
+    * @param coder the decoder to use.
     * @return the decoded instance
     */
-   [[nodiscard]] static TopicNameValue from(contomap::infrastructure::serial::Decoder &decoder);
+   [[nodiscard]] static TopicNameValue from(contomap::infrastructure::serial::Decoder &coder);
 
    /**
     * Serialize the topic name value.
     *
-    * @param encoder the coder to use.
+    * @param coder the encoder to use.
     */
-   void encode(contomap::infrastructure::serial::Encoder &encoder) const;
+   void encode(contomap::infrastructure::serial::Encoder &coder) const;
 
    /**
     * Spaceship operator.

@@ -35,7 +35,7 @@ public:
    /**
     * Deserializes the occurrence.
     *
-    * @param coder the coder to use.
+    * @param coder the decoder to use.
     * @param version the version to consider.
     * @param id the primary identifier of this occurrence.
     * @param topic the topic this occurrence represents.
@@ -48,7 +48,7 @@ public:
    /**
     * Serializes the occurrence.
     *
-    * @param coder the coder to use.
+    * @param coder the encoder to use.
     */
    void encode(contomap::infrastructure::serial::Encoder &coder) const;
 

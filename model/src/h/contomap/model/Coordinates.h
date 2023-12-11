@@ -27,7 +27,7 @@ public:
    /**
     * Serializes the coordinates.
     *
-    * @param coder the coder to use.
+    * @param coder the encoder to use.
     * @param name the name to use for the scope.
     */
    void encode(contomap::infrastructure::serial::Encoder &coder, std::string const &name) const;
@@ -35,7 +35,7 @@ public:
    /**
     * Deserializes the coordinates.
     *
-    * @param coder the coder to use.
+    * @param coder the decoder to use.
     * @param name the name to use for the scope.
     * @param version the version to consider.
     */
