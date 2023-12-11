@@ -1,7 +1,9 @@
 #include <cmath>
+#include <memory.h>
 #include <sstream>
 
 #include <raygui/raygui.h>
+#include <rpng/rpng.h>
 
 #include "contomap/editor/Selections.h"
 #include "contomap/editor/Styles.h"
@@ -9,6 +11,7 @@
 #include "contomap/frontend/DirectMapRenderer.h"
 #include "contomap/frontend/FocusInterceptor.h"
 #include "contomap/frontend/HelpDialog.h"
+#include "contomap/frontend/LoadDialog.h"
 #include "contomap/frontend/LocateTopicAndActDialog.h"
 #include "contomap/frontend/MainWindow.h"
 #include "contomap/frontend/MapRenderList.h"
@@ -18,6 +21,8 @@
 #include "contomap/frontend/RenameTopicDialog.h"
 #include "contomap/frontend/SaveAsDialog.h"
 #include "contomap/frontend/StyleDialog.h"
+#include "contomap/infrastructure/serial/BinaryDecoder.h"
+#include "contomap/infrastructure/serial/BinaryEncoder.h"
 #include "contomap/model/Associations.h"
 #include "contomap/model/Topics.h"
 
@@ -82,6 +87,9 @@ MainWindow::LengthInPixel MainWindow::Size::getHeight() const
 
 MainWindow::Size const MainWindow::DEFAULT_SIZE = MainWindow::Size::ofPixel(1280, 720);
 char const MainWindow::DEFAULT_TITLE[] = "contomap";
+// According to http://www.libpng.org/pub/png/spec/1.2/PNG-Structure.html#Chunk-naming-conventions ,
+// the chunk type is ancillary (lower), private (lower), conforming (upper), safe-to-copy (lower).
+std::array<char, 5> const MainWindow::PNG_MAP_TYPE { 'c', 'm', 'P', 'm', 0x00 };
 
 MainWindow::MainWindow(DisplayEnvironment &environment, contomap::editor::View &view, contomap::editor::InputRequestHandler &inputRequestHandler)
    : mapCamera(std::make_shared<MapCamera::ImmediateGearbox>())
@@ -474,6 +482,18 @@ void MainWindow::drawUserInterface(RenderContext const &context)
          .width = iconSize,
          .height = iconSize,
       };
+      GuiSetTooltip("New map");
+      if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_FILE_NEW, nullptr)))
+      {
+         requestNewFile();
+      }
+      leftIconButtonsBounds.x += (iconSize + padding);
+      GuiSetTooltip("Load map");
+      if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_FILE_OPEN, nullptr)))
+      {
+         requestLoad();
+      }
+      leftIconButtonsBounds.x += (iconSize + padding);
       GuiSetTooltip("Save map");
       if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_FILE_SAVE, nullptr)))
       {
@@ -679,6 +699,17 @@ void MainWindow::drawUserInterface(RenderContext const &context)
    }
 }
 
+void MainWindow::requestNewFile()
+{
+   inputRequestHandler.newMap();
+   mapRestored("");
+}
+
+void MainWindow::requestLoad()
+{
+   pendingDialog = std::make_unique<contomap::frontend::LoadDialog>(environment, layout, [this](std::string const &filePath) { load(filePath); });
+}
+
 void MainWindow::requestSave()
 {
    if (!currentFilePath.empty())
@@ -767,6 +798,22 @@ void MainWindow::openEditStyleDialog()
    pendingDialog = std::make_unique<contomap::frontend::StyleDialog>(inputRequestHandler, layout, style.value());
 }
 
+void MainWindow::load(std::string const &filePath)
+{
+   auto chunk = rpng_chunk_read(filePath.c_str(), PNG_MAP_TYPE.data());
+   if (chunk.length == 0)
+   {
+      return;
+   }
+   contomap::infrastructure::serial::BinaryDecoder decoder(chunk.data, chunk.data + chunk.length);
+   if (inputRequestHandler.loadState(decoder))
+   {
+      mapRestored(filePath);
+   }
+
+   RPNG_FREE(chunk.data);
+}
+
 void MainWindow::save()
 {
    contomap::frontend::MapRenderList renderList;
@@ -799,13 +846,42 @@ void MainWindow::save()
    auto exported = ExportImageToMemory(image, ".png", &fileSize);
    UnloadImage(image);
    UnloadRenderTexture(renderTexture);
+   if (exported == nullptr)
+   {
+      return;
+   }
+   {
+      int outputSize = 0;
+      contomap::infrastructure::serial::BinaryEncoder encoder;
+      rpng_chunk chunk;
+      memset(&chunk, 0x00, sizeof(chunk));
+      inputRequestHandler.saveState(encoder, false);
+      auto const &data = encoder.getData();
+      chunk.data = const_cast<uint8_t *>(data.data());
+      chunk.length = static_cast<int>(data.size());
+      memcpy(chunk.type, PNG_MAP_TYPE.data(), 4);
+
+      auto newExported = rpng_chunk_write_from_memory(reinterpret_cast<char const *>(exported), chunk, &outputSize);
+      RL_FREE(exported);
+      exported = reinterpret_cast<uint8_t *>(newExported);
+      fileSize = outputSize;
+   }
    if (exported != nullptr)
    {
       SaveFileData(currentFilePath.c_str(), exported, fileSize);
-      RL_FREE(exported);
+      RPNG_FREE(exported);
 
       environment.fileSaved(currentFilePath);
    }
+}
+
+void MainWindow::mapRestored(std::string const &filePath)
+{
+   currentFilePath = filePath;
+   currentFocus = contomap::frontend::Focus();
+   mapCamera.panTo(MapCamera::HOME_POSITION);
+   lastViewScope.clear();
+   viewScopeListStartIndex = 0;
 }
 
 SpacialCoordinate MainWindow::spacialCameraLocation()

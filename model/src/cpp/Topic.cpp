@@ -1,6 +1,12 @@
 #include "contomap/model/Topic.h"
 
+using contomap::infrastructure::Link;
+using contomap::infrastructure::Links;
 using contomap::infrastructure::Search;
+using contomap::infrastructure::serial::Coder;
+using contomap::infrastructure::serial::Decoder;
+using contomap::infrastructure::serial::Encoder;
+using contomap::model::Association;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 using contomap::model::Occurrence;
@@ -23,6 +29,50 @@ Topic::~Topic()
 Topic &Topic::refine()
 {
    return *this;
+}
+
+void Topic::encodeRelated(Encoder &coder) const
+{
+   Coder::Scope scope(coder, "related");
+   coder.codeArray("names", names.begin(), names.end(), [](Encoder &nested, auto const &kvp) {
+      Coder::Scope nameScope(nested, "");
+      kvp.first.encode(nested, "id");
+      kvp.second.encode(nested);
+   });
+   coder.codeArray("occurrences", occurrences.begin(), occurrences.end(), [](Encoder &nested, auto const &kvp) {
+      Coder::Scope nestedScope(nested, "");
+      kvp.first.encode(nested, "id");
+      kvp.second->encode(nested);
+   });
+   coder.codeArray("roles", roles.begin(), roles.end(), [](Encoder &nested, auto const &kvp) {
+      Coder::Scope nestedScope(nested, "");
+      kvp.first.encode(nested, "id");
+      kvp.second->role().encode(nested);
+   });
+}
+
+void Topic::decodeRelated(
+   Decoder &coder, uint8_t version, std::function<Topic &(Identifier)> topicResolver, std::function<Association &(Identifier)> associationResolver)
+{
+   Coder::Scope scope(coder, "related");
+   coder.codeArray("names", [this, version](Decoder &nested, size_t) {
+      Coder::Scope nameScope(nested, "");
+      auto nameId = Identifier::from(nested, "id");
+      auto name = TopicName::from(nested, version, nameId);
+      names.emplace(nameId, name);
+   });
+   coder.codeArray("occurrences", [this, version, &topicResolver](Decoder &nested, size_t) {
+      Coder::Scope nestedScope(nested, "");
+      Identifier occurrenceId = Identifier::from(nested, "id");
+      occurrences.emplace(occurrenceId, Occurrence::from(nested, version, occurrenceId, *this, topicResolver));
+   });
+   coder.codeArray("roles", [this, version, &topicResolver, &associationResolver](Decoder &nested, size_t) {
+      Coder::Scope nestedScope(nested, "");
+      Identifier roleId = Identifier::from(nested, "id");
+      auto role = Role::from(nested, version, roleId, topicResolver, associationResolver);
+      auto it = roles.find(roleId);
+      it->second->own(std::move(role));
+   });
 }
 
 Identifier Topic::getId() const
@@ -71,7 +121,7 @@ void Topic::removeNameInScope(Identifiers const &scope)
 Occurrence &Topic::newOccurrence(Identifiers scope, SpacialCoordinate location)
 {
    auto occurrenceId = Identifier::random();
-   auto it = occurrences.emplace(occurrenceId, std::make_unique<Occurrence>(occurrenceId, id, std::move(scope), location));
+   auto it = occurrences.emplace(occurrenceId, std::make_unique<Occurrence>(occurrenceId, *this, std::move(scope), location));
    return *it.first->second;
 }
 
@@ -82,33 +132,39 @@ bool Topic::removeOccurrence(Identifier occurrenceId)
 
 Role &Topic::newRole(Association &association)
 {
-   auto const &seed = association.addRole();
-   auto it = roles.emplace(seed.getId(), seed);
-   return it.first->second;
+   auto roleId = Identifier::random();
+   auto role = std::make_unique<Role>(roleId, *this, association);
+   auto it = roles.find(roleId);
+   it->second->own(std::move(role));
+   return it->second->role();
+}
+
+std::unique_ptr<Link<Topic>> Topic::link(Role &role, std::function<void()> topicUnlinked)
+{
+   Identifier roleId = role.getId();
+   auto links = Links::between(*this, std::move(topicUnlinked), role, [this, roleId]() { roles.erase(roleId); });
+   roles.emplace(roleId, std::make_unique<RoleEntry>(std::move(links.second)));
+   return std::move(links.first);
 }
 
 void Topic::removeRolesOf(Association &association)
 {
-   for (auto it = roles.begin(); it != roles.end();)
+   Identifiers toRemove;
+   for (auto const &[roleId, entry] : roles)
    {
-      if (association.removeRole(it->second))
+      if (entry->role().getParent() == association.getId())
       {
-         it = roles.erase(it);
-      }
-      else
-      {
-         ++it;
+         toRemove.add(roleId);
       }
    }
+   std::erase_if(roles, [&toRemove](auto const &kvp) {
+      auto const &[_, entry] = kvp;
+      return toRemove.contains(entry->role().getId());
+   });
 }
 
-void Topic::removeRole(Association &association, Identifier roleId)
+void Topic::removeRole(Identifier roleId)
 {
-   if (!roles.contains(roleId))
-   {
-      return;
-   }
-   association.removeRole(roles.at(roleId));
    roles.erase(roleId);
 }
 
@@ -215,33 +271,33 @@ Search<Occurrence> Topic::findOccurrences(Identifiers const &ids) // NOLINT
 
 Search<Role const> Topic::rolesAssociatedWith(Identifiers associations) const // NOLINT
 {
-   for (auto const &[_, role] : roles)
+   for (auto const &[_, entry] : roles)
    {
-      if (associations.contains(role.getParent()))
+      if (associations.contains(entry->role().getParent()))
       {
-         co_yield role;
+         co_yield entry->role();
       }
    }
 }
 
 Search<Role const> Topic::findRoles(contomap::model::Identifiers const &ids) const // NOLINT
 {
-   for (auto const &[roleId, role] : roles)
+   for (auto const &[roleId, entry] : roles)
    {
       if (ids.contains(roleId))
       {
-         co_yield role;
+         co_yield entry->role();
       }
    }
 }
 
 Search<Role> Topic::findRoles(contomap::model::Identifiers const &ids) // NOLINT
 {
-   for (auto &[roleId, role] : roles)
+   for (auto &[roleId, entry] : roles)
    {
       if (ids.contains(roleId))
       {
-         co_yield role;
+         co_yield entry->role();
       }
    }
 }
@@ -264,8 +320,9 @@ void Topic::removeTopicReferences(Identifier topicId)
          occurrence->clearType();
       }
    }
-   for (auto &[_, role] : roles)
+   for (auto &[_, entry] : roles)
    {
+      auto &role = entry->role();
       auto typeId = role.getType();
       if (typeId.isAssigned() && (typeId.value() == topicId))
       {

@@ -3,6 +3,8 @@
 #include <ostream>
 #include <set>
 
+#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Identifier.h"
 
 namespace contomap::model
@@ -84,6 +86,21 @@ public:
     * @return true if all the provided identifier are contained.
     */
    [[nodiscard]] bool contains(Identifiers const &other) const;
+
+   /**
+    * Serializes the identifiers with given coder.
+    *
+    * @param coder the encoder to use.
+    * @param name the name to specify for the entry.
+    */
+   void encode(contomap::infrastructure::serial::Encoder &coder, std::string const &name) const;
+   /**
+    * Deserializes the identifiers with given coder.
+    *
+    * @param coder the decoder to use.
+    * @param name the name to specify for the entry.
+    */
+   void decode(contomap::infrastructure::serial::Decoder &coder, std::string const &name);
 
    /**
     * Write the given collection to the given stream.

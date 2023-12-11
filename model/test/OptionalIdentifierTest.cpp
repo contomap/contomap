@@ -2,8 +2,12 @@
 
 #include <gtest/gtest.h>
 
+#include "contomap/infrastructure/serial/BinaryDecoder.h"
+#include "contomap/infrastructure/serial/BinaryEncoder.h"
 #include "contomap/model/OptionalIdentifier.h"
 
+using contomap::infrastructure::serial::BinaryDecoder;
+using contomap::infrastructure::serial::BinaryEncoder;
 using contomap::model::Identifier;
 using contomap::model::OptionalIdentifier;
 
@@ -61,4 +65,28 @@ TEST(OptionalIdentifierTest, clearing)
    id.clear();
    EXPECT_FALSE(id.isAssigned());
    EXPECT_EQ(OptionalIdentifier {}, id);
+}
+
+static void assertSerialization(OptionalIdentifier const &source, std::string const &caseName)
+{
+   BinaryEncoder encoder;
+   std::string scopeName("test");
+   source.encode(encoder, scopeName);
+   auto data = encoder.getData();
+   BinaryDecoder decoder(data.data(), data.data() + data.size());
+   try
+   {
+      OptionalIdentifier result = OptionalIdentifier::from(decoder, scopeName);
+      EXPECT_EQ(source, result) << caseName << ": serialization mismatch";
+   }
+   catch (std::exception &)
+   {
+      FAIL() << caseName << ": Exception caught";
+   }
+}
+
+TEST(OptionalIdentifierTest, serialization)
+{
+   assertSerialization({}, "empty");
+   assertSerialization(OptionalIdentifier::of(Identifier::random()), "set value");
 }

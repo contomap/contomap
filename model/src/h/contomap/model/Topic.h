@@ -4,6 +4,8 @@
 #include <memory>
 
 #include "contomap/infrastructure/Generator.h"
+#include "contomap/infrastructure/Link.h"
+#include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Association.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Occurrence.h"
@@ -32,9 +34,24 @@ public:
    Topic &refine() override;
 
    /**
-    * @return the unique identifier of this topic instance.
+    * Serialize the related items of this topic.
+    *
+    * @param coder the encoder to use.
     */
-   [[nodiscard]] contomap::model::Identifier getId() const;
+   void encodeRelated(contomap::infrastructure::serial::Encoder &coder) const;
+
+   /**
+    * Deserialize the related items of this topic.
+    *
+    * @param coder the decoder to use.
+    * @param version the version to consider.
+    * @param topicResolver the function to use for resolving topic references.
+    * @param associationResolver the function to use for resolving association references.
+    */
+   void decodeRelated(contomap::infrastructure::serial::Decoder &coder, uint8_t version, std::function<Topic &(contomap::model::Identifier)> topicResolver,
+      std::function<Association &(contomap::model::Identifier)> associationResolver);
+
+   [[nodiscard]] contomap::model::Identifier getId() const override;
 
    /**
     * Adds a new name to the topic.
@@ -71,6 +88,15 @@ public:
    [[nodiscard]] contomap::model::Role &newRole(contomap::model::Association &association);
 
    /**
+    * Establishes a link with given role.
+    *
+    * @param role the role instance to link with.
+    * @param topicUnlinked the function to pass on to the returned link.
+    * @return the link that refers to this instance.
+    */
+   [[nodiscard]] std::unique_ptr<contomap::infrastructure::Link<Topic>> link(contomap::model::Role &role, std::function<void()> topicUnlinked);
+
+   /**
     * Remove all the roles for given association.
     *
     * @param association the association to no longer relate to.
@@ -80,10 +106,9 @@ public:
    /**
     * Removes the role with given identifier from this topic.
     *
-    * @param association the association this topic has the given role in.
     * @param roleId the role to remove.
     */
-   void removeRole(contomap::model::Association &association, contomap::model::Identifier roleId);
+   void removeRole(contomap::model::Identifier roleId);
 
    /**
     * @return a Search for all names in the topic.
@@ -217,13 +242,36 @@ public:
    void clearReified() final;
 
 private:
+   class RoleEntry
+   {
+   public:
+      RoleEntry(std::unique_ptr<contomap::infrastructure::Link<contomap::model::Role>> link)
+         : link(std::move(link))
+      {
+      }
+
+      contomap::model::Role &role()
+      {
+         return link->getLinked();
+      }
+
+      void own(std::unique_ptr<contomap::model::Role> role)
+      {
+         ownedRole = std::move(role);
+      }
+
+   private:
+      std::unique_ptr<contomap::model::Role> ownedRole;
+      std::unique_ptr<contomap::infrastructure::Link<contomap::model::Role>> link;
+   };
+
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::TopicName>> findNameByScope(contomap::model::Identifiers const &scope);
 
    contomap::model::Identifier id;
 
    std::map<contomap::model::Identifier, contomap::model::TopicName> names;
    std::map<contomap::model::Identifier, std::unique_ptr<contomap::model::Occurrence>> occurrences;
-   std::map<contomap::model::Identifier, contomap::model::Role> roles;
+   std::map<contomap::model::Identifier, std::unique_ptr<RoleEntry>> roles;
 
    std::optional<std::reference_wrapper<contomap::model::Reified>> reified;
 };

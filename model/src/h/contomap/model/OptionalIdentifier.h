@@ -3,6 +3,8 @@
 #include <functional>
 #include <optional>
 
+#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Identifier.h"
 
 namespace contomap::model
@@ -27,6 +29,23 @@ public:
     * @return an initialized container.
     */
    [[nodiscard]] static OptionalIdentifier of(Identifier id);
+
+   /**
+    * Deserialize an optional identifier.
+    *
+    * @param coder the decoder to use.
+    * @param name the name to use for the scope.
+    * @return the decoded instance
+    */
+   [[nodiscard]] static OptionalIdentifier from(contomap::infrastructure::serial::Decoder &coder, std::string const &name);
+
+   /**
+    * Serialize the optional identifier value.
+    *
+    * @param coder the encoder to use.
+    * @param name the name to use for the scope.
+    */
+   void encode(contomap::infrastructure::serial::Encoder &coder, std::string const &name) const;
 
    /**
     * @return true if an identifier is specified for this container, false otherwise.

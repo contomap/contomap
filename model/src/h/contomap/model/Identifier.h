@@ -3,7 +3,9 @@
 #include <array>
 #include <ostream>
 #include <string>
-#include <variant>
+
+#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/Encoder.h"
 
 namespace contomap::model
 {
@@ -17,6 +19,15 @@ class Identifier
 public:
    /** The internally used type. */
    using ValueType = std::array<char, 12>;
+
+   /**
+    * Create an identifier from a saved state.
+    *
+    * @param coder the decoder to use.
+    * @param name the name to use for the field.
+    * @return the deserialized instance.
+    */
+   [[nodiscard]] static Identifier from(contomap::infrastructure::serial::Decoder &coder, std::string const &name);
 
    /**
     * Create a random identifier.
@@ -54,6 +65,14 @@ public:
     * @return the ordering for this type.
     */
    std::strong_ordering operator<=>(Identifier const &other) const noexcept = default;
+
+   /**
+    * Serializes this identifier with given coder.
+    *
+    * @param coder the encoder to use.
+    * @param name the name to use for the field.
+    */
+   void encode(contomap::infrastructure::serial::Encoder &coder, std::string const &name) const;
 
 private:
    explicit Identifier(ValueType const &value);

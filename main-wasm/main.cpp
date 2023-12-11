@@ -52,6 +52,11 @@ public:
       emscripten_cancel_main_loop();
    }
 
+   DialogResult showLoadDialog(std::string const &, std::string &, std::vector<std::string> const &, std::string const &) override
+   {
+      return DialogResult::NotSupported;
+   }
+
    DialogResult showSaveAsDialog(std::string const &, std::string &, std::vector<std::string> const &, std::string const &) override
    {
       return DialogResult::NotSupported;

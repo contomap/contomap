@@ -5,6 +5,9 @@
 using contomap::editor::Editor;
 using contomap::editor::SelectedType;
 using contomap::editor::SelectionAction;
+using contomap::infrastructure::serial::Coder;
+using contomap::infrastructure::serial::Decoder;
+using contomap::infrastructure::serial::Encoder;
 using contomap::model::Association;
 using contomap::model::Contomap;
 using contomap::model::Identifier;
@@ -17,10 +20,19 @@ using contomap::model::Topic;
 using contomap::model::TopicNameValue;
 using contomap::model::Topics;
 
+uint8_t const Editor::CURRENT_SERIAL_VERSION = 0x00;
+
 Editor::Editor()
    : map(Contomap::newMap())
 {
    viewScope.add(map.getDefaultScope());
+}
+
+void Editor::newMap()
+{
+   map = Contomap::newMap();
+   viewScope = Identifiers::ofSingle(map.getDefaultScope());
+   selection.clear();
 }
 
 Identifier Editor::newTopicRequested(TopicNameValue name, SpacialCoordinate location)
@@ -384,6 +396,60 @@ void Editor::selectClosestOccurrenceOf(Identifier topicId)
    Occurrence const &occurrence = optionalOccurrence.value();
    viewScope = occurrence.getScope();
    selection.setSole(SelectedType::Occurrence, occurrence.getId());
+}
+
+void Editor::saveState(Encoder &encoder, bool withSelection)
+{
+   encoder.code("version", CURRENT_SERIAL_VERSION);
+   map.encode(encoder);
+   viewScope.encode(encoder, "viewScope");
+   {
+      Coder::Scope selectionScope(encoder, "selection");
+      uint8_t selectionFlag = withSelection ? 0x01 : 0x00;
+      encoder.code("present", selectionFlag);
+      if (selectionFlag != 0x00)
+      {
+         selection.encode(encoder);
+      }
+   }
+}
+
+bool Editor::loadState(Decoder &decoder)
+{
+   Contomap newMap = contomap::model::Contomap::newMap();
+   Identifiers newViewScope;
+   Selection newSelection;
+   uint8_t serialVersion = 0x00;
+
+   try
+   {
+      decoder.code("version", serialVersion);
+      newMap.decode(decoder, serialVersion);
+      newViewScope.decode(decoder, "viewScope");
+      {
+         Coder::Scope selectionScope(decoder, "selection");
+         uint8_t selectionFlag = 0x00;
+         decoder.code("present", selectionFlag);
+         if (selectionFlag != 0x00)
+         {
+            auto occurrenceResolver = [&newMap](Identifier id) { return *newMap.findOccurrences(Identifiers::ofSingle(id)).begin(); };
+            auto associationResolver = [&newMap](Identifier id) { return newMap.findAssociation(id).value(); };
+            auto roleResolver = [&newMap](Identifier id) { return *newMap.findRoles(Identifiers::ofSingle(id)).begin(); };
+            newSelection = Selection::from(decoder, serialVersion, occurrenceResolver, associationResolver, roleResolver);
+         }
+      }
+   }
+   catch (std::exception &)
+   {
+      return false;
+   }
+
+   // TODO: verify new state is consistent -> proper references
+
+   map = std::move(newMap);
+   viewScope = newViewScope;
+   selection = newSelection;
+   return true;
 }
 
 Identifiers const &Editor::ofViewScope() const

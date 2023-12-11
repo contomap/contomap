@@ -120,6 +120,7 @@ public:
 private:
    static Size const DEFAULT_SIZE;
    static char const DEFAULT_TITLE[];
+   static std::array<char, 5> const PNG_MAP_TYPE;
 
    [[nodiscard]] static contomap::frontend::MapCamera::ZoomOperation doubledRelative(bool nearer);
    [[nodiscard]] static std::vector<std::pair<int, contomap::frontend::MapCamera::ZoomFactor>> generateZoomLevels();
@@ -136,6 +137,8 @@ private:
 
    void renderMap(contomap::frontend::MapRenderer &renderer, contomap::editor::Selection const &selection, Focus const &focus);
 
+   void requestNewFile();
+   void requestLoad();
    void requestSave();
 
    void closeDialog();
@@ -147,7 +150,9 @@ private:
    void openSetTopicNameInScopeDialog();
    void openEditStyleDialog();
 
+   void load(std::string const &filePath);
    void save();
+   void mapRestored(std::string const &filePath);
 
    [[nodiscard]] static contomap::model::Style selectedStyle(contomap::model::Style style);
    [[nodiscard]] static contomap::model::Style highlightedStyle(contomap::model::Style style);

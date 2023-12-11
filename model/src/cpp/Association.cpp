@@ -1,6 +1,11 @@
 #include "contomap/model/Association.h"
 #include "contomap/model/Role.h"
+#include "contomap/model/Topic.h"
 
+using contomap::infrastructure::Link;
+using contomap::infrastructure::Links;
+using contomap::infrastructure::serial::Coder;
+using contomap::infrastructure::serial::Encoder;
 using contomap::model::Association;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
@@ -8,12 +13,38 @@ using contomap::model::OptionalIdentifier;
 using contomap::model::Role;
 using contomap::model::SpacialCoordinate;
 using contomap::model::Style;
+using contomap::model::Topic;
+
+Association::Association(Identifier id)
+   : id(id)
+{
+}
 
 Association::Association(Identifier id, Identifiers scope, SpacialCoordinate spacial)
    : id(id)
    , scope(std::move(scope))
    , location(spacial)
 {
+}
+
+void Association::encodeProperties(Encoder &coder) const
+{
+   Coder::Scope propertiesScope(coder, "properties");
+   scope.encode(coder, "scope");
+   location.encode(coder, "location");
+   type.encode(coder, "type");
+   appearance.encode(coder, "appearance");
+   encodeReifiable(coder);
+}
+
+void Association::decodeProperties(contomap::infrastructure::serial::Decoder &coder, uint8_t version, std::function<Topic &(Identifier)> const &topicResolver)
+{
+   Coder::Scope propertiesScope(coder, "properties");
+   scope.decode(coder, "scope");
+   location.decode(coder, "location", version);
+   type = OptionalIdentifier::from(coder, "type");
+   appearance.decode(coder, "appearance", version);
+   decodeReifiable(coder, topicResolver);
 }
 
 Identifier Association::getId() const
@@ -41,21 +72,12 @@ bool Association::isWithoutScope() const
    return scope.empty();
 }
 
-Role::Seed Association::addRole()
+std::unique_ptr<Link<Association>> Association::link(Role &role, std::function<void()> associationUnlinked)
 {
-   auto roleId = Identifier::random();
-   roles.add(roleId);
-   return { roleId, getId() };
-}
-
-bool Association::removeRole(Role const &role)
-{
-   return roles.remove(role.getId());
-}
-
-bool Association::hasRole(Identifier roleId) const
-{
-   return roles.contains(roleId);
+   Identifier roleId = role.getId();
+   auto links = Links::between(*this, std::move(associationUnlinked), role, [this, roleId]() { roles.erase(roleId); });
+   roles.emplace(roleId, std::make_unique<RoleEntry>(std::move(links.second)));
+   return std::move(links.first);
 }
 
 bool Association::hasRoles() const

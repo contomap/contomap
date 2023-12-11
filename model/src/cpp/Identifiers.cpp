@@ -1,7 +1,10 @@
 #include <algorithm>
+#include <vector>
 
 #include "contomap/model/Identifiers.h"
 
+using contomap::infrastructure::serial::Decoder;
+using contomap::infrastructure::serial::Encoder;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 
@@ -55,4 +58,14 @@ bool Identifiers::contains(Identifier id) const
 bool Identifiers::contains(Identifiers const &other) const
 {
    return std::all_of(other.begin(), other.end(), [this](auto const &id) { return set.contains(id); });
+}
+
+void Identifiers::encode(Encoder &coder, std::string const &name) const
+{
+   coder.codeArray(name, set.begin(), set.end(), [](Encoder &nested, Identifier const &id) { id.encode(nested, ""); });
+}
+
+void Identifiers::decode(Decoder &coder, std::string const &name)
+{
+   coder.codeArray(name, [this](Decoder &nested, size_t) { set.emplace(Identifier::from(nested, "")); });
 }

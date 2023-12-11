@@ -4,6 +4,9 @@
 #include <map>
 #include <vector>
 
+#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/Encoder.h"
+
 namespace contomap::model
 {
 
@@ -46,6 +49,23 @@ public:
       uint8_t blue;
       /** Alpha blending intensity. */
       uint8_t alpha;
+
+      /**
+       * Deserialize a color value.
+       *
+       * @param coder the decoder to use.
+       * @param name the name for the scope.
+       * @return the decoded instance
+       */
+      [[nodiscard]] static Color from(contomap::infrastructure::serial::Decoder &coder, std::string const &name);
+
+      /**
+       * Serialize the color value.
+       *
+       * @param coder the encoder to use.
+       * @param name the name for the scope.
+       */
+      void encode(contomap::infrastructure::serial::Encoder &coder, std::string const &name) const;
    };
 
    /** The default value returned if not specified. */
@@ -57,6 +77,23 @@ public:
     * @return a resulting style.
     */
    [[nodiscard]] static Style averageOf(std::vector<Style> const &styles);
+
+   /**
+    * Serialize the style.
+    *
+    * @param coder the encoder to use.
+    * @param name the name for the scope.
+    */
+   void encode(contomap::infrastructure::serial::Encoder &coder, std::string const &name) const;
+
+   /**
+    * Deserialize the style.
+    *
+    * @param coder the decoder to use.
+    * @param name the name for the scope.
+    * @param version the version to consider.
+    */
+   void decode(contomap::infrastructure::serial::Decoder &coder, std::string const &name, uint8_t version);
 
    /**
     * Returns a new style with a copy from this style and any optionals not yet filled out are defaulting to given style.
@@ -99,6 +136,9 @@ public:
    [[nodiscard]] Color get(ColorType type, Color defaultValue = DEFAULT_COLOR) const;
 
 private:
+   [[nodiscard]] static ColorType typeFromSerial(uint8_t value);
+   [[nodiscard]] static uint8_t typeToSerial(ColorType type);
+
    std::map<ColorType, Color> colors;
 };
 

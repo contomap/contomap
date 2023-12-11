@@ -3,6 +3,8 @@
 
 #include "contomap/model/Identifier.h"
 
+using contomap::infrastructure::serial::Decoder;
+using contomap::infrastructure::serial::Encoder;
 using contomap::model::Identifier;
 
 std::string const Identifier::ALLOWED_CHARACTERS("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
@@ -10,6 +12,19 @@ std::string const Identifier::ALLOWED_CHARACTERS("0123456789abcdefghijklmnopqrst
 Identifier::Identifier(ValueType const &value)
    : value(value)
 {
+}
+
+Identifier Identifier::from(Decoder &coder, std::string const &name)
+{
+   ValueType temp;
+   temp.fill(0x00);
+   coder.codeArray(name, [&temp](Decoder &nested, size_t index) {
+      if (index < temp.size())
+      {
+         nested.code("", temp[index]);
+      }
+   });
+   return Identifier(temp);
 }
 
 Identifier Identifier::random()
@@ -36,4 +51,9 @@ Identifier Identifier::random()
       currentSet = (lettersInRow >= 2) ? &allowedDigits : &allowedCharacters;
    }
    return Identifier(value);
+}
+
+void Identifier::encode(Encoder &coder, std::string const &name) const
+{
+   coder.codeArray(name, value.begin(), value.end(), [](Encoder &nested, char const &c) { nested.code("", c); });
 }

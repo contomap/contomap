@@ -1,5 +1,7 @@
 #pragma once
 
+#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
 #include "contomap/model/OptionalIdentifier.h"
@@ -22,6 +24,23 @@ public:
     * @param value the human readable name.
     */
    TopicName(contomap::model::Identifier id, contomap::model::Identifiers scope, contomap::model::TopicNameValue value);
+
+   /**
+    * Deserialize the topic name value.
+    *
+    * @param coder the decoder to use.
+    * @param version the version to consider.
+    * @param id the identifier of the instance.
+    * @return the decoded instance
+    */
+   [[nodiscard]] static TopicName from(contomap::infrastructure::serial::Decoder &coder, uint8_t version, contomap::model::Identifier id);
+
+   /**
+    * Serialize the topic name.
+    *
+    * @param coder the encoder to use.
+    */
+   void encode(contomap::infrastructure::serial::Encoder &coder) const;
 
    /**
     * @return the unique identifier of this name.

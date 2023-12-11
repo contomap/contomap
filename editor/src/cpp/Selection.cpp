@@ -4,8 +4,39 @@
 
 using contomap::editor::SelectedType;
 using contomap::editor::Selection;
+using contomap::infrastructure::serial::Coder;
+using contomap::infrastructure::serial::Decoder;
+using contomap::infrastructure::serial::Encoder;
+using contomap::model::Association;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
+using contomap::model::Occurrence;
+using contomap::model::Role;
+
+Selection Selection::from(Decoder &coder, uint8_t, std::function<Occurrence &(Identifier)> const &, std::function<Association &(Identifier)> const &,
+   std::function<Role &(Identifier)> const &)
+{
+   Selection instance;
+   Coder::Scope scope(coder, "selection");
+   auto decode = [&instance, &coder](SelectedType type, std::string const &name) { instance.identifiers[type].decode(coder, name); };
+   decode(SelectedType::Occurrence, "occurrences");
+   decode(SelectedType::Association, "associations");
+   decode(SelectedType::Role, "roles");
+   return instance;
+}
+
+void Selection::encode(Encoder &coder) const
+{
+   static Identifiers const EMPTY;
+   Coder::Scope scope(coder, "selection");
+   auto encode = [this, &coder](SelectedType type, std::string const &name) {
+      auto const &ids = identifiers.contains(type) ? identifiers.at(type) : EMPTY;
+      ids.encode(coder, name);
+   };
+   encode(SelectedType::Occurrence, "occurrences");
+   encode(SelectedType::Association, "associations");
+   encode(SelectedType::Role, "roles");
+}
 
 bool Selection::empty() const
 {

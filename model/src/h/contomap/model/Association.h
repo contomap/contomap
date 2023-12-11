@@ -1,5 +1,7 @@
 #pragma once
 
+#include "contomap/infrastructure/Link.h"
+#include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Coordinates.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
@@ -23,10 +25,33 @@ public:
     * Constructor.
     *
     * @param id the primary identifier of this association.
+    */
+   explicit Association(contomap::model::Identifier id);
+   /**
+    * Constructor.
+    *
+    * @param id the primary identifier of this association.
     * @param scope the scope within which this association is valid.
     * @param spacial the known, initial point where the association is happening.
     */
    Association(contomap::model::Identifier id, contomap::model::Identifiers scope, contomap::model::SpacialCoordinate spacial);
+
+   /**
+    * Serializes the properties of the association.
+    *
+    * @param coder the encoder to use.
+    */
+   void encodeProperties(contomap::infrastructure::serial::Encoder &coder) const;
+
+   /**
+    * Deserializes the properties of the association.
+    *
+    * @param coder the decoder to use.
+    * @param version the version to consider.
+    * @param topicResolver the function to use for resolving topic references.
+    */
+   void decodeProperties(contomap::infrastructure::serial::Decoder &coder, uint8_t version,
+      std::function<contomap::model::Topic &(contomap::model::Identifier)> const &topicResolver);
 
    /**
     * @return the unique identifier of this association instance.
@@ -59,25 +84,13 @@ public:
    [[nodiscard]] bool isWithoutScope() const;
 
    /**
-    * Adds a new role to the association.
+    * Establishes a link with given role.
     *
-    * @return the created role details. Use the result as a template for storing the concrete instance somewhere.
+    * @param role the role instance to link with.
+    * @param associationUnlinked the function to pass on to the returned link.
+    * @return the link that refers to this instance.
     */
-   [[nodiscard]] Role::Seed addRole();
-
-   /**
-    * Removes given role from the association.
-    *
-    * @param role the role to remove.
-    * @return true if the role was part of this association.
-    */
-   bool removeRole(contomap::model::Role const &role);
-
-   /**
-    * @param roleId the identifier to check.
-    * @return true if the association has the role with given identifier.
-    */
-   [[nodiscard]] bool hasRole(contomap::model::Identifier roleId) const;
+   [[nodiscard]] std::unique_ptr<contomap::infrastructure::Link<Association>> link(contomap::model::Role &role, std::function<void()> associationUnlinked);
 
    /**
     * @return true if the association has at least one role.
@@ -118,15 +131,32 @@ public:
    [[nodiscard]] contomap::model::OptionalIdentifier getType() const;
 
 private:
+   class RoleEntry
+   {
+   public:
+      explicit RoleEntry(std::unique_ptr<contomap::infrastructure::Link<contomap::model::Role>> link)
+         : link(std::move(link))
+      {
+      }
+
+      contomap::model::Role &role()
+      {
+         return link->getLinked();
+      }
+
+   private:
+      std::unique_ptr<contomap::infrastructure::Link<contomap::model::Role>> link;
+   };
+
    contomap::model::Identifier id;
    contomap::model::Identifiers scope;
 
-   contomap::model::OptionalIdentifier type;
-
-   contomap::model::Style appearance;
    contomap::model::Coordinates location;
 
-   contomap::model::Identifiers roles;
+   contomap::model::OptionalIdentifier type;
+   contomap::model::Style appearance;
+
+   std::map<contomap::model::Identifier, std::unique_ptr<RoleEntry>> roles;
 };
 
 }

@@ -3,8 +3,12 @@
 
 #include <gtest/gtest.h>
 
+#include "contomap/infrastructure/serial/BinaryDecoder.h"
+#include "contomap/infrastructure/serial/BinaryEncoder.h"
 #include "contomap/model/Identifier.h"
 
+using contomap::infrastructure::serial::BinaryDecoder;
+using contomap::infrastructure::serial::BinaryEncoder;
 using contomap::model::Identifier;
 
 TEST(IdentifierTest, randomIdentifierAreUnique)
@@ -25,4 +29,15 @@ TEST(IdentifierTest, shiftToOutputStream)
    std::ostringstream buf;
    buf << id;
    EXPECT_TRUE(std::regex_match(buf.str(), pattern)) << "not matched: '" << id << "'";
+}
+
+TEST(IdentifierTest, serialization)
+{
+   auto id = Identifier::random();
+   BinaryEncoder encoder;
+   id.encode(encoder, "");
+   auto data = encoder.getData();
+   BinaryDecoder decoder(data.data(), data.data() + data.size());
+   auto copy = Identifier::from(decoder, "");
+   EXPECT_EQ(id, copy);
 }

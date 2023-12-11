@@ -2,6 +2,8 @@
 
 #include <map>
 
+#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Association.h"
 #include "contomap/model/ContomapView.h"
 #include "contomap/model/Identifier.h"
@@ -110,6 +112,20 @@ public:
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role> findRoles(contomap::model::Identifiers const &ids);
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role const> findRoles(contomap::model::Identifiers const &ids) const override;
 
+   /**
+    * Serializes the map with given coder.
+    *
+    * @param coder the encoder to use.
+    */
+   void encode(contomap::infrastructure::serial::Encoder &coder) const;
+   /**
+    * Deserializes the map with given coder.
+    *
+    * @param coder the decoder to use.
+    * @param version the version to consider.
+    */
+   void decode(contomap::infrastructure::serial::Decoder &coder, uint8_t version);
+
 private:
    Contomap();
 
@@ -121,7 +137,7 @@ private:
    void deleting(contomap::model::Identifiers &toDelete, contomap::model::Topic &topic);
 
    std::map<contomap::model::Identifier, std::unique_ptr<contomap::model::Topic>> topics;
-   std::map<contomap::model::Identifier, contomap::model::Association> associations;
+   std::map<contomap::model::Identifier, std::unique_ptr<contomap::model::Association>> associations;
    contomap::model::Identifier defaultScope;
 };
 

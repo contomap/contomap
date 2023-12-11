@@ -1,7 +1,11 @@
 #include <gtest/gtest.h>
 
+#include "contomap/infrastructure/serial/BinaryDecoder.h"
+#include "contomap/infrastructure/serial/BinaryEncoder.h"
 #include "contomap/model/Identifiers.h"
 
+using contomap::infrastructure::serial::BinaryDecoder;
+using contomap::infrastructure::serial::BinaryEncoder;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 
@@ -97,4 +101,33 @@ TEST(IdentifiersTest, contains)
 
    EXPECT_TRUE(a.contains(Identifiers {}));
    EXPECT_TRUE(Identifiers {}.contains(Identifiers {}));
+}
+
+static void testCode(std::string const &testCase, Identifiers const &source)
+{
+   BinaryEncoder encoder;
+   source.encode(encoder, testCase);
+   auto &data = encoder.getData();
+   BinaryDecoder decoder(data.data(), data.data() + data.size());
+   Identifiers clone;
+   try
+   {
+      clone.decode(decoder, testCase);
+   }
+   catch (std::exception &)
+   {
+   }
+   EXPECT_EQ(source, clone) << "Failed for " << testCase;
+}
+
+TEST(IdentifiersTest, serialization)
+{
+   testCode("empty", Identifiers {});
+   testCode("single", Identifiers::ofSingle(Identifier::random()));
+   Identifiers multiple;
+   multiple.add(Identifier::random());
+   multiple.add(Identifier::random());
+   multiple.add(Identifier::random());
+   multiple.add(Identifier::random());
+   testCode("multiple", multiple);
 }

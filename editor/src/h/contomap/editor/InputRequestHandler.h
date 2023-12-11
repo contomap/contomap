@@ -2,6 +2,8 @@
 
 #include "contomap/editor/SelectedType.h"
 #include "contomap/editor/SelectionAction.h"
+#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/SpacialCoordinate.h"
 #include "contomap/model/Style.h"
@@ -17,6 +19,11 @@ class InputRequestHandler
 {
 public:
    virtual ~InputRequestHandler() = default;
+
+   /**
+    * Called to request a new map.
+    */
+   virtual void newMap() = 0;
 
    /**
     * Called when a new topic shall be created.
@@ -178,6 +185,24 @@ public:
     * @param topicId the identifier of the topic to look for.
     */
    virtual void selectClosestOccurrenceOf(contomap::model::Identifier topicId) = 0;
+
+   /**
+    * Requests to save the current state using the given coder.
+    *
+    * @param encoder the coder to use.
+    * @param withSelection whether the selection shall be included in the serialization.
+    */
+   virtual void saveState(contomap::infrastructure::serial::Encoder &encoder, bool withSelection) = 0;
+
+   /**
+    * Requests to set the state from an encoded form.
+    * If the serialized state contains a selection, it will be applied. If it does not contain it, the selection
+    * will be empty.
+    *
+    * @param decoder the coder to read from.
+    * @return whether loading was successful.
+    */
+   [[nodiscard]] virtual bool loadState(contomap::infrastructure::serial::Decoder &decoder) = 0;
 };
 
 } // namespace contomap::editor

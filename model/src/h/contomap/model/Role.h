@@ -1,5 +1,11 @@
 #pragma once
 
+#include <functional>
+#include <memory>
+
+#include "contomap/infrastructure/Link.h"
+#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
 #include "contomap/model/OptionalIdentifier.h"
@@ -19,61 +25,34 @@ class Role : public contomap::model::Reifiable<contomap::model::Topic>
 {
 public:
    /**
-    * Seed contains the basic information for creating a new role.
-    * Seed instances are created through Association objects.
-    */
-   class Seed
-   {
-   public:
-      Seed() = delete;
-      /**
-       * Default copy constructor.
-       */
-      Seed(Seed const &) = default;
-      /**
-       * Default move constructor.
-       */
-      Seed(Seed &&) = default;
-
-      /**
-       * Default assignment operator.
-       * @return default result.
-       */
-      Seed &operator=(Seed const &) = default;
-      /**
-       * Default move operator.
-       * @return default result.
-       */
-      Seed &operator=(Seed &&) = default;
-
-      /**
-       * @return the unique identifier for the role.
-       */
-      [[nodiscard]] contomap::model::Identifier getId() const
-      {
-         return id;
-      }
-
-   private:
-      Seed(contomap::model::Identifier id, contomap::model::Identifier parent)
-         : id(id)
-         , parent(parent)
-      {
-      }
-
-      friend Role;
-      friend Association;
-
-      contomap::model::Identifier id;
-      contomap::model::Identifier parent;
-   };
-
-   /**
     * Constructor.
     *
-    * @param seed the properties for creating a new Role. Retrieve a new instance from an Association.
+    * @param id the unique identifier of this role.
+    * @param topic the topic to represent in the association.
+    * @param association the association the role is part of.
     */
-   explicit Role(Seed const &seed);
+   Role(contomap::model::Identifier id, contomap::model::Topic &topic, contomap::model::Association &association);
+
+   /**
+    * Deserializes the role.
+    *
+    * @param coder the decoder to use.
+    * @param version the version to consider.
+    * @param id the unique identifier of the role.
+    * @param topicResolver the function to use for resolving topic references.
+    * @param associationResolver the function to use for resolving association references.
+    * @return the decoded role.
+    */
+   [[nodiscard]] static std::unique_ptr<Role> from(contomap::infrastructure::serial::Decoder &coder, uint8_t version, contomap::model::Identifier id,
+      std::function<Topic &(contomap::model::Identifier)> const &topicResolver,
+      std::function<Association &(contomap::model::Identifier)> const &associationResolver);
+
+   /**
+    * Serializes the role.
+    *
+    * @param coder the encoder to use.
+    */
+   void encode(contomap::infrastructure::serial::Encoder &coder) const;
 
    /**
     * @return the primary identifier of this role.
@@ -112,12 +91,15 @@ public:
    [[nodiscard]] contomap::model::OptionalIdentifier getType() const;
 
 private:
+   void unlink();
+
    contomap::model::Identifier id;
-   contomap::model::Identifier parent;
 
    contomap::model::OptionalIdentifier type;
-
    contomap::model::Style appearance;
+
+   std::unique_ptr<contomap::infrastructure::Link<contomap::model::Topic>> topic;
+   std::unique_ptr<contomap::infrastructure::Link<contomap::model::Association>> association;
 };
 
 }

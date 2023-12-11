@@ -3,6 +3,8 @@
 #include "contomap/editor/InputRequestHandler.h"
 #include "contomap/editor/Selection.h"
 #include "contomap/editor/View.h"
+#include "contomap/infrastructure/serial/Decoder.h"
+#include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Contomap.h"
 #include "contomap/model/Identifiers.h"
 
@@ -16,6 +18,8 @@ class Editor : public contomap::editor::InputRequestHandler, public contomap::ed
 {
 public:
    Editor();
+
+   void newMap() override;
 
    contomap::model::Identifier newTopicRequested(contomap::model::TopicNameValue name, contomap::model::SpacialCoordinate location) override;
    void setTopicNameDefault(contomap::model::Identifier topicId, contomap::model::TopicNameValue value) override;
@@ -43,6 +47,9 @@ public:
    void cycleSelectedOccurrenceReverse() override;
    void selectClosestOccurrenceOf(contomap::model::Identifier topicId) override;
 
+   void saveState(contomap::infrastructure::serial::Encoder &encoder, bool withSelection) override;
+   [[nodiscard]] bool loadState(contomap::infrastructure::serial::Decoder &decoder) override;
+
    [[nodiscard]] contomap::model::Identifiers const &ofViewScope() const override;
    [[nodiscard]] contomap::model::ContomapView const &ofMap() const override;
    [[nodiscard]] contomap::editor::Selection const &ofSelection() const override;
@@ -58,6 +65,8 @@ private:
    void cycleSelectedOccurrence(bool forward);
    void setViewScopeTo(contomap::model::Identifiers const &ids);
    void verifyViewScopeIsStable();
+
+   static uint8_t const CURRENT_SERIAL_VERSION;
 
    contomap::model::Contomap map;
    contomap::model::Identifiers viewScope;
