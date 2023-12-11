@@ -482,6 +482,12 @@ void MainWindow::drawUserInterface(RenderContext const &context)
          .width = iconSize,
          .height = iconSize,
       };
+      GuiSetTooltip("New map");
+      if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_FILE_NEW, nullptr)))
+      {
+         requestNewFile();
+      }
+      leftIconButtonsBounds.x += (iconSize + padding);
       GuiSetTooltip("Load map");
       if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_FILE_OPEN, nullptr)))
       {
@@ -693,6 +699,12 @@ void MainWindow::drawUserInterface(RenderContext const &context)
    }
 }
 
+void MainWindow::requestNewFile()
+{
+   inputRequestHandler.newMap();
+   mapRestored("");
+}
+
 void MainWindow::requestLoad()
 {
    pendingDialog = std::make_unique<contomap::frontend::LoadDialog>(environment, layout, [this](std::string const &filePath) { load(filePath); });
@@ -796,8 +808,7 @@ void MainWindow::load(std::string const &filePath)
    contomap::infrastructure::serial::BinaryDecoder decoder(chunk.data, chunk.data + chunk.length);
    if (inputRequestHandler.loadState(decoder))
    {
-      mapCamera.panTo(MapCamera::HOME_POSITION);
-      currentFilePath = filePath;
+      mapRestored(filePath);
    }
 
    RPNG_FREE(chunk.data);
@@ -862,6 +873,15 @@ void MainWindow::save()
 
       environment.fileSaved(currentFilePath);
    }
+}
+
+void MainWindow::mapRestored(std::string const &filePath)
+{
+   currentFilePath = filePath;
+   currentFocus = contomap::frontend::Focus();
+   mapCamera.panTo(MapCamera::HOME_POSITION);
+   lastViewScope.clear();
+   viewScopeListStartIndex = 0;
 }
 
 SpacialCoordinate MainWindow::spacialCameraLocation()

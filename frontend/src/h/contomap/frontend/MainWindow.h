@@ -137,6 +137,7 @@ private:
 
    void renderMap(contomap::frontend::MapRenderer &renderer, contomap::editor::Selection const &selection, Focus const &focus);
 
+   void requestNewFile();
    void requestLoad();
    void requestSave();
 
@@ -151,6 +152,7 @@ private:
 
    void load(std::string const &filePath);
    void save();
+   void mapRestored(std::string const &filePath);
 
    [[nodiscard]] static contomap::model::Style selectedStyle(contomap::model::Style style);
    [[nodiscard]] static contomap::model::Style highlightedStyle(contomap::model::Style style);

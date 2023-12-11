@@ -19,6 +19,8 @@ class Editor : public contomap::editor::InputRequestHandler, public contomap::ed
 public:
    Editor();
 
+   void newMap() override;
+
    contomap::model::Identifier newTopicRequested(contomap::model::TopicNameValue name, contomap::model::SpacialCoordinate location) override;
    void setTopicNameDefault(contomap::model::Identifier topicId, contomap::model::TopicNameValue value) override;
    void setTopicNameInScope(contomap::model::Identifier topicId, contomap::model::TopicNameValue value) override;

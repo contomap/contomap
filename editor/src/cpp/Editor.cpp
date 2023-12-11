@@ -28,6 +28,13 @@ Editor::Editor()
    viewScope.add(map.getDefaultScope());
 }
 
+void Editor::newMap()
+{
+   map = Contomap::newMap();
+   viewScope = Identifiers::ofSingle(map.getDefaultScope());
+   selection.clear();
+}
+
 Identifier Editor::newTopicRequested(TopicNameValue name, SpacialCoordinate location)
 {
    auto &topic = map.newTopic();

@@ -21,6 +21,11 @@ public:
    virtual ~InputRequestHandler() = default;
 
    /**
+    * Called to request a new map.
+    */
+   virtual void newMap() = 0;
+
+   /**
     * Called when a new topic shall be created.
     *
     * @param name how the new topic shall be named by default.
