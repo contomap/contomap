@@ -87,6 +87,9 @@ MainWindow::LengthInPixel MainWindow::Size::getHeight() const
 
 MainWindow::Size const MainWindow::DEFAULT_SIZE = MainWindow::Size::ofPixel(1280, 720);
 char const MainWindow::DEFAULT_TITLE[] = "contomap";
+// According to http://www.libpng.org/pub/png/spec/1.2/PNG-Structure.html#Chunk-naming-conventions ,
+// the chunk type is ancillary (lower), private (lower), conforming (upper), safe-to-copy (lower).
+std::array<char, 5> const MainWindow::PNG_MAP_TYPE { 'c', 'm', 'P', 'm', 0x00 };
 
 MainWindow::MainWindow(DisplayEnvironment &environment, contomap::editor::View &view, contomap::editor::InputRequestHandler &inputRequestHandler)
    : mapCamera(std::make_shared<MapCamera::ImmediateGearbox>())
@@ -785,7 +788,7 @@ void MainWindow::openEditStyleDialog()
 
 void MainWindow::load(std::string const &filePath)
 {
-   auto chunk = rpng_chunk_read(filePath.c_str(), "cMAP");
+   auto chunk = rpng_chunk_read(filePath.c_str(), PNG_MAP_TYPE.data());
    if (chunk.length == 0)
    {
       return;
@@ -845,7 +848,7 @@ void MainWindow::save()
       auto const &data = encoder.getData();
       chunk.data = const_cast<uint8_t *>(data.data());
       chunk.length = static_cast<int>(data.size());
-      memcpy(chunk.type, "cMAP", 4);
+      memcpy(chunk.type, PNG_MAP_TYPE.data(), 4);
 
       auto newExported = rpng_chunk_write_from_memory(reinterpret_cast<char const *>(exported), chunk, &outputSize);
       RL_FREE(exported);
