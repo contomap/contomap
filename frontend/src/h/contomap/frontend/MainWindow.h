@@ -125,14 +125,14 @@ private:
    [[nodiscard]] static contomap::frontend::MapCamera::ZoomOperation doubledRelative(bool nearer);
    [[nodiscard]] static std::vector<std::pair<int, contomap::frontend::MapCamera::ZoomFactor>> generateZoomLevels();
 
-   void processInput();
+   void processInput(Vector2 focusCoordinate, Vector2 focusDelta);
    void updateState();
    void cycleSelectedOccurrence(bool forward);
    void jumpToFirstOccurrenceOf(contomap::model::Identifier topicId);
    void panCameraToSelectedOccurrence();
 
    void drawBackground();
-   void drawMap(RenderContext const &context);
+   void drawMap(Vector2 focusCoordinate);
    void drawUserInterface(contomap::frontend::RenderContext const &context);
 
    void renderMap(contomap::frontend::MapRenderer &renderer, contomap::editor::Selection const &selection, Focus const &focus);
@@ -177,6 +177,8 @@ private:
 
    contomap::frontend::Focus currentFocus;
    std::string currentFilePath;
+
+   Vector2 lastMousePos;
 };
 
 } // namespace contomap::frontend

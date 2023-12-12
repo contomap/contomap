@@ -2,6 +2,11 @@
 #include <memory.h>
 #include <sstream>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#include <raylib.h>
+#include <raymath.h>
+#pragma GCC diagnostic pop
 #include <raygui/raygui.h>
 #include <rpng/rpng.h>
 
@@ -96,6 +101,7 @@ MainWindow::MainWindow(DisplayEnvironment &environment, contomap::editor::View &
    , environment(environment)
    , view(view)
    , inputRequestHandler(inputRequestHandler)
+   , lastMousePos { .x = 0.0f, .y = 0.0f }
 {
 }
 
@@ -117,21 +123,31 @@ void MainWindow::closeRequested()
 
 void MainWindow::nextFrame()
 {
-   processInput();
    updateState();
 
    BeginDrawing();
 
-   auto renderContext = RenderContext::fromCurrentState();
-
    drawBackground();
-   drawMap(renderContext);
+
+   auto renderContext = RenderContext::fromCurrentState();
+   {
+      auto contentSize = renderContext.getContentSize();
+      auto projection = mapCamera.beginProjection(contentSize);
+      auto currentMousePos = GetMousePosition();
+      auto focusCoordinate = projection.unproject(currentMousePos);
+      auto focusCoordinateOld = projection.unproject(lastMousePos);
+      lastMousePos = currentMousePos;
+
+      processInput(focusCoordinate, Vector2Subtract(focusCoordinate, focusCoordinateOld));
+
+      drawMap(focusCoordinate);
+   }
    drawUserInterface(renderContext);
 
    EndDrawing();
 }
 
-void MainWindow::processInput()
+void MainWindow::processInput(Vector2, Vector2 focusDelta)
 {
    if (currentDialog == nullptr)
    {
@@ -199,10 +215,21 @@ void MainWindow::processInput()
       }
 
       // TODO: avoid map interaction click when on view scope bar.
-      if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && (static_cast<float>(GetMouseY()) > (layout.buttonHeight() + layout.padding() * 2.0f)))
+      if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) && (static_cast<float>(GetMouseY()) > (layout.buttonHeight() + layout.padding() * 2.0f)))
       {
          auto action = IsKeyDown(KEY_LEFT_CONTROL) ? SelectionAction::Toggle : SelectionAction::Set;
          currentFocus.modifySelection(inputRequestHandler, action);
+      }
+      if (IsMouseButtonDown(MOUSE_BUTTON_LEFT) && (Vector2Length(focusDelta) > 0.0f))
+      {
+         if (currentFocus.hasNoItem())
+         {
+            mapCamera.panTo(Vector2Subtract(mapCamera.getCurrentPosition(), focusDelta));
+         }
+         else
+         {
+            inputRequestHandler.moveSelectionBy(SpacialCoordinate::Offset::of(focusDelta.x, focusDelta.y));
+         }
       }
    }
 }
@@ -247,12 +274,8 @@ void MainWindow::drawBackground()
    ClearBackground(WHITE);
 }
 
-void MainWindow::drawMap(RenderContext const &context)
+void MainWindow::drawMap(Vector2 focusCoordinate)
 {
-   auto contentSize = context.getContentSize();
-   auto projection = mapCamera.beginProjection(contentSize);
-   auto focusCoordinate = projection.unproject(GetMousePosition());
-
    DirectMapRenderer directMapRenderer;
    FocusInterceptor focusInterceptor(directMapRenderer, focusCoordinate);
 
