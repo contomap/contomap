@@ -62,6 +62,11 @@ void Association::moveTo(SpacialCoordinate absolutePosition)
    location.setSpacial(absolutePosition);
 }
 
+void Association::moveBy(SpacialCoordinate::Offset offset)
+{
+   location.moveBy(offset);
+}
+
 bool Association::isIn(Identifiers const &thatScope) const
 {
    return thatScope.contains(scope);

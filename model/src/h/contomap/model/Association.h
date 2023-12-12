@@ -71,6 +71,13 @@ public:
    void moveTo(SpacialCoordinate absolutePosition);
 
    /**
+    * Moves the association by the given offset.
+    *
+    * @param offset the offset to apply.
+    */
+   void moveBy(SpacialCoordinate::Offset offset);
+
+   /**
     * Return true if this instance is in the given scope.
     *
     * @param thatScope the scope to look for.

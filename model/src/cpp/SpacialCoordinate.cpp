@@ -31,6 +31,11 @@ SpacialCoordinate::AbsolutePoint SpacialCoordinate::AbsolutePoint::from(Decoder 
    return at(x, y);
 }
 
+SpacialCoordinate::AbsolutePoint SpacialCoordinate::AbsolutePoint::plus(Offset offset)
+{
+   return { x + offset.X(), y + offset.Y() };
+}
+
 void SpacialCoordinate::AbsolutePoint::encode(Encoder &coder, std::string const &name) const
 {
    Coder::Scope scope(coder, name);
@@ -65,4 +70,9 @@ void SpacialCoordinate::setAbsoluteReference(AbsolutePoint point)
 SpacialCoordinate::AbsolutePoint SpacialCoordinate::getAbsoluteReference() const
 {
    return absoluteReference;
+}
+
+void SpacialCoordinate::moveBy(Offset offset)
+{
+   absoluteReference = absoluteReference.plus(offset);
 }

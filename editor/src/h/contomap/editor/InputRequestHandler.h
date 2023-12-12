@@ -129,6 +129,13 @@ public:
    virtual void clearReifierOfSelection() = 0;
 
    /**
+    * Requests to move all the items in the selection by applying the provided offset.
+    *
+    * @param offset the offset to apply.
+    */
+   virtual void moveSelectionBy(contomap::model::SpacialCoordinate::Offset offset) = 0;
+
+   /**
     * Sets the view scope from the current selection.
     */
    virtual void setViewScopeFromSelection() = 0;

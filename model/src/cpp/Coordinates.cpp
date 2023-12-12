@@ -32,3 +32,8 @@ SpacialCoordinate Coordinates::getSpacial() const
 {
    return spacial;
 }
+
+void Coordinates::moveBy(contomap::model::SpacialCoordinate::Offset offset)
+{
+   spacial.moveBy(offset);
+}

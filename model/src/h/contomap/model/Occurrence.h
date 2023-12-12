@@ -129,6 +129,13 @@ public:
     */
    [[nodiscard]] contomap::model::OptionalIdentifier getType() const;
 
+   /**
+    * Move the location of the occurrence by given offset.
+    *
+    * @param offset the offset to apply.
+    */
+   void moveBy(contomap::model::SpacialCoordinate::Offset offset);
+
 private:
    Occurrence(contomap::model::Identifier id, contomap::model::Topic &topic);
 
