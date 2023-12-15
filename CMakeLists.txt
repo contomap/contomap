@@ -246,5 +246,5 @@ elseif (${PLATFORM} STREQUAL "Web")
     )
     # Tell Emscripten to build an example.html file.
     set_target_properties(contomap-wasm PROPERTIES SUFFIX ".html")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY -s GL_ENABLE_GET_PROC_ADDRESS=1")
 endif ()
