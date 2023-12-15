@@ -262,6 +262,11 @@ public:
          handler.modifySelection(type, id, SelectionAction::Toggle);
       }
 
+      void movesTheSelectionBy(SpacialCoordinate::Offset offset)
+      {
+         handler.moveSelectionBy(offset);
+      }
+
       void setsTheViewScopeToBe(Identifier id)
       {
          handler.setViewScopeTo(id);
@@ -1001,5 +1006,21 @@ TEST_P(EditorTest, typeOfRoleCanNotBeSetToUnknownId)
       Role const &role = *topic.findRoles(Identifiers::ofSingle(roleId)).begin();
       auto optionalType = role.getType();
       ASSERT_FALSE(optionalType.isAssigned());
+   });
+}
+
+TEST_P(EditorTest, movingSelection)
+{
+   auto position = someSpacialCoordinate();
+   auto offset = SpacialCoordinate::Offset::of(10.0f, 20.0f);
+   Identifier topicId = given().user().requestsANewTopic().at(position);
+   Identifier occurrenceId = occurrenceOf(topicId).getId();
+   given().user().selects(SelectedType::Occurrence, occurrenceId);
+   when().user().movesTheSelectionBy(offset);
+   then().view().ofMap().shouldHaveTopicThat(topicId, [occurrenceId, position, offset](Topic const &topic) {
+      auto occurrence = topic.getOccurrence(occurrenceId);
+      ASSERT_TRUE(occurrence.has_value());
+      auto expected = position.getAbsoluteReference().plus(offset);
+      EXPECT_THAT(occurrence->get().getLocation().getSpacial(), isCloseTo(SpacialCoordinate::absoluteAt(expected.X(), expected.Y())));
    });
 }
