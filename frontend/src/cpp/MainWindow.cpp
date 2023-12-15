@@ -139,7 +139,7 @@ void MainWindow::nextFrame()
       auto lastFocusCoordinate = lastMousePos.has_value() ? projection.unproject(lastMousePos.value()) : focusCoordinate;
       lastMousePos = currentMousePos;
 
-      processInput(focusCoordinate, Vector2Subtract(focusCoordinate, lastFocusCoordinate));
+      processInput(renderContext, focusCoordinate, Vector2Subtract(focusCoordinate, lastFocusCoordinate));
 
       drawMap(focusCoordinate);
    }
@@ -148,11 +148,11 @@ void MainWindow::nextFrame()
    EndDrawing();
 }
 
-void MainWindow::processInput(Vector2, Vector2 focusDelta)
+void MainWindow::processInput(RenderContext const &context, Vector2, Vector2 focusDelta)
 {
    if (currentDialog != nullptr)
    {
-      return
+      return;
    }
 
    // TODO: probably needs some better checks here -> hotkey system
@@ -218,14 +218,17 @@ void MainWindow::processInput(Vector2, Vector2 focusDelta)
       requestSave();
    }
 
+   auto mousePos = GetMousePosition();
+   auto barHeight = layout.buttonHeight() + layout.padding() + 2.0f;
+   auto contentSize = context.getContentSize();
    MouseInput input {
       .buttonPressed = IsMouseButtonPressed(MOUSE_BUTTON_LEFT),
       .buttonDown = IsMouseButtonDown(MOUSE_BUTTON_LEFT),
       .ctrlDown = IsKeyDown(KEY_LEFT_CONTROL),
       .abortPressed = IsKeyPressed(KEY_ESCAPE),
-      .pixelPos = GetMousePosition(),
+      .pixelPos = mousePos,
       .worldMoveDelta = focusDelta,
-      .overMap = true,
+      .overMap = (mousePos.y > barHeight) && (mousePos.y < (contentSize.y - barHeight)),
    };
    mouseHandler(input);
 }
@@ -267,14 +270,11 @@ void MainWindow::panCameraToSelectedOccurrence()
 
 void MainWindow::handleMouseIdle(MouseInput const &input)
 {
-   // TODO: avoid map interaction click when on view scope bar.
-   if (input.buttonPressed && (input.pixelPos.y > (layout.buttonHeight() + layout.padding() * 2.0f)))
+   if (input.buttonPressed && input.overMap)
    {
       auto action = input.ctrlDown ? SelectionAction::Toggle : SelectionAction::Set;
       currentFocus.modifySelection(inputRequestHandler, action);
-   }
-   if (input.buttonDown && (Vector2Length(input.worldMoveDelta) > 0.0f))
-   {
+
       mouseHandler = [this](MouseInput const &nested) { handleMouseDownMoving(nested); };
       mouseHandler(input);
    }
@@ -290,13 +290,17 @@ void MainWindow::handleMouseDownMoving(MouseInput const &input)
    {
       selectionDrawOffset = selectionDrawOffset.plus(SpacialCoordinate::Offset::of(input.worldMoveDelta.x, input.worldMoveDelta.y));
    }
+   bool done = false;
    if (!input.buttonDown)
    {
       inputRequestHandler.moveSelectionBy(selectionDrawOffset);
-      selectionDrawOffset = SpacialCoordinate::Offset::of(0.0f, 0.0f);
-      mouseHandler = [this](MouseInput const &nested) { handleMouseIdle(nested); };
+      done = true;
    }
    else if (input.abortPressed)
+   {
+      done = true;
+   }
+   if (done)
    {
       selectionDrawOffset = SpacialCoordinate::Offset::of(0.0f, 0.0f);
       mouseHandler = [this](MouseInput const &nested) { handleMouseIdle(nested); };

@@ -137,7 +137,7 @@ private:
    [[nodiscard]] static contomap::frontend::MapCamera::ZoomOperation doubledRelative(bool nearer);
    [[nodiscard]] static std::vector<std::pair<int, contomap::frontend::MapCamera::ZoomFactor>> generateZoomLevels();
 
-   void processInput(Vector2 focusCoordinate, Vector2 focusDelta);
+   void processInput(contomap::frontend::RenderContext const &context, Vector2 focusCoordinate, Vector2 focusDelta);
    void updateState();
    void cycleSelectedOccurrence(bool forward);
    void jumpToFirstOccurrenceOf(contomap::model::Identifier topicId);
