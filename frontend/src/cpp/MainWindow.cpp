@@ -101,7 +101,6 @@ MainWindow::MainWindow(DisplayEnvironment &environment, contomap::editor::View &
    , environment(environment)
    , view(view)
    , inputRequestHandler(inputRequestHandler)
-   , lastMousePos { .x = 0.0f, .y = 0.0f }
 {
 }
 
@@ -135,10 +134,10 @@ void MainWindow::nextFrame()
       auto projection = mapCamera.beginProjection(contentSize);
       auto currentMousePos = GetMousePosition();
       auto focusCoordinate = projection.unproject(currentMousePos);
-      auto focusCoordinateOld = projection.unproject(lastMousePos);
+      auto lastFocusCoordinate = lastMousePos.has_value() ? projection.unproject(lastMousePos.value()) : focusCoordinate;
       lastMousePos = currentMousePos;
 
-      processInput(focusCoordinate, Vector2Subtract(focusCoordinate, focusCoordinateOld));
+      processInput(focusCoordinate, Vector2Subtract(focusCoordinate, lastFocusCoordinate));
 
       drawMap(focusCoordinate);
    }

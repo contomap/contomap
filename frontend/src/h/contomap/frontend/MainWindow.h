@@ -178,7 +178,7 @@ private:
    contomap::frontend::Focus currentFocus;
    std::string currentFilePath;
 
-   Vector2 lastMousePos;
+   std::optional<Vector2> lastMousePos;
 };
 
 } // namespace contomap::frontend
