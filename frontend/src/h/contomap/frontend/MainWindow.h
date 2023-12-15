@@ -118,6 +118,18 @@ public:
    void close();
 
 private:
+   struct MouseInput
+   {
+      bool buttonPressed;
+      bool buttonDown;
+      bool ctrlDown;
+      bool abortPressed;
+      Vector2 pixelPos;
+      Vector2 worldMoveDelta;
+      bool overMap;
+   };
+   using MouseHandler = std::function<void(MouseInput const &)>;
+
    static Size const DEFAULT_SIZE;
    static char const DEFAULT_TITLE[];
    static std::array<char, 5> const PNG_MAP_TYPE;
@@ -131,11 +143,15 @@ private:
    void jumpToFirstOccurrenceOf(contomap::model::Identifier topicId);
    void panCameraToSelectedOccurrence();
 
+   void handleMouseIdle(MouseInput const &input);
+   void handleMouseDownMoving(MouseInput const &input);
+
    void drawBackground();
    void drawMap(Vector2 focusCoordinate);
    void drawUserInterface(contomap::frontend::RenderContext const &context);
 
-   void renderMap(contomap::frontend::MapRenderer &renderer, contomap::editor::Selection const &selection, Focus const &focus);
+   void renderMap(contomap::frontend::MapRenderer &renderer, contomap::editor::Selection const &selection, Focus const &focus,
+      contomap::model::SpacialCoordinate::Offset selectionOffset);
 
    void requestNewFile();
    void requestLoad();
@@ -179,6 +195,9 @@ private:
    std::string currentFilePath;
 
    std::optional<Vector2> lastMousePos;
+
+   MouseHandler mouseHandler;
+   contomap::model::SpacialCoordinate::Offset selectionDrawOffset;
 };
 
 } // namespace contomap::frontend

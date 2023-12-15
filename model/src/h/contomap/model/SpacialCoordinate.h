@@ -31,6 +31,17 @@ public:
       }
 
       /**
+       * Calculate the sum of two offset values.
+       *
+       * @param other the other offset to add.
+       * @return the resulting value.
+       */
+      [[nodiscard]] Offset plus(Offset other) const
+      {
+         return { x + other.x, y + other.y };
+      }
+
+      /**
        * @return the X delta.
        */
       [[nodiscard]] CoordinateType X() const
