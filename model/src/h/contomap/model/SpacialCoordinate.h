@@ -15,6 +15,9 @@ public:
    /** Type for coordinate values. */
    using CoordinateType = float;
 
+   /**
+    * Offset is a displacement value from another coordinate.
+    */
    class Offset
    {
    public:
