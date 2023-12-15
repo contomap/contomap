@@ -177,6 +177,14 @@ public:
    Focus();
 
    /**
+    * @return true if currently nothing is focused.
+    */
+   [[nodiscard]] bool hasNoItem() const
+   {
+      return item == nullptr;
+   }
+
+   /**
     * Registers a new item with given distance. Should the distance be shorter than any previously registered item,
     * then this new item receives focus.
     *

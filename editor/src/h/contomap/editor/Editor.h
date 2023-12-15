@@ -37,6 +37,7 @@ public:
    void clearTypeOfSelection() override;
    void setReifierOfSelection(contomap::model::Identifier topicId) override;
    void clearReifierOfSelection() override;
+   void moveSelectionBy(contomap::model::SpacialCoordinate::Offset offset) override;
    void setViewScopeFromSelection() override;
    void addToViewScopeFromSelection() override;
    void setViewScopeToDefault() override;

@@ -113,3 +113,8 @@ OptionalIdentifier Occurrence::getType() const
 {
    return type;
 }
+
+void Occurrence::moveBy(contomap::model::SpacialCoordinate::Offset offset)
+{
+   location.moveBy(offset);
+}

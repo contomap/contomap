@@ -295,6 +295,25 @@ void Editor::clearReifierOfSelection()
    }
 }
 
+void Editor::moveSelectionBy(contomap::model::SpacialCoordinate::Offset offset)
+{
+   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   {
+      for (auto &occurrence : map.findOccurrences(ids))
+      {
+         occurrence.get().moveBy(offset);
+      }
+   }
+   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
+   {
+      for (auto id : ids)
+      {
+         Association &association = map.findAssociation(id).value();
+         association.moveBy(offset);
+      }
+   }
+}
+
 void Editor::setViewScopeFromSelection()
 {
    auto &occurrenceIds = selection.of(SelectedType::Occurrence);

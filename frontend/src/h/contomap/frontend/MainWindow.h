@@ -118,6 +118,18 @@ public:
    void close();
 
 private:
+   struct MouseInput
+   {
+      bool buttonPressed;
+      bool buttonDown;
+      bool ctrlDown;
+      bool abortPressed;
+      Vector2 pixelPos;
+      Vector2 worldMoveDelta;
+      bool overMap;
+   };
+   using MouseHandler = std::function<void(MouseInput const &)>;
+
    static Size const DEFAULT_SIZE;
    static char const DEFAULT_TITLE[];
    static std::array<char, 5> const PNG_MAP_TYPE;
@@ -125,17 +137,21 @@ private:
    [[nodiscard]] static contomap::frontend::MapCamera::ZoomOperation doubledRelative(bool nearer);
    [[nodiscard]] static std::vector<std::pair<int, contomap::frontend::MapCamera::ZoomFactor>> generateZoomLevels();
 
-   void processInput();
+   void processInput(contomap::frontend::RenderContext const &context, Vector2 focusCoordinate, Vector2 focusDelta);
    void updateState();
    void cycleSelectedOccurrence(bool forward);
    void jumpToFirstOccurrenceOf(contomap::model::Identifier topicId);
    void panCameraToSelectedOccurrence();
 
+   void handleMouseIdle(MouseInput const &input);
+   void handleMouseDownMoving(MouseInput const &input);
+
    void drawBackground();
-   void drawMap(RenderContext const &context);
+   void drawMap(Vector2 focusCoordinate);
    void drawUserInterface(contomap::frontend::RenderContext const &context);
 
-   void renderMap(contomap::frontend::MapRenderer &renderer, contomap::editor::Selection const &selection, Focus const &focus);
+   void renderMap(contomap::frontend::MapRenderer &renderer, contomap::editor::Selection const &selection, Focus const &focus,
+      contomap::model::SpacialCoordinate::Offset selectionOffset);
 
    void requestNewFile();
    void requestLoad();
@@ -177,6 +193,11 @@ private:
 
    contomap::frontend::Focus currentFocus;
    std::string currentFilePath;
+
+   std::optional<Vector2> lastMousePos;
+
+   MouseHandler mouseHandler;
+   contomap::model::SpacialCoordinate::Offset selectionDrawOffset;
 };
 
 } // namespace contomap::frontend

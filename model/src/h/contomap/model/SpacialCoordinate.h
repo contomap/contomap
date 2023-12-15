@@ -16,6 +16,61 @@ public:
    using CoordinateType = float;
 
    /**
+    * Offset is a displacement value from another coordinate.
+    */
+   class Offset
+   {
+   public:
+      /**
+       * Factory method creating a new instance with the given values.
+       *
+       * @param x the X delta.
+       * @param y the Y delta.
+       * @return the resulting instance.
+       */
+      [[nodiscard]] static Offset of(CoordinateType x, CoordinateType y)
+      {
+         return { x, y };
+      }
+
+      /**
+       * Calculate the sum of two offset values.
+       *
+       * @param other the other offset to add.
+       * @return the resulting value.
+       */
+      [[nodiscard]] Offset plus(Offset other) const
+      {
+         return { x + other.x, y + other.y };
+      }
+
+      /**
+       * @return the X delta.
+       */
+      [[nodiscard]] CoordinateType X() const
+      {
+         return x;
+      }
+      /**
+       * @return the Y delta.
+       */
+      [[nodiscard]] CoordinateType Y() const
+      {
+         return y;
+      }
+
+   private:
+      Offset(CoordinateType x, CoordinateType y)
+         : x(x)
+         , y(y)
+      {
+      }
+
+      CoordinateType x;
+      CoordinateType y;
+   };
+
+   /**
     * AbsolutePoint is a location at an absolute position based on an origin at x=0,y=0.
     */
    class AbsolutePoint
@@ -43,6 +98,14 @@ public:
        * @return the decoded instance.
        */
       [[nodiscard]] static AbsolutePoint from(contomap::infrastructure::serial::Decoder &coder, std::string const &name);
+
+      /**
+       * Calculates a new absolute point by adding the given offset to the current values.
+       *
+       * @param offset the offset to apply.
+       * @return the resulting value.
+       */
+      [[nodiscard]] AbsolutePoint plus(Offset offset);
 
       /**
        * Serializes the coordinates.
@@ -108,6 +171,13 @@ public:
     * @return the current absolute reference point.
     */
    [[nodiscard]] AbsolutePoint getAbsoluteReference() const;
+
+   /**
+    * Move the spacial coordinate by given offset.
+    *
+    * @param offset the offset to apply.
+    */
+   void moveBy(Offset offset);
 
 private:
    AbsolutePoint absoluteReference;

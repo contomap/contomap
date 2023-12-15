@@ -50,6 +50,13 @@ public:
     */
    [[nodiscard]] contomap::model::SpacialCoordinate getSpacial() const;
 
+   /**
+    * Move the spacial location by given offset.
+    *
+    * @param offset the offset to apply.
+    */
+   void moveBy(contomap::model::SpacialCoordinate::Offset offset);
+
 private:
    contomap::model::SpacialCoordinate spacial;
 };

@@ -2,6 +2,11 @@
 #include <memory.h>
 #include <sstream>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+#include <raylib.h>
+#include <raymath.h>
+#pragma GCC diagnostic pop
 #include <raygui/raygui.h>
 #include <rpng/rpng.h>
 
@@ -96,7 +101,9 @@ MainWindow::MainWindow(DisplayEnvironment &environment, contomap::editor::View &
    , environment(environment)
    , view(view)
    , inputRequestHandler(inputRequestHandler)
+   , selectionDrawOffset(SpacialCoordinate::Offset::of(0.0f, 0.0f))
 {
+   mouseHandler = [this](MouseInput const &input) { handleMouseIdle(input); };
 }
 
 void MainWindow::init()
@@ -117,94 +124,113 @@ void MainWindow::closeRequested()
 
 void MainWindow::nextFrame()
 {
-   processInput();
    updateState();
 
    BeginDrawing();
 
-   auto renderContext = RenderContext::fromCurrentState();
-
    drawBackground();
-   drawMap(renderContext);
+
+   auto renderContext = RenderContext::fromCurrentState();
+   {
+      auto contentSize = renderContext.getContentSize();
+      auto projection = mapCamera.beginProjection(contentSize);
+      auto currentMousePos = GetMousePosition();
+      auto focusCoordinate = projection.unproject(currentMousePos);
+      auto lastFocusCoordinate = lastMousePos.has_value() ? projection.unproject(lastMousePos.value()) : focusCoordinate;
+      lastMousePos = currentMousePos;
+
+      processInput(renderContext, focusCoordinate, Vector2Subtract(focusCoordinate, lastFocusCoordinate));
+
+      drawMap(focusCoordinate);
+   }
    drawUserInterface(renderContext);
 
    EndDrawing();
 }
 
-void MainWindow::processInput()
+void MainWindow::processInput(RenderContext const &context, Vector2, Vector2 focusDelta)
 {
-   if (currentDialog == nullptr)
+   if (currentDialog != nullptr)
    {
-      // TODO: probably needs some better checks here -> hotkey system
-      // TODO: consider pinch zoom as well?
-      if (GetMouseWheelMove() > 0.0f)
-      {
-         mapCamera.zoom(doubledRelative(true));
-      }
-      else if (GetMouseWheelMove() < 0.0f)
-      {
-         mapCamera.zoom(doubledRelative(false));
-      }
+      return;
+   }
 
-      bool panLeft = IsKeyDown(KEY_LEFT);
-      bool panUp = IsKeyDown(KEY_UP);
-      bool panRight = IsKeyDown(KEY_RIGHT);
-      bool panDown = IsKeyDown(KEY_DOWN);
-      mapCamera.pan(panLeft, panUp, panRight, panDown);
+   // TODO: probably needs some better checks here -> hotkey system
+   // TODO: consider pinch zoom as well?
+   if (GetMouseWheelMove() > 0.0f)
+   {
+      mapCamera.zoom(doubledRelative(true));
+   }
+   else if (GetMouseWheelMove() < 0.0f)
+   {
+      mapCamera.zoom(doubledRelative(false));
+   }
 
-      if (IsKeyPressed(KEY_HOME))
-      {
-         if (IsKeyDown(KEY_LEFT_CONTROL))
-         {
-            inputRequestHandler.setViewScopeToDefault();
-         }
-         mapCamera.panTo(MapCamera::HOME_POSITION);
-      }
+   bool panLeft = IsKeyDown(KEY_LEFT);
+   bool panUp = IsKeyDown(KEY_UP);
+   bool panRight = IsKeyDown(KEY_RIGHT);
+   bool panDown = IsKeyDown(KEY_DOWN);
+   mapCamera.pan(panLeft, panUp, panRight, panDown);
 
-      bool isInsertOperation = IsKeyReleased(KEY_INSERT) || IsKeyReleased(KEY_I);
-      bool isAssociationContext = IsKeyDown(KEY_LEFT_SHIFT);
-      if (isInsertOperation)
+   if (IsKeyPressed(KEY_HOME))
+   {
+      if (IsKeyDown(KEY_LEFT_CONTROL))
       {
-         if (isAssociationContext)
-         {
-            inputRequestHandler.newAssociationRequested(spacialCameraLocation());
-         }
-         else
-         {
-            openNewTopicDialog();
-         }
+         inputRequestHandler.setViewScopeToDefault();
       }
-      if (IsKeyReleased(KEY_O))
-      {
-         openNewOccurrenceDialog();
-      }
-      if (IsKeyReleased(KEY_T))
-      {
-         openNewLocateTopicAndActDialog();
-      }
+      mapCamera.panTo(MapCamera::HOME_POSITION);
+   }
 
-      if (IsKeyReleased(KEY_L))
+   bool isInsertOperation = IsKeyReleased(KEY_INSERT) || IsKeyReleased(KEY_I);
+   bool isAssociationContext = IsKeyDown(KEY_LEFT_SHIFT);
+   if (isInsertOperation)
+   {
+      if (isAssociationContext)
       {
-         inputRequestHandler.linkSelection();
+         inputRequestHandler.newAssociationRequested(spacialCameraLocation());
       }
-
-      if (IsKeyReleased(KEY_DELETE))
+      else
       {
-         inputRequestHandler.deleteSelection();
-      }
-
-      if (IsKeyPressed(KEY_S) && (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)))
-      {
-         requestSave();
-      }
-
-      // TODO: avoid map interaction click when on view scope bar.
-      if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT) && (static_cast<float>(GetMouseY()) > (layout.buttonHeight() + layout.padding() * 2.0f)))
-      {
-         auto action = IsKeyDown(KEY_LEFT_CONTROL) ? SelectionAction::Toggle : SelectionAction::Set;
-         currentFocus.modifySelection(inputRequestHandler, action);
+         openNewTopicDialog();
       }
    }
+   if (IsKeyReleased(KEY_O))
+   {
+      openNewOccurrenceDialog();
+   }
+   if (IsKeyReleased(KEY_T))
+   {
+      openNewLocateTopicAndActDialog();
+   }
+
+   if (IsKeyReleased(KEY_L))
+   {
+      inputRequestHandler.linkSelection();
+   }
+
+   if (IsKeyReleased(KEY_DELETE))
+   {
+      inputRequestHandler.deleteSelection();
+   }
+
+   if (IsKeyPressed(KEY_S) && (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)))
+   {
+      requestSave();
+   }
+
+   auto mousePos = GetMousePosition();
+   auto barHeight = layout.buttonHeight() + layout.padding() + 2.0f;
+   auto contentSize = context.getContentSize();
+   MouseInput input {
+      .buttonPressed = IsMouseButtonPressed(MOUSE_BUTTON_LEFT),
+      .buttonDown = IsMouseButtonDown(MOUSE_BUTTON_LEFT),
+      .ctrlDown = IsKeyDown(KEY_LEFT_CONTROL),
+      .abortPressed = IsKeyPressed(KEY_ESCAPE),
+      .pixelPos = mousePos,
+      .worldMoveDelta = focusDelta,
+      .overMap = (mousePos.y > barHeight) && (mousePos.y < (contentSize.y - barHeight)),
+   };
+   mouseHandler(input);
 }
 
 void MainWindow::updateState()
@@ -242,26 +268,61 @@ void MainWindow::panCameraToSelectedOccurrence()
    }
 }
 
+void MainWindow::handleMouseIdle(MouseInput const &input)
+{
+   if (input.buttonPressed && input.overMap)
+   {
+      auto action = input.ctrlDown ? SelectionAction::Toggle : SelectionAction::Set;
+      currentFocus.modifySelection(inputRequestHandler, action);
+
+      mouseHandler = [this](MouseInput const &nested) { handleMouseDownMoving(nested); };
+      mouseHandler(input);
+   }
+}
+
+void MainWindow::handleMouseDownMoving(MouseInput const &input)
+{
+   if (currentFocus.hasNoItem())
+   {
+      mapCamera.panTo(Vector2Subtract(mapCamera.getCurrentPosition(), input.worldMoveDelta));
+   }
+   else
+   {
+      selectionDrawOffset = selectionDrawOffset.plus(SpacialCoordinate::Offset::of(input.worldMoveDelta.x, input.worldMoveDelta.y));
+   }
+   bool done = false;
+   if (!input.buttonDown)
+   {
+      inputRequestHandler.moveSelectionBy(selectionDrawOffset);
+      done = true;
+   }
+   else if (input.abortPressed)
+   {
+      done = true;
+   }
+   if (done)
+   {
+      selectionDrawOffset = SpacialCoordinate::Offset::of(0.0f, 0.0f);
+      mouseHandler = [this](MouseInput const &nested) { handleMouseIdle(nested); };
+   }
+}
+
 void MainWindow::drawBackground()
 {
    ClearBackground(WHITE);
 }
 
-void MainWindow::drawMap(RenderContext const &context)
+void MainWindow::drawMap(Vector2 focusCoordinate)
 {
-   auto contentSize = context.getContentSize();
-   auto projection = mapCamera.beginProjection(contentSize);
-   auto focusCoordinate = projection.unproject(GetMousePosition());
-
    DirectMapRenderer directMapRenderer;
    FocusInterceptor focusInterceptor(directMapRenderer, focusCoordinate);
 
-   renderMap(focusInterceptor, view.ofSelection(), currentFocus);
+   renderMap(focusInterceptor, view.ofSelection(), currentFocus, selectionDrawOffset);
 
    currentFocus = focusInterceptor.getNewFocus();
 }
 
-void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection const &selection, Focus const &focus)
+void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection const &selection, Focus const &focus, SpacialCoordinate::Offset selectionOffset)
 {
    static Style const defaultStyle = Style()
                                         .with(Style::ColorType::Text, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF })
@@ -273,10 +334,12 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
 
    Identifiers associationIds;
    std::map<Identifier, Vector2> associationLocationsById;
+   auto drawOffsetIf = [&selectionOffset](bool isSelected) { return isSelected ? selectionOffset : SpacialCoordinate::Offset::of(0.0f, 0.0f); };
 
    auto visibleAssociations = map.find(Associations::thatAreIn(viewScope));
    for (Association const &visibleAssociation : visibleAssociations)
    {
+      bool associationIsSelected = selection.contains(SelectedType::Association, visibleAssociation.getId());
       auto optionalTypeId = visibleAssociation.getType();
       std::string nameText;
       if (optionalTypeId.isAssigned())
@@ -285,7 +348,7 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
          nameText = bestTitleFor(typeTopic.value());
       }
 
-      auto spacialLocation = visibleAssociation.getLocation().getSpacial().getAbsoluteReference();
+      auto spacialLocation = visibleAssociation.getLocation().getSpacial().getAbsoluteReference().plus(drawOffsetIf(associationIsSelected));
       Vector2 projectedLocation { .x = spacialLocation.X(), .y = spacialLocation.Y() };
 
       Font font = GetFontDefault();
@@ -323,7 +386,7 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
 
       auto associationStyle
          = Styles::resolve(visibleAssociation.getAppearance(), visibleAssociation.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
-      if (selection.contains(SelectedType::Association, visibleAssociation.getId()))
+      if (associationIsSelected)
       {
          associationStyle = selectedStyle(associationStyle);
       }
@@ -348,11 +411,13 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
 
       for (Occurrence const &occurrence : visibleTopic.occurrencesIn(viewScope))
       {
-         auto spacialLocation = occurrence.getLocation().getSpacial().getAbsoluteReference();
+         bool occurrenceIsSelected = selection.contains(SelectedType::Occurrence, occurrence.getId());
+         auto spacialLocation = occurrence.getLocation().getSpacial().getAbsoluteReference().plus(drawOffsetIf(occurrenceIsSelected));
          Vector2 projectedLocation { .x = spacialLocation.X(), .y = spacialLocation.Y() };
 
          for (Role const &role : roles)
          {
+            bool roleIsSelected = selection.contains(SelectedType::Role, role.getId());
             std::string roleTitle;
             auto optionalTypeId = role.getType();
             if (optionalTypeId.isAssigned())
@@ -364,7 +429,7 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
             auto roleStyle = Styles::resolve(role.getAppearance(), role.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
 
             float thickness = 1.0f;
-            if (selection.contains(SelectedType::Role, role.getId()))
+            if (roleIsSelected)
             {
                roleStyle = selectedStyle(roleStyle);
                thickness += 2.0f;
@@ -428,7 +493,7 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
 
          auto occurrenceStyle
             = Styles::resolve(occurrence.getAppearance(), occurrence.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
-         if (selection.contains(SelectedType::Occurrence, occurrence.getId()))
+         if (occurrenceIsSelected)
          {
             occurrenceStyle = selectedStyle(occurrenceStyle);
          }
@@ -817,7 +882,7 @@ void MainWindow::load(std::string const &filePath)
 void MainWindow::save()
 {
    contomap::frontend::MapRenderList renderList;
-   renderMap(renderList, {}, {});
+   renderMap(renderList, {}, {}, SpacialCoordinate::Offset::of(0.0f, 0.0f));
    contomap::frontend::MapRenderMeasurer measurer;
    renderList.renderTo(measurer);
    auto mapArea = measurer.getArea();
