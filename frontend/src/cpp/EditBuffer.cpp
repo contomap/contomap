@@ -95,7 +95,14 @@ void EditBuffer::recordOperation(Vector2 oldCameraPosition)
    if (operationIndex == operations.size())
    {
       operations.emplace_back(std::move(operation));
-      operationIndex++;
+      if (operations.size() > UNDO_LIMIT)
+      {
+         operations.erase(operations.begin());
+      }
+      else
+      {
+         operationIndex++;
+      }
    }
    else
    {

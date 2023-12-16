@@ -95,6 +95,8 @@ private:
 
    friend Recorder;
 
+   static size_t const UNDO_LIMIT = 10000;
+
    contomap::editor::InputRequestHandler &nested;
    contomap::frontend::MapCamera &camera;
 
