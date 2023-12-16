@@ -9,17 +9,34 @@ namespace contomap::frontend
 {
 
 /**
- * DisplayEnvironment represents the context that the application is running in.
- * Any interaction towards this environment is made available here.
+ * EditBuffer provides a undo/redo buffer for all input request handler operations.
  */
 class EditBuffer : public contomap::editor::InputRequestHandler
 {
 public:
+   /**
+    * Constructor.
+    *
+    * @param nested the request handler to forward all requests towards.
+    * @param camera the camera for which to handle state.
+    */
    EditBuffer(contomap::editor::InputRequestHandler &nested, contomap::frontend::MapCamera &camera);
 
+   /**
+    * @return true if at least one operation can be undone.
+    */
    [[nodiscard]] bool canUndo() const;
+   /**
+    * Restores the state before the last operation.
+    */
    void undo();
+   /**
+    * @return true if at least one operation can be redone.
+    */
    [[nodiscard]] bool canRedo() const;
+   /**
+    * Restores the state after the previously undone operation.
+    */
    void redo();
 
    void newMap() override;
