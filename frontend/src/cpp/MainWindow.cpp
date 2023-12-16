@@ -293,7 +293,10 @@ void MainWindow::handleMouseDownMoving(MouseInput const &input)
    bool done = false;
    if (!input.buttonDown)
    {
-      editBuffer.moveSelectionBy(selectionDrawOffset);
+      if (Vector2Length(Vector2 { .x = selectionDrawOffset.X(), .y = selectionDrawOffset.Y() }) > 0.0f)
+      {
+         editBuffer.moveSelectionBy(selectionDrawOffset);
+      }
       done = true;
    }
    else if (input.abortPressed)
