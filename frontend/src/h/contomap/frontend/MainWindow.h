@@ -8,6 +8,7 @@
 #include "contomap/editor/View.h"
 #include "contomap/frontend/Dialog.h"
 #include "contomap/frontend/DisplayEnvironment.h"
+#include "contomap/frontend/EditBuffer.h"
 #include "contomap/frontend/Focus.h"
 #include "contomap/frontend/Layout.h"
 #include "contomap/frontend/MapCamera.h"
@@ -183,7 +184,7 @@ private:
 
    contomap::frontend::DisplayEnvironment &environment;
    contomap::editor::View &view;
-   contomap::editor::InputRequestHandler &inputRequestHandler;
+   contomap::frontend::EditBuffer editBuffer;
 
    contomap::model::Identifiers lastViewScope;
    size_t viewScopeListStartIndex = 0;

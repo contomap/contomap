@@ -100,7 +100,7 @@ MainWindow::MainWindow(DisplayEnvironment &environment, contomap::editor::View &
    : mapCamera(std::make_shared<MapCamera::ImmediateGearbox>())
    , environment(environment)
    , view(view)
-   , inputRequestHandler(inputRequestHandler)
+   , editBuffer(inputRequestHandler, mapCamera)
    , selectionDrawOffset(SpacialCoordinate::Offset::of(0.0f, 0.0f))
 {
    mouseHandler = [this](MouseInput const &input) { handleMouseIdle(input); };
@@ -176,7 +176,7 @@ void MainWindow::processInput(RenderContext const &context, Vector2, Vector2 foc
    {
       if (IsKeyDown(KEY_LEFT_CONTROL))
       {
-         inputRequestHandler.setViewScopeToDefault();
+         editBuffer.setViewScopeToDefault();
       }
       mapCamera.panTo(MapCamera::HOME_POSITION);
    }
@@ -187,7 +187,7 @@ void MainWindow::processInput(RenderContext const &context, Vector2, Vector2 foc
    {
       if (isAssociationContext)
       {
-         inputRequestHandler.newAssociationRequested(spacialCameraLocation());
+         editBuffer.newAssociationRequested(spacialCameraLocation());
       }
       else
       {
@@ -205,12 +205,12 @@ void MainWindow::processInput(RenderContext const &context, Vector2, Vector2 foc
 
    if (IsKeyReleased(KEY_L))
    {
-      inputRequestHandler.linkSelection();
+      editBuffer.linkSelection();
    }
 
    if (IsKeyReleased(KEY_DELETE))
    {
-      inputRequestHandler.deleteSelection();
+      editBuffer.deleteSelection();
    }
 
    if (IsKeyPressed(KEY_S) && (IsKeyDown(KEY_LEFT_CONTROL) || IsKeyDown(KEY_RIGHT_CONTROL)))
@@ -243,18 +243,18 @@ void MainWindow::cycleSelectedOccurrence(bool forward)
 {
    if (forward)
    {
-      inputRequestHandler.cycleSelectedOccurrenceForward();
+      editBuffer.cycleSelectedOccurrenceForward();
    }
    else
    {
-      inputRequestHandler.cycleSelectedOccurrenceReverse();
+      editBuffer.cycleSelectedOccurrenceReverse();
    }
    panCameraToSelectedOccurrence();
 }
 
 void MainWindow::jumpToFirstOccurrenceOf(Identifier topicId)
 {
-   inputRequestHandler.selectClosestOccurrenceOf(topicId);
+   editBuffer.selectClosestOccurrenceOf(topicId);
    panCameraToSelectedOccurrence();
 }
 
@@ -273,7 +273,7 @@ void MainWindow::handleMouseIdle(MouseInput const &input)
    if (input.buttonPressed && input.overMap)
    {
       auto action = input.ctrlDown ? SelectionAction::Toggle : SelectionAction::Set;
-      currentFocus.modifySelection(inputRequestHandler, action);
+      currentFocus.modifySelection(editBuffer, action);
 
       mouseHandler = [this](MouseInput const &nested) { handleMouseDownMoving(nested); };
       mouseHandler(input);
@@ -293,7 +293,10 @@ void MainWindow::handleMouseDownMoving(MouseInput const &input)
    bool done = false;
    if (!input.buttonDown)
    {
-      inputRequestHandler.moveSelectionBy(selectionDrawOffset);
+      if (Vector2Length(Vector2 { .x = selectionDrawOffset.X(), .y = selectionDrawOffset.Y() }) > 0.0f)
+      {
+         editBuffer.moveSelectionBy(selectionDrawOffset);
+      }
       done = true;
    }
    else if (input.abortPressed)
@@ -567,24 +570,46 @@ void MainWindow::drawUserInterface(RenderContext const &context)
       leftIconButtonsBounds.x += (iconSize + padding);
 
       leftIconButtonsBounds.x += (iconSize + padding);
+      if (!editBuffer.canUndo())
+      {
+         GuiDisable();
+      }
+      GuiSetTooltip("Undo last operation");
+      if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_UNDO, nullptr)))
+      {
+         editBuffer.undo();
+      }
+      GuiEnable();
+      leftIconButtonsBounds.x += (iconSize + padding);
+      if (!editBuffer.canRedo())
+      {
+         GuiDisable();
+      }
+      GuiSetTooltip("Redo last operation");
+      if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_REDO, nullptr)))
+      {
+         editBuffer.redo();
+      }
+      GuiEnable();
+      leftIconButtonsBounds.x += (iconSize + padding);
+
+      leftIconButtonsBounds.x += (iconSize + padding);
       GuiSetTooltip("Set home view scope");
       if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_HOUSE, nullptr)))
       {
-         inputRequestHandler.setViewScopeToDefault();
-         mapCamera.panTo(MapCamera::HOME_POSITION);
+         editBuffer.setViewScopeToDefault();
       }
       leftIconButtonsBounds.x += (iconSize + padding);
       GuiSetTooltip("Set view scope to selected");
       if (GuiButton(leftIconButtonsBounds, GuiIconText(ICON_BOX_DOTS_BIG, nullptr)))
       {
-         inputRequestHandler.setViewScopeFromSelection();
-         mapCamera.panTo(MapCamera::HOME_POSITION);
+         editBuffer.setViewScopeFromSelection();
       }
       leftIconButtonsBounds.x += (iconSize + padding);
       GuiSetTooltip("Add selected to view scope");
       if (GuiButton(leftIconButtonsBounds, "+v"))
       {
-         inputRequestHandler.addToViewScopeFromSelection();
+         editBuffer.addToViewScopeFromSelection();
       }
       leftIconButtonsBounds.x += (iconSize + padding);
       GuiSetTooltip("Cycle to previous occurrence");
@@ -643,7 +668,7 @@ void MainWindow::drawUserInterface(RenderContext const &context)
       }
       if (GuiButton(leftIconButtonsBounds, "-T"))
       {
-         inputRequestHandler.clearTypeOfSelection();
+         editBuffer.clearTypeOfSelection();
       }
       GuiEnable();
       leftIconButtonsBounds.x += (iconSize + padding);
@@ -672,7 +697,7 @@ void MainWindow::drawUserInterface(RenderContext const &context)
       }
       if (GuiButton(leftIconButtonsBounds, "-R"))
       {
-         inputRequestHandler.clearReifierOfSelection();
+         editBuffer.clearReifierOfSelection();
       }
       GuiEnable();
    }
@@ -734,7 +759,7 @@ void MainWindow::drawUserInterface(RenderContext const &context)
          GuiToggle(Rectangle { .x = buttonStartX, .y = viewScopePosition.y + padding, .width = labelWidth, .height = iconSize }, name.c_str(), &isActive);
          if (!isActive)
          {
-            inputRequestHandler.removeFromViewScope(id);
+            editBuffer.removeFromViewScope(id);
          }
          buttonStartX += labelWidth + padding;
       };
@@ -766,7 +791,7 @@ void MainWindow::drawUserInterface(RenderContext const &context)
 
 void MainWindow::requestNewFile()
 {
-   inputRequestHandler.newMap();
+   editBuffer.newMap();
    mapRestored("");
 }
 
@@ -802,13 +827,13 @@ void MainWindow::openHelpDialog()
 
 void MainWindow::openNewTopicDialog()
 {
-   pendingDialog = std::make_unique<contomap::frontend::NewTopicDialog>(inputRequestHandler, layout, spacialCameraLocation());
+   pendingDialog = std::make_unique<contomap::frontend::NewTopicDialog>(editBuffer, layout, spacialCameraLocation());
 }
 
 void MainWindow::openNewOccurrenceDialog()
 {
    std::vector<LocateTopicAndActDialog::TitledAction> actions { LocateTopicAndActDialog::newOccurrence(spacialCameraLocation()) };
-   pendingDialog = std::make_unique<LocateTopicAndActDialog>(inputRequestHandler, view.ofMap(), layout, actions);
+   pendingDialog = std::make_unique<LocateTopicAndActDialog>(editBuffer, view.ofMap(), layout, actions);
 }
 
 void MainWindow::openNewLocateTopicAndActDialog()
@@ -827,7 +852,7 @@ void MainWindow::openNewLocateTopicAndActDialog()
    {
       actions.emplace_back(LocateTopicAndActDialog::setReifierOfSelection());
    }
-   pendingDialog = std::make_unique<LocateTopicAndActDialog>(inputRequestHandler, view.ofMap(), layout, actions);
+   pendingDialog = std::make_unique<LocateTopicAndActDialog>(editBuffer, view.ofMap(), layout, actions);
 }
 
 void MainWindow::openSetTopicNameDefaultDialog()
@@ -838,7 +863,7 @@ void MainWindow::openSetTopicNameDefaultDialog()
       return;
    }
 
-   pendingDialog = RenameTopicDialog::forDefaultName(inputRequestHandler, layout, topic.value().get().getId());
+   pendingDialog = RenameTopicDialog::forDefaultName(editBuffer, layout, topic.value().get().getId());
 }
 
 void MainWindow::openSetTopicNameInScopeDialog()
@@ -849,7 +874,7 @@ void MainWindow::openSetTopicNameInScopeDialog()
       return;
    }
 
-   pendingDialog = RenameTopicDialog::forScopedName(inputRequestHandler, layout, topic.value().get().getId());
+   pendingDialog = RenameTopicDialog::forScopedName(editBuffer, layout, topic.value().get().getId());
 }
 
 void MainWindow::openEditStyleDialog()
@@ -860,7 +885,7 @@ void MainWindow::openEditStyleDialog()
       return;
    }
 
-   pendingDialog = std::make_unique<contomap::frontend::StyleDialog>(inputRequestHandler, layout, style.value());
+   pendingDialog = std::make_unique<contomap::frontend::StyleDialog>(editBuffer, layout, style.value());
 }
 
 void MainWindow::load(std::string const &filePath)
@@ -871,7 +896,7 @@ void MainWindow::load(std::string const &filePath)
       return;
    }
    contomap::infrastructure::serial::BinaryDecoder decoder(chunk.data, chunk.data + chunk.length);
-   if (inputRequestHandler.loadState(decoder))
+   if (editBuffer.loadState(decoder))
    {
       mapRestored(filePath);
    }
@@ -920,7 +945,7 @@ void MainWindow::save()
       contomap::infrastructure::serial::BinaryEncoder encoder;
       rpng_chunk chunk;
       memset(&chunk, 0x00, sizeof(chunk));
-      inputRequestHandler.saveState(encoder, false);
+      editBuffer.saveState(encoder, false);
       auto const &data = encoder.getData();
       chunk.data = const_cast<uint8_t *>(data.data());
       chunk.length = static_cast<int>(data.size());
