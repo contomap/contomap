@@ -63,6 +63,11 @@ MapCamera::ZoomFactor MapCamera::ImmediateGearbox::getCurrentZoomFactor() const
    return zoomFactor;
 }
 
+Vector2 MapCamera::ImmediateGearbox::getTargetPosition() const
+{
+   return position;
+}
+
 Vector2 MapCamera::ImmediateGearbox::getCurrentPosition() const
 {
    return position;
@@ -79,6 +84,107 @@ void MapCamera::ImmediateGearbox::pan(bool left, bool up, bool right, bool down)
    panningUp = up;
    panningRight = right;
    panningDown = down;
+}
+
+MapCamera::SmoothGearbox::SmoothGearbox()
+   : currentPosition(MapCamera::HOME_POSITION)
+   , requestedZoomFactor(ZoomFactor::UNIT)
+   , targetZoomFactor(ZoomFactor::UNIT)
+   , currentZoomFactor(ZoomFactor::UNIT)
+   , currentPanningSpeed { .x = 0.0f, .y = 0.0f }
+{
+}
+
+void MapCamera::SmoothGearbox::timePassed(FrameTime amount)
+{
+   targetZoomFactor = requestedZoomFactor;
+   float zoomOffset = targetZoomFactor.raw() - currentZoomFactor.raw();
+   if ((std::abs(zoomOffset) > 0.001f) && (amount.rawSeconds() < ZOOM_TARGET_TIME))
+   {
+      currentZoomFactor = ZoomFactor::from(currentZoomFactor.raw() + ((zoomOffset / ZOOM_TARGET_TIME) * amount.rawSeconds()));
+   }
+   else
+   {
+      currentZoomFactor = targetZoomFactor;
+   }
+
+   if (requestedPosition.has_value())
+   {
+      targetPosition = requestedPosition;
+      requestedPosition.reset();
+   }
+   if (targetPosition.has_value())
+   {
+      Vector2 positionOffset = Vector2Subtract(targetPosition.value(), currentPosition);
+      if ((Vector2Length(positionOffset) > 0.001f) && (amount.rawSeconds() < PANNING_TARGET_TIME))
+      {
+         currentPosition = Vector2Add(currentPosition, Vector2Scale(positionOffset, amount.rawSeconds() / PANNING_TARGET_TIME));
+      }
+      else
+      {
+         currentPosition = targetPosition.value();
+         targetPosition.reset();
+      }
+   }
+
+   Vector2 v {
+      .x = (panningLeft ? -1.0f : 0.0f) + (panningRight ? 1.0f : 0.0f),
+      .y = (panningUp ? -1.0f : 0.0f) + (panningDown ? 1.0f : 0.0f),
+   };
+   auto targetPanningSpeed = Vector2Normalize(v);
+   Vector2 panningSpeedOffset = Vector2Subtract(targetPanningSpeed, currentPanningSpeed);
+   if ((Vector2Length(panningSpeedOffset) > 0.001f) && (amount.rawSeconds() < PANNING_TARGET_TIME))
+   {
+      currentPanningSpeed = Vector2Add(currentPanningSpeed, Vector2Scale(panningSpeedOffset, amount.rawSeconds() / PANNING_TARGET_TIME));
+   }
+   else
+   {
+      currentPanningSpeed = targetPanningSpeed;
+   }
+   currentPosition = Vector2Add(currentPosition, Vector2Scale(currentPanningSpeed, (MapCamera::PANNING_SPEED * amount.rawSeconds()) / currentZoomFactor.raw()));
+}
+
+void MapCamera::SmoothGearbox::setTargetZoomFactor(ZoomFactor target)
+{
+   requestedZoomFactor = target;
+}
+
+MapCamera::ZoomFactor MapCamera::SmoothGearbox::getTargetZoomFactor() const
+{
+   return targetZoomFactor;
+}
+
+MapCamera::ZoomFactor MapCamera::SmoothGearbox::getCurrentZoomFactor() const
+{
+   return currentZoomFactor;
+}
+
+Vector2 MapCamera::SmoothGearbox::getTargetPosition() const
+{
+   return targetPosition.has_value() ? targetPosition.value() : currentPosition;
+}
+
+Vector2 MapCamera::SmoothGearbox::getCurrentPosition() const
+{
+   return currentPosition;
+}
+
+void MapCamera::SmoothGearbox::panTo(Vector2 target)
+{
+   requestedPosition = target;
+}
+
+void MapCamera::SmoothGearbox::pan(bool left, bool up, bool right, bool down)
+{
+   panningLeft = left;
+   panningUp = up;
+   panningRight = right;
+   panningDown = down;
+   if (left || up || right || down)
+   {
+      requestedPosition.reset();
+      targetPosition.reset();
+   }
 }
 
 contomap::frontend::MapCamera::Projection::Projection(MapCamera::Projection &&other) noexcept
@@ -158,6 +264,11 @@ MapCamera::Projection MapCamera::beginProjection(Vector2 viewportSize)
    data.target = gearbox->getCurrentPosition();
    data.zoom = gearbox->getCurrentZoomFactor().raw();
    return Projection { data };
+}
+
+Vector2 MapCamera::getTargetPosition() const
+{
+   return gearbox->getTargetPosition();
 }
 
 Vector2 MapCamera::getCurrentPosition() const

@@ -96,7 +96,7 @@ char const MainWindow::DEFAULT_TITLE[] = "contomap";
 std::array<char, 5> const MainWindow::PNG_MAP_TYPE { 'c', 'm', 'P', 'm', 0x00 };
 
 MainWindow::MainWindow(DisplayEnvironment &environment, contomap::editor::View &view, contomap::editor::InputRequestHandler &inputRequestHandler)
-   : mapCamera(std::make_shared<MapCamera::ImmediateGearbox>())
+   : mapCamera(std::make_shared<MapCamera::SmoothGearbox>())
    , environment(environment)
    , view(view)
    , editBuffer(inputRequestHandler, mapCamera)
@@ -279,7 +279,7 @@ void MainWindow::handleMouseDownMoving(MouseInput const &input)
 {
    if (currentFocus.hasNoItem())
    {
-      mapCamera.panTo(Vector2Subtract(mapCamera.getCurrentPosition(), input.worldMoveDelta));
+      mapCamera.panTo(Vector2Subtract(mapCamera.getTargetPosition(), input.worldMoveDelta));
    }
    else
    {

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 
 #include <raylib.h>
 
@@ -99,6 +100,10 @@ public:
       [[nodiscard]] virtual ZoomFactor getCurrentZoomFactor() const = 0;
 
       /**
+       * @return the target position as per previous request.
+       */
+      [[nodiscard]] virtual Vector2 getTargetPosition() const = 0;
+      /**
        * @return the current position as per movement.
        */
       [[nodiscard]] virtual Vector2 getCurrentPosition() const = 0;
@@ -137,6 +142,7 @@ public:
       [[nodiscard]] ZoomFactor getTargetZoomFactor() const override;
       [[nodiscard]] ZoomFactor getCurrentZoomFactor() const override;
 
+      [[nodiscard]] Vector2 getTargetPosition() const override;
       [[nodiscard]] Vector2 getCurrentPosition() const override;
       void panTo(Vector2 target) override;
       void pan(bool left, bool up, bool right, bool down) override;
@@ -148,6 +154,46 @@ public:
       bool panningUp = false;
       bool panningRight = false;
       bool panningDown = false;
+   };
+
+   /**
+    * This Gearbox implementation applies changes over time.
+    */
+   class SmoothGearbox : public Gearbox
+   {
+   public:
+      /**
+       * Default constructor.
+       */
+      SmoothGearbox();
+
+      void timePassed(contomap::frontend::FrameTime amount) override;
+
+      void setTargetZoomFactor(ZoomFactor target) override;
+      [[nodiscard]] ZoomFactor getTargetZoomFactor() const override;
+      [[nodiscard]] ZoomFactor getCurrentZoomFactor() const override;
+
+      [[nodiscard]] Vector2 getTargetPosition() const override;
+      [[nodiscard]] Vector2 getCurrentPosition() const override;
+      void panTo(Vector2 target) override;
+      void pan(bool left, bool up, bool right, bool down) override;
+
+   private:
+      static float constexpr ZOOM_TARGET_TIME = 0.075f;
+      static float constexpr PANNING_TARGET_TIME = 0.075f;
+
+      std::optional<Vector2> requestedPosition;
+      std::optional<Vector2> targetPosition;
+      Vector2 currentPosition;
+      ZoomFactor requestedZoomFactor;
+      ZoomFactor targetZoomFactor;
+      ZoomFactor currentZoomFactor;
+      bool panningLeft = false;
+      bool panningUp = false;
+      bool panningRight = false;
+      bool panningDown = false;
+
+      Vector2 currentPanningSpeed;
    };
 
    /**
@@ -247,6 +293,10 @@ public:
     */
    void pan(bool left, bool up, bool right, bool down);
 
+   /**
+    * @return the target position as per last request.
+    */
+   [[nodiscard]] Vector2 getTargetPosition() const;
    /**
     * @return the current position as per gearbox movement.
     */
