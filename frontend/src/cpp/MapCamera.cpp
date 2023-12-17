@@ -86,6 +86,7 @@ MapCamera::SmoothGearbox::SmoothGearbox()
    , requestedZoomFactor(ZoomFactor::UNIT)
    , targetZoomFactor(ZoomFactor::UNIT)
    , currentZoomFactor(ZoomFactor::UNIT)
+   , currentPanningSpeed { .x = 0.0f, .y = 0.0f }
 {
 }
 
@@ -93,9 +94,9 @@ void MapCamera::SmoothGearbox::timePassed(FrameTime amount)
 {
    targetZoomFactor = requestedZoomFactor;
    float zoomOffset = targetZoomFactor.raw() - currentZoomFactor.raw();
-   if ((std::abs(zoomOffset) > 0.001f) && (amount.rawSeconds() < ZOOM_SPEED))
+   if ((std::abs(zoomOffset) > 0.001f) && (amount.rawSeconds() < ZOOM_TARGET_TIME))
    {
-      currentZoomFactor = ZoomFactor::from(currentZoomFactor.raw() + ((zoomOffset / ZOOM_SPEED) * amount.rawSeconds()));
+      currentZoomFactor = ZoomFactor::from(currentZoomFactor.raw() + ((zoomOffset / ZOOM_TARGET_TIME) * amount.rawSeconds()));
    }
    else
    {
@@ -106,8 +107,17 @@ void MapCamera::SmoothGearbox::timePassed(FrameTime amount)
       .x = (panningLeft ? -1.0f : 0.0f) + (panningRight ? 1.0f : 0.0f),
       .y = (panningUp ? -1.0f : 0.0f) + (panningDown ? 1.0f : 0.0f),
    };
-   auto normalized = Vector2Normalize(v);
-   position = Vector2Add(position, Vector2Scale(normalized, (MapCamera::PANNING_SPEED * amount.rawSeconds()) / currentZoomFactor.raw()));
+   auto targetPanningSpeed = Vector2Normalize(v);
+   Vector2 panningSpeedOffset = Vector2Subtract(targetPanningSpeed, currentPanningSpeed);
+   if ((Vector2Length(panningSpeedOffset) > 0.001f) && (amount.rawSeconds() < PANNING_TARGET_TIME))
+   {
+      currentPanningSpeed = Vector2Add(currentPanningSpeed, Vector2Scale(panningSpeedOffset, amount.rawSeconds() / PANNING_TARGET_TIME));
+   }
+   else
+   {
+      currentPanningSpeed = targetPanningSpeed;
+   }
+   position = Vector2Add(position, Vector2Scale(currentPanningSpeed, (MapCamera::PANNING_SPEED * amount.rawSeconds()) / currentZoomFactor.raw()));
 }
 
 void MapCamera::SmoothGearbox::setTargetZoomFactor(ZoomFactor target)

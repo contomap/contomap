@@ -172,7 +172,8 @@ public:
       void pan(bool left, bool up, bool right, bool down) override;
 
    private:
-      static float constexpr ZOOM_SPEED = 0.075f;
+      static float constexpr ZOOM_TARGET_TIME = 0.075f;
+      static float constexpr PANNING_TARGET_TIME = 0.075f;
 
       Vector2 position;
       ZoomFactor requestedZoomFactor;
@@ -182,6 +183,8 @@ public:
       bool panningUp = false;
       bool panningRight = false;
       bool panningDown = false;
+
+      Vector2 currentPanningSpeed;
    };
 
    /**
