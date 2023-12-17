@@ -279,7 +279,7 @@ void MainWindow::handleMouseDownMoving(MouseInput const &input)
 {
    if (currentFocus.hasNoItem())
    {
-      mapCamera.panTo(Vector2Subtract(mapCamera.getCurrentPosition(), input.worldMoveDelta));
+      mapCamera.panTo(Vector2Subtract(mapCamera.getTargetPosition(), input.worldMoveDelta));
    }
    else
    {

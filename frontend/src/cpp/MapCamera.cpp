@@ -63,6 +63,11 @@ MapCamera::ZoomFactor MapCamera::ImmediateGearbox::getCurrentZoomFactor() const
    return zoomFactor;
 }
 
+Vector2 MapCamera::ImmediateGearbox::getTargetPosition() const
+{
+   return position;
+}
+
 Vector2 MapCamera::ImmediateGearbox::getCurrentPosition() const
 {
    return position;
@@ -152,6 +157,11 @@ MapCamera::ZoomFactor MapCamera::SmoothGearbox::getTargetZoomFactor() const
 MapCamera::ZoomFactor MapCamera::SmoothGearbox::getCurrentZoomFactor() const
 {
    return currentZoomFactor;
+}
+
+Vector2 MapCamera::SmoothGearbox::getTargetPosition() const
+{
+   return targetPosition.has_value() ? targetPosition.value() : currentPosition;
 }
 
 Vector2 MapCamera::SmoothGearbox::getCurrentPosition() const
@@ -254,6 +264,11 @@ MapCamera::Projection MapCamera::beginProjection(Vector2 viewportSize)
    data.target = gearbox->getCurrentPosition();
    data.zoom = gearbox->getCurrentZoomFactor().raw();
    return Projection { data };
+}
+
+Vector2 MapCamera::getTargetPosition() const
+{
+   return gearbox->getTargetPosition();
 }
 
 Vector2 MapCamera::getCurrentPosition() const

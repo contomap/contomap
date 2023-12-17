@@ -100,6 +100,10 @@ public:
       [[nodiscard]] virtual ZoomFactor getCurrentZoomFactor() const = 0;
 
       /**
+       * @return the target position as per previous request.
+       */
+      [[nodiscard]] virtual Vector2 getTargetPosition() const = 0;
+      /**
        * @return the current position as per movement.
        */
       [[nodiscard]] virtual Vector2 getCurrentPosition() const = 0;
@@ -138,6 +142,7 @@ public:
       [[nodiscard]] ZoomFactor getTargetZoomFactor() const override;
       [[nodiscard]] ZoomFactor getCurrentZoomFactor() const override;
 
+      [[nodiscard]] Vector2 getTargetPosition() const override;
       [[nodiscard]] Vector2 getCurrentPosition() const override;
       void panTo(Vector2 target) override;
       void pan(bool left, bool up, bool right, bool down) override;
@@ -168,6 +173,7 @@ public:
       [[nodiscard]] ZoomFactor getTargetZoomFactor() const override;
       [[nodiscard]] ZoomFactor getCurrentZoomFactor() const override;
 
+      [[nodiscard]] Vector2 getTargetPosition() const override;
       [[nodiscard]] Vector2 getCurrentPosition() const override;
       void panTo(Vector2 target) override;
       void pan(bool left, bool up, bool right, bool down) override;
@@ -287,6 +293,10 @@ public:
     */
    void pan(bool left, bool up, bool right, bool down);
 
+   /**
+    * @return the target position as per last request.
+    */
+   [[nodiscard]] Vector2 getTargetPosition() const;
    /**
     * @return the current position as per gearbox movement.
     */
