@@ -842,10 +842,12 @@ void MainWindow::openNewLocateTopicAndActDialog()
    if (!view.ofSelection().empty())
    {
       actions.emplace_back(LocateTopicAndActDialog::setTypeOfSelection());
+      actions.emplace_back(LocateTopicAndActDialog::setNewTypeOfSelection());
    }
    if (view.ofSelection().hasSoleEntry())
    {
       actions.emplace_back(LocateTopicAndActDialog::setReifierOfSelection());
+      actions.emplace_back(LocateTopicAndActDialog::setNewReifierOfSelection());
    }
    pendingDialog = std::make_unique<LocateTopicAndActDialog>(editBuffer, view.ofMap(), layout, actions);
 }

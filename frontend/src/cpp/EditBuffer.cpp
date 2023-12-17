@@ -188,6 +188,12 @@ void EditBuffer::setTypeOfSelection(Identifier topicId)
    nested.setTypeOfSelection(topicId);
 }
 
+void EditBuffer::setTypeOfSelection(TopicNameValue name)
+{
+   Recorder rec(*this);
+   nested.setTypeOfSelection(name);
+}
+
 void EditBuffer::clearTypeOfSelection()
 {
    Recorder rec(*this);
@@ -198,6 +204,12 @@ void EditBuffer::setReifierOfSelection(Identifier topicId)
 {
    Recorder rec(*this);
    nested.setReifierOfSelection(topicId);
+}
+
+void EditBuffer::setReifierOfSelection(TopicNameValue name)
+{
+   Recorder rec(*this);
+   nested.setReifierOfSelection(name);
 }
 
 void EditBuffer::clearReifierOfSelection()
@@ -236,6 +248,7 @@ void EditBuffer::setViewScopeTo(Identifier id)
 {
    Recorder rec(*this);
    nested.setViewScopeTo(id);
+   camera.panTo(MapCamera::HOME_POSITION);
 }
 
 void EditBuffer::addToViewScope(Identifier id)

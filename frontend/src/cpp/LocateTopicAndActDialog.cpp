@@ -273,7 +273,7 @@ bool LocateTopicAndActDialog::draw(RenderContext const &context)
    }
 
    float buttonsHeight = layout.buttonHeight() + padding * 2;
-   float buttonsY = windowPos.y + windowSize.y - buttonsHeight;
+   float buttonsY = windowPos.y + windowSize.y - (buttonsHeight * 2) - padding;
 
    Rectangle listBounds {
       .x = inputBounds.x,
@@ -310,6 +310,11 @@ bool LocateTopicAndActDialog::draw(RenderContext const &context)
       bool acceptByKey = (action.getHotkey() != 0) && IsKeyReleased(action.getHotkey()) && IsKeyDown(KEY_LEFT_ALT);
       auto textSize = MeasureTextEx(font, action.getTitle().c_str(), fontSize, spacing);
       buttonBounds.width = textSize.x + (textPadding * 2.0f) + (buttonBorderWidth * 2.0f) + extraPadding;
+      if ((buttonBounds.x + buttonBounds.width) > (inputBounds.x + inputBounds.width))
+      {
+         buttonBounds.y += padding + buttonBounds.height;
+         buttonBounds.x = inputBounds.x;
+      }
       bool actionPossible = (action.requiresTopic() && selectedTopicId.has_value()) || (action.requiresName() && enteredName.has_value());
       if (!actionPossible)
       {
@@ -365,7 +370,17 @@ LocateTopicAndActDialog::TitledAction LocateTopicAndActDialog::setTypeOfSelectio
    return { "Set type", KEY_T, [](InputRequestHandler &handler, Identifier id) { handler.setTypeOfSelection(id); } };
 }
 
+LocateTopicAndActDialog::TitledAction LocateTopicAndActDialog::setNewTypeOfSelection()
+{
+   return { "Set new type", KEY_T, [](InputRequestHandler &handler, TopicNameValue const &name) { handler.setTypeOfSelection(name); } };
+}
+
 LocateTopicAndActDialog::TitledAction LocateTopicAndActDialog::setReifierOfSelection()
 {
    return { "Set reifier", KEY_R, [](InputRequestHandler &handler, Identifier id) { handler.setReifierOfSelection(id); } };
+}
+
+LocateTopicAndActDialog::TitledAction LocateTopicAndActDialog::setNewReifierOfSelection()
+{
+   return { "Set new reifier", KEY_R, [](InputRequestHandler &handler, TopicNameValue const &name) { handler.setReifierOfSelection(name); } };
 }

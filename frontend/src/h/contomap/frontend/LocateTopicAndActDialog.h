@@ -213,11 +213,25 @@ public:
    [[nodiscard]] static TitledAction setTypeOfSelection();
 
    /**
+    * Creates a new type for the selected items.
+    *
+    * @return an action for this dialog.
+    */
+   [[nodiscard]] static TitledAction setNewTypeOfSelection();
+
+   /**
     * Sets the reifier of the selected items.
     *
     * @return an action for this dialog.
     */
    [[nodiscard]] static TitledAction setReifierOfSelection();
+
+   /**
+    * Creates a new reifier of the selected items.
+    *
+    * @return an action for this dialog.
+    */
+   [[nodiscard]] static TitledAction setNewReifierOfSelection();
 
 private:
    class TopicList

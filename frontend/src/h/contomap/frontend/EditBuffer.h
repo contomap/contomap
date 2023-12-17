@@ -54,8 +54,10 @@ public:
    void deleteSelection() override;
    void setAppearanceOfSelection(contomap::model::Style style) override;
    void setTypeOfSelection(contomap::model::Identifier topicId) override;
+   void setTypeOfSelection(contomap::model::TopicNameValue name) override;
    void clearTypeOfSelection() override;
    void setReifierOfSelection(contomap::model::Identifier topicId) override;
+   void setReifierOfSelection(contomap::model::TopicNameValue name) override;
    void clearReifierOfSelection() override;
    void moveSelectionBy(contomap::model::SpacialCoordinate::Offset offset) override;
    void setViewScopeFromSelection() override;
