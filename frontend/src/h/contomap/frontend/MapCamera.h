@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <functional>
 #include <memory>
+#include <optional>
 
 #include <raylib.h>
 
@@ -175,7 +176,9 @@ public:
       static float constexpr ZOOM_TARGET_TIME = 0.075f;
       static float constexpr PANNING_TARGET_TIME = 0.075f;
 
-      Vector2 position;
+      std::optional<Vector2> requestedPosition;
+      std::optional<Vector2> targetPosition;
+      Vector2 currentPosition;
       ZoomFactor requestedZoomFactor;
       ZoomFactor targetZoomFactor;
       ZoomFactor currentZoomFactor;

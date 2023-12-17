@@ -82,7 +82,7 @@ void MapCamera::ImmediateGearbox::pan(bool left, bool up, bool right, bool down)
 }
 
 MapCamera::SmoothGearbox::SmoothGearbox()
-   : position(MapCamera::HOME_POSITION)
+   : currentPosition(MapCamera::HOME_POSITION)
    , requestedZoomFactor(ZoomFactor::UNIT)
    , targetZoomFactor(ZoomFactor::UNIT)
    , currentZoomFactor(ZoomFactor::UNIT)
@@ -103,6 +103,25 @@ void MapCamera::SmoothGearbox::timePassed(FrameTime amount)
       currentZoomFactor = targetZoomFactor;
    }
 
+   if (requestedPosition.has_value())
+   {
+      targetPosition = requestedPosition;
+      requestedPosition.reset();
+   }
+   if (targetPosition.has_value())
+   {
+      Vector2 positionOffset = Vector2Subtract(targetPosition.value(), currentPosition);
+      if ((Vector2Length(positionOffset) > 0.001f) && (amount.rawSeconds() < PANNING_TARGET_TIME))
+      {
+         currentPosition = Vector2Add(currentPosition, Vector2Scale(positionOffset, amount.rawSeconds() / PANNING_TARGET_TIME));
+      }
+      else
+      {
+         currentPosition = targetPosition.value();
+         targetPosition.reset();
+      }
+   }
+
    Vector2 v {
       .x = (panningLeft ? -1.0f : 0.0f) + (panningRight ? 1.0f : 0.0f),
       .y = (panningUp ? -1.0f : 0.0f) + (panningDown ? 1.0f : 0.0f),
@@ -117,7 +136,7 @@ void MapCamera::SmoothGearbox::timePassed(FrameTime amount)
    {
       currentPanningSpeed = targetPanningSpeed;
    }
-   position = Vector2Add(position, Vector2Scale(currentPanningSpeed, (MapCamera::PANNING_SPEED * amount.rawSeconds()) / currentZoomFactor.raw()));
+   currentPosition = Vector2Add(currentPosition, Vector2Scale(currentPanningSpeed, (MapCamera::PANNING_SPEED * amount.rawSeconds()) / currentZoomFactor.raw()));
 }
 
 void MapCamera::SmoothGearbox::setTargetZoomFactor(ZoomFactor target)
@@ -137,12 +156,12 @@ MapCamera::ZoomFactor MapCamera::SmoothGearbox::getCurrentZoomFactor() const
 
 Vector2 MapCamera::SmoothGearbox::getCurrentPosition() const
 {
-   return position;
+   return currentPosition;
 }
 
 void MapCamera::SmoothGearbox::panTo(Vector2 target)
 {
-   position = target;
+   requestedPosition = target;
 }
 
 void MapCamera::SmoothGearbox::pan(bool left, bool up, bool right, bool down)
@@ -151,6 +170,11 @@ void MapCamera::SmoothGearbox::pan(bool left, bool up, bool right, bool down)
    panningUp = up;
    panningRight = right;
    panningDown = down;
+   if (left || up || right || down)
+   {
+      requestedPosition.reset();
+      targetPosition.reset();
+   }
 }
 
 contomap::frontend::MapCamera::Projection::Projection(MapCamera::Projection &&other) noexcept
