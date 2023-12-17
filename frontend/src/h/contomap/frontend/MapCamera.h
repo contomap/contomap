@@ -151,6 +151,40 @@ public:
    };
 
    /**
+    * This Gearbox implementation applies changes over time.
+    */
+   class SmoothGearbox : public Gearbox
+   {
+   public:
+      /**
+       * Default constructor.
+       */
+      SmoothGearbox();
+
+      void timePassed(contomap::frontend::FrameTime amount) override;
+
+      void setTargetZoomFactor(ZoomFactor target) override;
+      [[nodiscard]] ZoomFactor getTargetZoomFactor() const override;
+      [[nodiscard]] ZoomFactor getCurrentZoomFactor() const override;
+
+      [[nodiscard]] Vector2 getCurrentPosition() const override;
+      void panTo(Vector2 target) override;
+      void pan(bool left, bool up, bool right, bool down) override;
+
+   private:
+      static float constexpr ZOOM_SPEED = 0.075f;
+
+      Vector2 position;
+      ZoomFactor requestedZoomFactor;
+      ZoomFactor targetZoomFactor;
+      ZoomFactor currentZoomFactor;
+      bool panningLeft = false;
+      bool panningUp = false;
+      bool panningRight = false;
+      bool panningDown = false;
+   };
+
+   /**
     * Projection is a helper object that keeps a mode active as long as it is within scope.
     */
    class Projection

@@ -81,6 +81,68 @@ void MapCamera::ImmediateGearbox::pan(bool left, bool up, bool right, bool down)
    panningDown = down;
 }
 
+MapCamera::SmoothGearbox::SmoothGearbox()
+   : position(MapCamera::HOME_POSITION)
+   , requestedZoomFactor(ZoomFactor::UNIT)
+   , targetZoomFactor(ZoomFactor::UNIT)
+   , currentZoomFactor(ZoomFactor::UNIT)
+{
+}
+
+void MapCamera::SmoothGearbox::timePassed(FrameTime amount)
+{
+   targetZoomFactor = requestedZoomFactor;
+   float zoomOffset = targetZoomFactor.raw() - currentZoomFactor.raw();
+   if ((std::abs(zoomOffset) > 0.001f) && (amount.rawSeconds() < ZOOM_SPEED))
+   {
+      currentZoomFactor = ZoomFactor::from(currentZoomFactor.raw() + ((zoomOffset / ZOOM_SPEED) * amount.rawSeconds()));
+   }
+   else
+   {
+      currentZoomFactor = targetZoomFactor;
+   }
+
+   Vector2 v {
+      .x = (panningLeft ? -1.0f : 0.0f) + (panningRight ? 1.0f : 0.0f),
+      .y = (panningUp ? -1.0f : 0.0f) + (panningDown ? 1.0f : 0.0f),
+   };
+   auto normalized = Vector2Normalize(v);
+   position = Vector2Add(position, Vector2Scale(normalized, (MapCamera::PANNING_SPEED * amount.rawSeconds()) / currentZoomFactor.raw()));
+}
+
+void MapCamera::SmoothGearbox::setTargetZoomFactor(ZoomFactor target)
+{
+   requestedZoomFactor = target;
+}
+
+MapCamera::ZoomFactor MapCamera::SmoothGearbox::getTargetZoomFactor() const
+{
+   return targetZoomFactor;
+}
+
+MapCamera::ZoomFactor MapCamera::SmoothGearbox::getCurrentZoomFactor() const
+{
+   return currentZoomFactor;
+}
+
+Vector2 MapCamera::SmoothGearbox::getCurrentPosition() const
+{
+   return position;
+}
+
+void MapCamera::SmoothGearbox::panTo(Vector2 target)
+{
+   position = target;
+}
+
+void MapCamera::SmoothGearbox::pan(bool left, bool up, bool right, bool down)
+{
+   panningLeft = left;
+   panningUp = up;
+   panningRight = right;
+   panningDown = down;
+}
+
 contomap::frontend::MapCamera::Projection::Projection(MapCamera::Projection &&other) noexcept
 {
    moveFrom(std::move(other));
