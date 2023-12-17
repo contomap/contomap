@@ -161,7 +161,6 @@ private:
    void closeDialog();
    void openHelpDialog();
    void openNewTopicDialog();
-   void openNewOccurrenceDialog();
    void openNewLocateTopicAndActDialog();
    void openSetTopicNameDefaultDialog();
    void openSetTopicNameInScopeDialog();

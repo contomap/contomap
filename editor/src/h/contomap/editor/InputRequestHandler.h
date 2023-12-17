@@ -113,6 +113,12 @@ public:
    virtual void setTypeOfSelection(contomap::model::Identifier topicId) = 0;
 
    /**
+    * Sets the type of the selected items, creating a new topic as part of the assignment.
+    * @param name the name of the newly created type.
+    */
+   virtual void setTypeOfSelection(contomap::model::TopicNameValue name) = 0;
+
+   /**
     * Clears the type of the selected items.
     */
    virtual void clearTypeOfSelection() = 0;
@@ -122,6 +128,12 @@ public:
     * @param topicId the identifier of the topic to set.
     */
    virtual void setReifierOfSelection(contomap::model::Identifier topicId) = 0;
+
+   /**
+    * Sets the reifier of the selected items, creating a new topic as part of the assignment.
+    * @param name the name of the newly created type.
+    */
+   virtual void setReifierOfSelection(contomap::model::TopicNameValue name) = 0;
 
    /**
     * Clears the reifier of the selected items.

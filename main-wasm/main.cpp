@@ -125,7 +125,7 @@ int main()
 {
    WasmContext context;
 
-   SetConfigFlags(FLAG_WINDOW_HIGHDPI);
+   SetConfigFlags(FLAG_WINDOW_HIGHDPI | FLAG_MSAA_4X_HINT);
 
    context.initWindow();
    runDrawFrameLoop();

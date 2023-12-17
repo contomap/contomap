@@ -53,6 +53,14 @@ void Editor::setTopicNameInScope(Identifier topicId, TopicNameValue value)
    setTopicNameInScope(topicId, viewScope, std::move(value));
 }
 
+Identifier Editor::newSelfContainedTopic(TopicNameValue value)
+{
+   auto &topic = map.newTopic();
+   static_cast<void>(topic.newName(scopeForTopicDefaultName(), value));
+   static_cast<void>(topic.newOccurrence(Identifiers::ofSingle(topic.getId()), SpacialCoordinate::absoluteAt(0.0f, 0.0f)));
+   return topic.getId();
+}
+
 void Editor::setTopicNameInScope(Identifier topicId, Identifiers const &scope, TopicNameValue value)
 {
    auto topic = map.findTopic(topicId);
@@ -212,6 +220,12 @@ void Editor::setTypeOfSelection(contomap::model::Identifier topicId)
    }
 }
 
+void Editor::setTypeOfSelection(contomap::model::TopicNameValue name)
+{
+   auto topicId = newSelfContainedTopic(name);
+   setTypeOfSelection(topicId);
+}
+
 void Editor::clearTypeOfSelection()
 {
    if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
@@ -267,6 +281,12 @@ void Editor::setReifierOfSelection(contomap::model::Identifier topicId)
          role.setReifier(topic.value());
       }
    }
+}
+
+void Editor::setReifierOfSelection(TopicNameValue name)
+{
+   auto topicId = newSelfContainedTopic(name);
+   setReifierOfSelection(topicId);
 }
 
 void Editor::clearReifierOfSelection()

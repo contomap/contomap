@@ -22,7 +22,6 @@
 #include "contomap/frontend/MapRenderList.h"
 #include "contomap/frontend/MapRenderMeasurer.h"
 #include "contomap/frontend/Names.h"
-#include "contomap/frontend/NewTopicDialog.h"
 #include "contomap/frontend/RenameTopicDialog.h"
 #include "contomap/frontend/SaveAsDialog.h"
 #include "contomap/frontend/StyleDialog.h"
@@ -193,10 +192,6 @@ void MainWindow::processInput(RenderContext const &context, Vector2, Vector2 foc
       {
          openNewTopicDialog();
       }
-   }
-   if (IsKeyReleased(KEY_O))
-   {
-      openNewOccurrenceDialog();
    }
    if (IsKeyReleased(KEY_T))
    {
@@ -827,30 +822,32 @@ void MainWindow::openHelpDialog()
 
 void MainWindow::openNewTopicDialog()
 {
-   pendingDialog = std::make_unique<contomap::frontend::NewTopicDialog>(editBuffer, layout, spacialCameraLocation());
-}
-
-void MainWindow::openNewOccurrenceDialog()
-{
-   std::vector<LocateTopicAndActDialog::TitledAction> actions { LocateTopicAndActDialog::newOccurrence(spacialCameraLocation()) };
+   auto cameraLocation = spacialCameraLocation();
+   std::vector<LocateTopicAndActDialog::TitledAction> actions {
+      LocateTopicAndActDialog::newTopic(cameraLocation),
+      LocateTopicAndActDialog::newOccurrence(cameraLocation),
+   };
    pendingDialog = std::make_unique<LocateTopicAndActDialog>(editBuffer, view.ofMap(), layout, actions);
 }
 
 void MainWindow::openNewLocateTopicAndActDialog()
 {
+   auto cameraLocation = spacialCameraLocation();
    std::vector<LocateTopicAndActDialog::TitledAction> actions {
       LocateTopicAndActDialog::setViewScope(),
       LocateTopicAndActDialog::addToViewScope(),
-      LocateTopicAndActDialog::newOccurrence(spacialCameraLocation()),
-
+      LocateTopicAndActDialog::newTopic(cameraLocation),
+      LocateTopicAndActDialog::newOccurrence(cameraLocation),
    };
    if (!view.ofSelection().empty())
    {
       actions.emplace_back(LocateTopicAndActDialog::setTypeOfSelection());
+      actions.emplace_back(LocateTopicAndActDialog::setNewTypeOfSelection());
    }
    if (view.ofSelection().hasSoleEntry())
    {
       actions.emplace_back(LocateTopicAndActDialog::setReifierOfSelection());
+      actions.emplace_back(LocateTopicAndActDialog::setNewReifierOfSelection());
    }
    pendingDialog = std::make_unique<LocateTopicAndActDialog>(editBuffer, view.ofMap(), layout, actions);
 }

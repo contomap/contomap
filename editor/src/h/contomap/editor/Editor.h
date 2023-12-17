@@ -34,8 +34,10 @@ public:
    void deleteSelection() override;
    void setAppearanceOfSelection(contomap::model::Style style) override;
    void setTypeOfSelection(contomap::model::Identifier topicId) override;
+   void setTypeOfSelection(contomap::model::TopicNameValue name) override;
    void clearTypeOfSelection() override;
    void setReifierOfSelection(contomap::model::Identifier topicId) override;
+   void setReifierOfSelection(contomap::model::TopicNameValue name) override;
    void clearReifierOfSelection() override;
    void moveSelectionBy(contomap::model::SpacialCoordinate::Offset offset) override;
    void setViewScopeFromSelection() override;
@@ -61,6 +63,7 @@ public:
    [[nodiscard]] static contomap::model::Identifiers scopeForTopicDefaultName();
 
 private:
+   contomap::model::Identifier newSelfContainedTopic(contomap::model::TopicNameValue value);
    void setTopicNameInScope(contomap::model::Identifier topicId, contomap::model::Identifiers const &scope, contomap::model::TopicNameValue value);
    void createAndSelectOccurrence(contomap::model::Topic &topic, contomap::model::SpacialCoordinate location);
    void cycleSelectedOccurrence(bool forward);
