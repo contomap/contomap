@@ -74,7 +74,7 @@ int main()
    DesktopEnvironment environment;
    Application app(environment);
 
-   SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_HIGHDPI);
+   SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_HIGHDPI | FLAG_MSAA_4X_HINT);
 
    app.initWindow();
    SetTargetFPS(60);
