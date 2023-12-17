@@ -13,6 +13,7 @@ using contomap::model::Identifier;
 using contomap::model::SpacialCoordinate;
 using contomap::model::Topic;
 using contomap::model::TopicName;
+using contomap::model::TopicNameValue;
 using contomap::model::Topics;
 
 LocateTopicAndActDialog::TopicList::TopicList(ContomapView const &view)
@@ -250,7 +251,7 @@ bool LocateTopicAndActDialog::draw(RenderContext const &context)
    Vector2 windowSize { 640, 480 };
    Vector2 windowPos { contentSize.x / 2 - windowSize.x / 2, contentSize.y / 2 - windowSize.y / 2 };
 
-   auto closeDialog = GuiWindowBox(Rectangle { windowPos.x, windowPos.y, windowSize.x, windowSize.y }, "Find Topic");
+   auto closeDialog = GuiWindowBox(Rectangle { windowPos.x, windowPos.y, windowSize.x, windowSize.y }, "Topic dialog");
 
    if (IsKeyPressed(KEY_ESCAPE))
    {
@@ -283,10 +284,11 @@ bool LocateTopicAndActDialog::draw(RenderContext const &context)
    listBounds.height -= listBounds.y;
 
    auto selectedTopicId = topicList.draw(listBounds, view.find(Topics::withANameLike(searchInput.data())));
-
-   if (!selectedTopicId.has_value())
+   std::optional<TopicNameValue> enteredName;
+   auto enteredText = TopicNameValue::from(std::string(searchInput.data()));
+   if (std::holds_alternative<TopicNameValue>(enteredText))
    {
-      GuiDisable();
+      enteredName = std::get<TopicNameValue>(enteredText);
    }
 
    Rectangle buttonBounds {
@@ -302,27 +304,44 @@ bool LocateTopicAndActDialog::draw(RenderContext const &context)
    auto textPadding = static_cast<float>(GuiGetStyle(BUTTON, TEXT_PADDING));
    auto buttonBorderWidth = static_cast<float>(GuiGetStyle(BUTTON, BORDER_WIDTH));
    float extraPadding = layout.buttonHeight(); // necessary as zero apparently results in characters cut away.
-
+   std::vector<std::reference_wrapper<TitledAction const>> possibleActions;
    for (auto const &action : actions)
    {
       bool acceptByKey = (action.getHotkey() != 0) && IsKeyReleased(action.getHotkey()) && IsKeyDown(KEY_LEFT_ALT);
-      if (!acceptByKey && (actions.size() == 1))
-      {
-         acceptByKey = IsKeyReleased(KEY_ENTER);
-      }
       auto textSize = MeasureTextEx(font, action.getTitle().c_str(), fontSize, spacing);
       buttonBounds.width = textSize.x + (textPadding * 2.0f) + (buttonBorderWidth * 2.0f) + extraPadding;
-      if ((GuiButton(buttonBounds, action.getTitle().c_str()) || acceptByKey) && selectedTopicId.has_value())
+      bool actionPossible = (action.requiresTopic() && selectedTopicId.has_value()) || (action.requiresName() && enteredName.has_value());
+      if (!actionPossible)
       {
-         action.act(inputRequestHandler, selectedTopicId.value());
-         closeDialog = true;
-         break;
+         GuiDisable();
+      }
+      else
+      {
+         possibleActions.emplace_back(action);
+      }
+      bool buttonTriggered = GuiButton(buttonBounds, action.getTitle().c_str());
+      GuiEnable();
+      if ((buttonTriggered || acceptByKey) && actionPossible)
+      {
+         closeDialog = action.act(inputRequestHandler, selectedTopicId, enteredName);
+         if (closeDialog)
+         {
+            break;
+         }
       }
       buttonBounds.x += buttonBounds.width + padding;
    }
-   GuiEnable();
+   if (!closeDialog && (possibleActions.size() == 1) && IsKeyReleased(KEY_ENTER))
+   {
+      closeDialog = possibleActions[0].get().act(inputRequestHandler, selectedTopicId, enteredName);
+   }
 
    return closeDialog;
+}
+
+LocateTopicAndActDialog::TitledAction LocateTopicAndActDialog::newTopic(SpacialCoordinate location)
+{
+   return { "New topic", KEY_N, [location](InputRequestHandler &handler, TopicNameValue const &name) { handler.newTopicRequested(name, location); } };
 }
 
 LocateTopicAndActDialog::TitledAction LocateTopicAndActDialog::newOccurrence(SpacialCoordinate location)
