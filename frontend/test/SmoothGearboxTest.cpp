@@ -12,12 +12,12 @@
 using contomap::frontend::FrameTime;
 using contomap::frontend::MapCamera;
 
-class ImmediateGearboxTest : public testing::Test, public contomap::test::Steps<ImmediateGearboxTest>
+class SmoothGearboxTest : public testing::Test, public contomap::test::Steps<SmoothGearboxTest>
 {
 public:
    void SetUp() override
    {
-      instance = std::make_unique<MapCamera::ImmediateGearbox>();
+      instance = std::make_unique<MapCamera::SmoothGearbox>();
    }
 
    void timePasses(FrameTime amount)
@@ -52,14 +52,14 @@ public:
       EXPECT_LT(Vector2Distance(expected, current), 0.001f) << "target: " << current.x << ":" << current.y << " - " << message;
    }
 
-   void currentZoomFactorShouldBe(MapCamera::ZoomFactor expected, std::string const &message = "")
+   void currentZoomFactorShouldBeNear(MapCamera::ZoomFactor expected, std::string const &message = "")
    {
-      EXPECT_EQ(expected, instance->getCurrentZoomFactor()) << message;
+      EXPECT_NEAR(expected.raw(), instance->getCurrentZoomFactor().raw(), 0.001f) << message;
    }
 
-   void targetZoomFactorShouldBe(MapCamera::ZoomFactor expected, std::string const &message = "")
+   void targetZoomFactorShouldBeNear(MapCamera::ZoomFactor expected, std::string const &message = "")
    {
-      EXPECT_EQ(expected, instance->getTargetZoomFactor()) << message;
+      EXPECT_NEAR(expected.raw(), instance->getTargetZoomFactor().raw(), 0.001f) << message;
    }
 
    static FrameTime oneSecond()
@@ -81,29 +81,30 @@ private:
    std::unique_ptr<MapCamera::Gearbox> instance;
 };
 
-TEST_F(ImmediateGearboxTest, defaultStateAtConstruction)
+TEST_F(SmoothGearboxTest, defaultStateAtConstruction)
 {
    then().currentPositionShouldBeCloseTo(MapCamera::HOME_POSITION);
-   asWellAs().currentPositionShouldBeCloseTo(MapCamera::HOME_POSITION);
-   asWellAs().currentZoomFactorShouldBe(MapCamera::ZoomFactor::UNIT);
-   asWellAs().targetZoomFactorShouldBe(MapCamera::ZoomFactor::UNIT);
+   asWellAs().targetPositionShouldBeCloseTo(MapCamera::HOME_POSITION);
+   asWellAs().currentZoomFactorShouldBeNear(MapCamera::ZoomFactor::UNIT);
+   asWellAs().targetZoomFactorShouldBeNear(MapCamera::ZoomFactor::UNIT);
 }
 
-TEST_F(ImmediateGearboxTest, defaultStateAfterPassageOfTime)
+TEST_F(SmoothGearboxTest, defaultStateAfterPassageOfTime)
 {
    when().timePasses(oneSecond());
    then().currentPositionShouldBeCloseTo(MapCamera::HOME_POSITION);
-   asWellAs().currentZoomFactorShouldBe(MapCamera::ZoomFactor::UNIT);
+   asWellAs().currentZoomFactorShouldBeNear(MapCamera::ZoomFactor::UNIT);
 }
 
-TEST_F(ImmediateGearboxTest, panToIsImmediate)
+TEST_F(SmoothGearboxTest, panToIsSmooth)
 {
-   Vector2 target = somePosition();
-   when().panningTo(target);
-   then().currentPositionShouldBeCloseTo(target);
+   Vector2 target { .x = 10.0f, .y = 20.0f };
+   given().panningTo(target);
+   when().timePasses(ofSeconds(0.01f));
+   then().currentPositionShouldBeCloseTo(Vector2 { .x = 1.333f, .y = 2.666f });
 }
 
-TEST_F(ImmediateGearboxTest, panIsAppliedOverTime)
+TEST_F(SmoothGearboxTest, panIsAppliedOverTime)
 {
    float seconds = 4.0f;
    given().panning(true, false, false, true);
@@ -111,10 +112,11 @@ TEST_F(ImmediateGearboxTest, panIsAppliedOverTime)
    then().currentPositionShouldBeCloseTo(Vector2Scale(Vector2Normalize(Vector2 { .x = -1.0f, .y = 1.0f }), MapCamera::PANNING_SPEED * seconds));
 }
 
-TEST_F(ImmediateGearboxTest, zoomFactorIsAppliedImmediately)
+TEST_F(SmoothGearboxTest, zoomFactorIsAppliedSmoothly)
 {
    auto factor = MapCamera::ZoomFactor::from(12.3f);
-   when().zoomingTo(factor);
-   then().currentZoomFactorShouldBe(factor);
-   asWellAs().targetZoomFactorShouldBe(factor);
+   given().zoomingTo(factor);
+   when().timePasses(ofSeconds(0.01f));
+   then().currentZoomFactorShouldBeNear(MapCamera::ZoomFactor::from(2.5066f));
+   asWellAs().targetZoomFactorShouldBeNear(factor);
 }
