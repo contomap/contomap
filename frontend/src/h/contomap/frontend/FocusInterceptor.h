@@ -34,8 +34,6 @@ public:
    void renderRoleLine(contomap::model::Identifier id, Vector2 a, Vector2 b, contomap::model::Style const &style, float lineThickness, bool reified) override;
 
 private:
-   [[nodiscard]] static Vector2 centerOf(Rectangle area);
-
    contomap::frontend::MapRenderer &next;
    Vector2 focusCoordinate;
    Focus newFocus;

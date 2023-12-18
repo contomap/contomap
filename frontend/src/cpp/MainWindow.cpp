@@ -15,6 +15,7 @@
 #include "contomap/frontend/Colors.h"
 #include "contomap/frontend/DirectMapRenderer.h"
 #include "contomap/frontend/FocusInterceptor.h"
+#include "contomap/frontend/Geometry.h"
 #include "contomap/frontend/HelpDialog.h"
 #include "contomap/frontend/LoadDialog.h"
 #include "contomap/frontend/LocateTopicAndActDialog.h"
@@ -45,6 +46,8 @@ using contomap::frontend::MapRenderer;
 using contomap::frontend::Names;
 using contomap::frontend::RenameTopicDialog;
 using contomap::frontend::RenderContext;
+using contomap::frontend::geometry::centerOf;
+using contomap::frontend::geometry::intersectLineIntoBoxCenter;
 using contomap::model::Association;
 using contomap::model::Associations;
 using contomap::model::Identifier;
@@ -314,9 +317,10 @@ void MainWindow::drawMap(Vector2 focusCoordinate)
 {
    DirectMapRenderer directMapRenderer;
    FocusInterceptor focusInterceptor(directMapRenderer, focusCoordinate);
-
-   renderMap(focusInterceptor, view.ofSelection(), currentFocus, selectionDrawOffset);
-
+   MapRenderList renderList;
+   renderMap(renderList, view.ofSelection(), currentFocus, selectionDrawOffset);
+   renderList.optimize();
+   renderList.renderTo(focusInterceptor);
    currentFocus = focusInterceptor.getNewFocus();
 }
 
@@ -330,8 +334,11 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
    auto const &viewScope = view.ofViewScope();
    auto const &map = view.ofMap();
 
+   Font font = GetFontDefault();
+   float spacing = 1.0f;
+
    Identifiers associationIds;
-   std::map<Identifier, Vector2> associationLocationsById;
+   std::map<Identifier, Rectangle> associationAreasById;
    auto drawOffsetIf = [&selectionOffset](bool isSelected) { return isSelected ? selectionOffset : SpacialCoordinate::Offset::of(0.0f, 0.0f); };
 
    auto visibleAssociations = map.find(Associations::thatAreIn(viewScope));
@@ -349,9 +356,7 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
       auto spacialLocation = visibleAssociation.getLocation().getSpacial().getAbsoluteReference().plus(drawOffsetIf(associationIsSelected));
       Vector2 projectedLocation { .x = spacialLocation.X(), .y = spacialLocation.Y() };
 
-      Font font = GetFontDefault();
       float fontSize = 16.0f;
-      float spacing = 1.0f;
       auto textSize = MeasureTextEx(font, nameText.c_str(), fontSize, spacing);
       float lineThickness = 2.0f;
 
@@ -380,7 +385,7 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
       };
 
       associationIds.add(visibleAssociation.getId());
-      associationLocationsById[visibleAssociation.getId()] = projectedLocation;
+      associationAreasById[visibleAssociation.getId()] = area;
 
       auto associationStyle
          = Styles::resolve(visibleAssociation.getAppearance(), visibleAssociation.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
@@ -413,6 +418,33 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
          auto spacialLocation = occurrence.getLocation().getSpacial().getAbsoluteReference().plus(drawOffsetIf(occurrenceIsSelected));
          Vector2 projectedLocation { .x = spacialLocation.X(), .y = spacialLocation.Y() };
 
+         float occurrenceFontSize = 16.0f;
+         auto occurrenceTextSize = MeasureTextEx(font, nameText.c_str(), occurrenceFontSize, spacing);
+
+         float occurrenceBorderThickness = 2.0f;
+
+         Rectangle occurrenceTextArea {
+            .x = projectedLocation.x - occurrenceTextSize.x / 2.0f,
+            .y = projectedLocation.y - occurrenceTextSize.y / 2.0f,
+            .width = occurrenceTextSize.x,
+            .height = occurrenceTextSize.y,
+         };
+         float occurrencePlatePadding = 2.0f;
+         Rectangle occurrencePlate {
+            .x = occurrenceTextArea.x - occurrencePlatePadding,
+            .y = occurrenceTextArea.y - occurrencePlatePadding,
+            .width = occurrenceTextArea.width + occurrencePlatePadding * 2.0f,
+            .height = occurrenceTextArea.height + occurrencePlatePadding * 2.0f,
+         };
+         float occurrenceReifierPadding = 2.0f;
+         float occurrenceReifierOffset = occurrenceBorderThickness + occurrenceReifierPadding;
+         Rectangle occurrenceArea {
+            .x = occurrencePlate.x - occurrenceReifierOffset - occurrenceBorderThickness,
+            .y = occurrencePlate.y - occurrenceBorderThickness,
+            .width = occurrencePlate.width + (occurrenceReifierOffset * 2.0f) + (occurrenceBorderThickness * 2.0f),
+            .height = occurrencePlate.height + (occurrenceBorderThickness * 2.0f),
+         };
+
          for (Role const &role : roles)
          {
             bool roleIsSelected = selection.contains(SelectedType::Role, role.getId());
@@ -426,68 +458,52 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
 
             auto roleStyle = Styles::resolve(role.getAppearance(), role.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
 
-            float thickness = 1.0f;
+            float roleLineThickness = 1.0f;
             if (roleIsSelected)
             {
                roleStyle = selectedStyle(roleStyle);
-               thickness += 2.0f;
+               roleLineThickness += 2.0f;
             }
             if (focus.isRole(role.getId()))
             {
                roleStyle = highlightedStyle(roleStyle);
-               thickness += 0.5f;
+               roleLineThickness += 0.5f;
             }
 
-            auto associationLocation = associationLocationsById[role.getParent()];
-            renderer.renderRoleLine(role.getId(), projectedLocation, associationLocation, roleStyle, thickness, role.hasReifier());
+            auto associationArea = associationAreasById[role.getParent()];
+            auto rolePointApproxOccurrence = intersectLineIntoBoxCenter(centerOf(associationArea), occurrenceArea);
+            auto rolePointApproxAssociation = intersectLineIntoBoxCenter(centerOf(occurrenceArea), associationArea);
+            if (!rolePointApproxOccurrence.has_value() || !rolePointApproxAssociation.has_value()) [[unlikely]]
+            {
+               // can happen if either has its center within the area of the other
+               continue;
+            }
+            auto rolePointOccurrence = intersectLineIntoBoxCenter(rolePointApproxAssociation.value(), occurrenceArea);
+            auto rolePointAssociation = intersectLineIntoBoxCenter(rolePointApproxOccurrence.value(), associationArea);
+            if (!rolePointOccurrence.has_value() || !rolePointAssociation.has_value()) [[unlikely]]
+            {
+               // can happen if the point on the area border is within the area of the other
+               continue;
+            }
+
+            renderer.renderRoleLine(role.getId(), rolePointOccurrence.value(), rolePointAssociation.value(), roleStyle, roleLineThickness, role.hasReifier());
 
             if (!roleTitle.empty())
             {
-               Font font = GetFontDefault();
-               float fontSize = 10.0f;
-               float spacing = 1.0f;
-               auto textSize = MeasureTextEx(font, roleTitle.c_str(), fontSize, spacing);
-               float plateHeight = textSize.y;
+               float roleFontSize = 10.0f;
+               auto roleTextSize = MeasureTextEx(font, roleTitle.c_str(), roleFontSize, spacing);
+               float plateHeight = roleTextSize.y;
 
-               Rectangle area {
-                  .x = (projectedLocation.x + associationLocation.x) / 2,
-                  .y = (projectedLocation.y + associationLocation.y) / 2 - textSize.y / 2.0f,
-                  .width = textSize.x,
+               Rectangle roleArea {
+                  .x = (rolePointOccurrence.value().x + rolePointAssociation.value().x) / 2,
+                  .y = (rolePointOccurrence.value().y + rolePointAssociation.value().y) / 2 - roleTextSize.y / 2.0f,
+                  .width = roleTextSize.x,
                   .height = plateHeight,
                };
 
-               renderer.renderText(area, roleStyle.without(Style::ColorType::Line), roleTitle, font, fontSize, spacing);
+               renderer.renderText(roleArea, roleStyle.without(Style::ColorType::Line), roleTitle, font, roleFontSize, spacing);
             }
          }
-
-         Font font = GetFontDefault();
-         float fontSize = 16.0f;
-         float spacing = 1.0f;
-         auto textSize = MeasureTextEx(font, nameText.c_str(), fontSize, spacing);
-
-         float lineThickness = 2.0f;
-
-         Rectangle textArea {
-            .x = projectedLocation.x - textSize.x / 2.0f,
-            .y = projectedLocation.y - textSize.y / 2.0f,
-            .width = textSize.x,
-            .height = textSize.y,
-         };
-         float platePadding = 2.0f;
-         Rectangle plate {
-            .x = textArea.x - platePadding,
-            .y = textArea.y - platePadding,
-            .width = textArea.width + platePadding * 2.0f,
-            .height = textArea.height + platePadding * 2.0f,
-         };
-         float reifierPadding = 2.0f;
-         float reifierOffset = lineThickness + reifierPadding;
-         Rectangle area {
-            .x = plate.x - reifierOffset - lineThickness,
-            .y = plate.y - lineThickness,
-            .width = plate.width + (reifierOffset * 2.0f) + (lineThickness * 2.0f),
-            .height = plate.height + (lineThickness * 2.0f),
-         };
 
          auto occurrenceStyle
             = Styles::resolve(occurrence.getAppearance(), occurrence.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
@@ -500,8 +516,10 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
             occurrenceStyle = highlightedStyle(occurrenceStyle);
          }
 
-         renderer.renderOccurrencePlate(occurrence.getId(), area, occurrenceStyle, plate, lineThickness, occurrence.hasReifier());
-         renderer.renderText(textArea, Style().with(Style::ColorType::Text, occurrenceStyle.get(Style::ColorType::Text)), nameText, font, fontSize, spacing);
+         renderer.renderOccurrencePlate(
+            occurrence.getId(), occurrenceArea, occurrenceStyle, occurrencePlate, occurrenceBorderThickness, occurrence.hasReifier());
+         renderer.renderText(
+            occurrenceTextArea, Style().with(Style::ColorType::Text, occurrenceStyle.get(Style::ColorType::Text)), nameText, font, occurrenceFontSize, spacing);
       }
    }
 }
@@ -905,6 +923,7 @@ void MainWindow::save()
 {
    contomap::frontend::MapRenderList renderList;
    renderMap(renderList, {}, {}, SpacialCoordinate::Offset::of(0.0f, 0.0f));
+   renderList.optimize();
    contomap::frontend::MapRenderMeasurer measurer;
    renderList.renderTo(measurer);
    auto mapArea = measurer.getArea();
