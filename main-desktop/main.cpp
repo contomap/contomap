@@ -1,7 +1,10 @@
+#include <cmrc/cmrc.hpp>
 #include <raylib.h>
 #include <tinyfiledialogs/tinyfiledialogs.h>
 
 #include "contomap/application/Application.h"
+
+CMRC_DECLARE(res);
 
 using contomap::application::Application;
 using contomap::frontend::DisplayEnvironment;
@@ -69,6 +72,19 @@ private:
    bool shouldClose = false;
 };
 
+/**
+ * Sets the icon of the current window to the image stored in the resources.
+ */
+static void setWindowIcon()
+{
+   auto fs = cmrc::res::get_filesystem();
+   auto iconFile = fs.open("desktop/appicon.png");
+   std::vector<uint8_t> iconData(iconFile.begin(), iconFile.end());
+   auto iconImage = LoadImageFromMemory(".png", iconData.data(), static_cast<int>(iconData.size()));
+   SetWindowIcon(iconImage);
+   UnloadImage(iconImage);
+}
+
 int main()
 {
    DesktopEnvironment environment;
@@ -77,6 +93,7 @@ int main()
    SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE | FLAG_WINDOW_HIGHDPI | FLAG_MSAA_4X_HINT);
 
    app.initWindow();
+   setWindowIcon();
    SetTargetFPS(60);
    SetExitKey(KEY_NULL); // Disable default behavior that requests to close window on Escape key.
 
