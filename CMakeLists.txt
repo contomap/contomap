@@ -11,6 +11,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Dependencies
 cmake_policy(SET CMP0135 NEW)
 
+include(CMakeRC.cmake)
+
 include(FetchContent)
 FetchContent_Declare(
         googletest
@@ -88,6 +90,9 @@ if (!WIN32)
 endif ()
 
 # This project
+
+file(GLOB_RECURSE RES_SOURCES "${PROJECT_SOURCE_DIR}/resources/*")
+cmrc_add_resource_library(contomap-resources ALIAS cmp::resources NAMESPACE res WHENCE resources ${RES_SOURCES})
 
 file(GLOB_RECURSE LIB_INFRASTRUCTURE_SOURCES "${PROJECT_SOURCE_DIR}/infrastructure/src/cpp/*.cpp")
 add_library(contomap-infrastructure STATIC ${LIB_INFRASTRUCTURE_SOURCES})
@@ -223,6 +228,7 @@ if (${PLATFORM} STREQUAL "Desktop")
             PRIVATE
             all_warnings
             contomap-application
+            cmp::resources
             raylib
             tinyfiledialogs
     )
