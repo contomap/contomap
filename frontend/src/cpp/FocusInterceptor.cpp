@@ -5,12 +5,14 @@
 #pragma GCC diagnostic pop
 
 #include "contomap/frontend/FocusInterceptor.h"
+#include "contomap/frontend/Geometry.h"
 
 using contomap::frontend::AssociationFocusItem;
 using contomap::frontend::Focus;
 using contomap::frontend::FocusInterceptor;
 using contomap::frontend::OccurrenceFocusItem;
 using contomap::frontend::RoleFocusItem;
+using contomap::frontend::geometry::centerOf;
 using contomap::model::Identifier;
 using contomap::model::Style;
 
@@ -55,9 +57,4 @@ void FocusInterceptor::renderRoleLine(Identifier id, Vector2 a, Vector2 b, Style
       newFocus.registerItem(std::make_shared<RoleFocusItem>(id), 0.0f);
    }
    next.renderRoleLine(id, a, b, style, lineThickness, reified);
-}
-
-Vector2 FocusInterceptor::centerOf(Rectangle area)
-{
-   return Vector2 { .x = area.x + (area.width / 2.0f), .y = area.y + (area.height / 2.0f) };
 }
