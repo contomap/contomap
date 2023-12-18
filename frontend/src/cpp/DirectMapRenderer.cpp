@@ -138,21 +138,21 @@ void DirectMapRenderer::renderRoleLine(Identifier, Vector2 a, Vector2 b, Style c
    if ((length > 0.0001f) && reified)
    {
       auto drawWithOffset = [length, a, b, lineThickness, color](float offset) {
-         Vector2 shiftedProjected {
+         Vector2 shiftedA {
             .x = a.x + offset * (b.y - a.y) / length,
             .y = a.y + offset * (a.x - b.x) / length,
          };
-         Vector2 shiftedAssociation {
+         Vector2 shiftedB {
             .x = b.x + offset * (b.y - a.y) / length,
             .y = b.y + offset * (a.x - b.x) / length,
          };
-         float diffX = shiftedAssociation.x - shiftedProjected.x;
-         float diffY = shiftedAssociation.y - shiftedProjected.y;
-         shiftedProjected.x += diffX / 3;
-         shiftedProjected.y += diffY / 3;
-         shiftedAssociation.x += -diffX / 3;
-         shiftedAssociation.y += -diffY / 3;
-         DrawLineEx(shiftedProjected, shiftedAssociation, lineThickness, color);
+         float diffX = shiftedB.x - shiftedA.x;
+         float diffY = shiftedB.y - shiftedA.y;
+         shiftedA.x += diffX / 3;
+         shiftedA.y += diffY / 3;
+         shiftedB.x += -diffX / 3;
+         shiftedB.y += -diffY / 3;
+         DrawLineEx(shiftedA, shiftedB, lineThickness, color);
       };
 
       drawWithOffset(+3.0f);
