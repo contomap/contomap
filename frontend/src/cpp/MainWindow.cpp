@@ -317,9 +317,10 @@ void MainWindow::drawMap(Vector2 focusCoordinate)
 {
    DirectMapRenderer directMapRenderer;
    FocusInterceptor focusInterceptor(directMapRenderer, focusCoordinate);
-
-   renderMap(focusInterceptor, view.ofSelection(), currentFocus, selectionDrawOffset);
-
+   MapRenderList renderList;
+   renderMap(renderList, view.ofSelection(), currentFocus, selectionDrawOffset);
+   renderList.optimize();
+   renderList.renderTo(focusInterceptor);
    currentFocus = focusInterceptor.getNewFocus();
 }
 
@@ -922,6 +923,7 @@ void MainWindow::save()
 {
    contomap::frontend::MapRenderList renderList;
    renderMap(renderList, {}, {}, SpacialCoordinate::Offset::of(0.0f, 0.0f));
+   renderList.optimize();
    contomap::frontend::MapRenderMeasurer measurer;
    renderList.renderTo(measurer);
    auto mapArea = measurer.getArea();
