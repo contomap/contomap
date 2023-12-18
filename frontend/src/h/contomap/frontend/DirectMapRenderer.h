@@ -21,6 +21,9 @@ public:
    void renderAssociationPlate(
       contomap::model::Identifier id, Rectangle area, contomap::model::Style const &style, Rectangle plate, float lineThickness, bool reified) override;
    void renderRoleLine(contomap::model::Identifier id, Vector2 a, Vector2 b, contomap::model::Style const &style, float lineThickness, bool reified) override;
+
+private:
+   static void drawLine(Vector2 a, Color colorA, Vector2 b, Color colorB, float thickness);
 };
 
 } // namespace contomap::frontend

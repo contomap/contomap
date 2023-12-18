@@ -131,13 +131,37 @@ void DirectMapRenderer::renderAssociationPlate(Identifier, Rectangle area, Style
 void DirectMapRenderer::renderRoleLine(Identifier, Vector2 a, Vector2 b, Style const &style, float lineThickness, bool reified)
 {
    auto color = Colors::toUiColor(style.get(Style::ColorType::Line));
-   DrawLineEx(a, b, lineThickness, color);
+   auto drawLineShadedEnds = [lineThickness, color](Vector2 a, Vector2 b) {
+      float const shadeLength = 7.5f;
+      Vector2 centerPoint { .x = (b.x + a.x) / 2.0f, .y = (b.y + a.y) / 2.0f };
+      Vector2 centerToA = Vector2Subtract(a, centerPoint);
+      float halfLength = Vector2Length(centerToA);
+      Vector2 centerToShadeA { .x = 0.0f, .y = 0.0f };
+      uint8_t shadeAlpha = 0xFF;
+      if (halfLength >= shadeLength)
+      {
+         centerToShadeA = Vector2Scale(centerToA, (halfLength - shadeLength) / halfLength);
+      }
+      else
+      {
+         shadeAlpha = static_cast<uint8_t>(std::roundf((255.0f * halfLength) / shadeLength));
+      }
+      Vector2 shadeAPoint = Vector2Add(centerPoint, centerToShadeA);
+      Vector2 shadeBPoint = Vector2Subtract(centerPoint, centerToShadeA);
+      Color endColor { .r = color.r, .g = color.g, .b = color.b, .a = 0x00 };
+      Color shadeColor { .r = color.r, .g = color.g, .b = color.b, .a = shadeAlpha };
+
+      drawLine(Vector2Add(centerPoint, centerToA), endColor, shadeAPoint, shadeColor, lineThickness);
+      drawLine(Vector2Subtract(centerPoint, centerToA), endColor, shadeBPoint, shadeColor, lineThickness);
+      drawLine(shadeAPoint, shadeColor, shadeBPoint, shadeColor, lineThickness);
+   };
+   drawLineShadedEnds(a, b);
    float diffX = a.x - b.x;
    float diffY = a.y - b.y;
    float length = Vector2Length(Vector2 { .x = diffX, .y = diffY });
    if ((length > 0.0001f) && reified)
    {
-      auto drawWithOffset = [length, a, b, lineThickness, color](float offset) {
+      auto drawWithOffset = [&drawLineShadedEnds, length, a, b](float offset) {
          Vector2 shiftedA {
             .x = a.x + offset * (b.y - a.y) / length,
             .y = a.y + offset * (a.x - b.x) / length,
@@ -152,10 +176,41 @@ void DirectMapRenderer::renderRoleLine(Identifier, Vector2 a, Vector2 b, Style c
          shiftedA.y += diffY / 3;
          shiftedB.x += -diffX / 3;
          shiftedB.y += -diffY / 3;
-         DrawLineEx(shiftedA, shiftedB, lineThickness, color);
+         drawLineShadedEnds(shiftedA, shiftedB);
       };
 
       drawWithOffset(+3.0f);
       drawWithOffset(-3.0f);
+   }
+}
+
+void DirectMapRenderer::drawLine(Vector2 a, Color colorA, Vector2 b, Color colorB, float thickness)
+{
+   Vector2 delta = { b.x - a.x, b.y - a.y };
+   float length = sqrtf(delta.x * delta.x + delta.y * delta.y);
+   if ((length > 0) && (thickness > 0))
+   {
+      float scale = thickness / (2 * length);
+      Vector2 radius = { -scale * delta.y, scale * delta.x };
+      std::array<Vector2, 4> strip {
+         Vector2 { a.x - radius.x, a.y - radius.y },
+         Vector2 { a.x + radius.x, a.y + radius.y },
+         Vector2 { b.x - radius.x, b.y - radius.y },
+         Vector2 { b.x + radius.x, b.y + radius.y },
+      };
+
+      rlBegin(RL_TRIANGLES);
+      rlColor4ub(colorA.r, colorA.g, colorA.b, colorA.a);
+      rlVertex2f(strip[0].x, strip[0].y);
+      rlVertex2f(strip[1].x, strip[1].y);
+      rlColor4ub(colorB.r, colorB.g, colorB.b, colorB.a);
+      rlVertex2f(strip[2].x, strip[2].y);
+
+      rlVertex2f(strip[2].x, strip[2].y);
+      rlColor4ub(colorA.r, colorA.g, colorA.b, colorA.a);
+      rlVertex2f(strip[1].x, strip[1].y);
+      rlColor4ub(colorB.r, colorB.g, colorB.b, colorB.a);
+      rlVertex2f(strip[3].x, strip[3].y);
+      rlEnd();
    }
 }
