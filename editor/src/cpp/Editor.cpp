@@ -142,7 +142,7 @@ void Editor::linkSelection()
       {
          static_cast<void>(topic.newRole(association));
 
-         for (Occurrence const &occurrence : topic.occurrencesIn(viewScope))
+         for (Occurrence const &occurrence : topic.findOccurrences(occurrenceIds))
          {
             auto occurrenceLocation = occurrence.getLocation().getSpacial().getAbsoluteReference();
             x += occurrenceLocation.X();
