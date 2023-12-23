@@ -18,12 +18,6 @@ jobs:
       contents: read
       security-events: write
 
-    strategy:
-      fail-fast: false
-      matrix:
-        language: [ 'cpp' ]
-        build: [ RelWithDebInfo ]
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -31,7 +25,7 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: ${{ matrix.language }}
+          languages: 'c-cpp'
           # For more details on CodeQL's query packs, refer to: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
           queries: security-extended,security-and-quality
 
@@ -51,15 +45,15 @@ jobs:
           popd > /dev/null || exit 1
       - name: Generate build files
         run: |
-          ./build.sh --build-type ${{matrix.build}} generate
+          ./build.sh --build-type RelWithDebInfo generate
       - name: Compile and link
         run: |
-          ./build.sh --build-type ${{matrix.build}} compile
+          ./build.sh --build-type RelWithDebInfo compile
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:${{matrix.language}}"
+          category: "/language:c-cpp"
           upload: False
           output: sarif-results
 
@@ -69,14 +63,14 @@ jobs:
           patterns: |
             -cmake-build-all/**/*
             -vendor/**/*
-          input: sarif-results/${{matrix.language}}.sarif
-          output: sarif-results/${{matrix.language}}.sarif
+          input: sarif-results/cpp.sarif
+          output: sarif-results/cpp.sarif
 
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v2
         with:
-          sarif_file: sarif-results/${{matrix.language}}.sarif
-          category: "/language:${{matrix.language}}"
+          sarif_file: sarif-results/c-cpp.sarif
+          category: "/language:c-cpp"
 
       - name: Upload loc as a Build Artifact
         uses: actions/upload-artifact@v4.0.0
