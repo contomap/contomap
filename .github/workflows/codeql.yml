@@ -22,7 +22,7 @@ jobs:
       fail-fast: false
       matrix:
         language: [ 'c-cpp' ]
-        build: [ Debug, RelWithDebInfo ]
+        build: [ RelWithDebInfo ]
 
     steps:
       - name: Checkout repository
