@@ -1,0 +1,62 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '22 17 * * 1'
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-22.04
+    timeout-minutes: 360
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'c-cpp' ]
+        build: [ Debug, RelWithDebInfo ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          # For more details on CodeQL's query packs, refer to: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
+          queries: security-extended,security-and-quality
+
+      - name: Install libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mesa-utils mesa-common-dev xorg-dev libxrandr-dev
+      - name: Install compilers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake gcc g++ gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 valgrind
+          pushd "${HOME}" > /dev/null || exit 1
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          ./emsdk install latest
+          ./emsdk activate latest
+          popd > /dev/null || exit 1
+      - name: Generate build files
+        run: |
+          ./build.sh --build-type ${{matrix.build}} generate
+      - name: Compile and link
+        run: |
+          ./build.sh --build-type ${{matrix.build}} compile
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
