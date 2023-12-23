@@ -57,6 +57,10 @@ jobs:
           upload: False
           output: sarif-results
 
+      - name: Show available SARIF files
+        run: |
+          ls -la sarif-results/*
+
       - name: Filter SARIF
         uses: advanced-security/filter-sarif@v1
         with:
@@ -69,7 +73,7 @@ jobs:
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v2
         with:
-          sarif_file: sarif-results/c-cpp.sarif
+          sarif_file: sarif-results/cpp.sarif
           category: "/language:c-cpp"
 
       - name: Upload loc as a Build Artifact
