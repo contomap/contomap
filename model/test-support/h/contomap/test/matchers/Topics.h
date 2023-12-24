@@ -13,7 +13,8 @@ MATCHER_P(hasNameCountOf, expected, "")
 {
    contomap::model::Topic const &topic = arg;
    auto names = topic.allNames();
-   return std::ranges::distance(names.begin(), names.end()) == static_cast<size_t>(expected);
+   auto distance = std::ranges::distance(names.begin(), names.end());
+   return distance == static_cast<decltype(distance)>(expected);
 }
 
 MATCHER_P(hasName, expected, "")
