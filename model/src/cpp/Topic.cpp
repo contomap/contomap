@@ -80,6 +80,20 @@ Identifier Topic::getId() const
    return id;
 }
 
+std::unique_ptr<Link<Topic>> Topic::linkTyped(std::function<void()> topicUnlinked)
+{
+   static std::monostate sentinel;
+   auto localLinkEntry = typed.insert(typed.end(), std::unique_ptr<Link<std::monostate>> {});
+   auto links = Links::between(*this, std::move(topicUnlinked), sentinel, [this, localLinkEntry]() { typed.erase(localLinkEntry); });
+   *localLinkEntry = std::move(links.second);
+   return std::move(links.first);
+}
+
+size_t Topic::getTypedCount() const
+{
+   return typed.size();
+}
+
 TopicName &Topic::newName(Identifiers scope, contomap::model::TopicNameValue const &value)
 {
    auto nameId = Identifier::random();

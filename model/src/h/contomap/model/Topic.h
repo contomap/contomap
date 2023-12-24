@@ -1,5 +1,6 @@
 #pragma once
 
+#include <list>
 #include <map>
 #include <memory>
 
@@ -52,6 +53,19 @@ public:
       std::function<Association &(contomap::model::Identifier)> associationResolver);
 
    [[nodiscard]] contomap::model::Identifier getId() const override;
+
+   /**
+    * Links the topic to be the type of a typed entity.
+    *
+    * @param topicUnlinked the function to pass on to the returned link.
+    * @return the link that refers to this instance.
+    */
+   [[nodiscard]] std::unique_ptr<contomap::infrastructure::Link<Topic>> linkTyped(std::function<void()> topicUnlinked);
+
+   /**
+    * @return the number of entities this topic is the type of.
+    */
+   [[nodiscard]] size_t getTypedCount() const;
 
    /**
     * Adds a new name to the topic.
@@ -268,6 +282,8 @@ private:
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::TopicName>> findNameByScope(contomap::model::Identifiers const &scope);
 
    contomap::model::Identifier id;
+
+   std::list<std::unique_ptr<contomap::infrastructure::Link<std::monostate>>> typed;
 
    std::map<contomap::model::Identifier, contomap::model::TopicName> names;
    std::map<contomap::model::Identifier, std::unique_ptr<contomap::model::Occurrence>> occurrences;

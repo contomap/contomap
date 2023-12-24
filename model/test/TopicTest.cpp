@@ -1,6 +1,7 @@
 #include <gmock/gmock.h>
 
 #include "contomap/model/Topic.h"
+#include "contomap/model/Typeable.h"
 
 #include "contomap/test/matchers/Coordinates.h"
 #include "contomap/test/printers/model.h"
@@ -26,6 +27,10 @@ public:
    {
    public:
       MOCK_METHOD0(clearReifier, void());
+   };
+
+   class TestingTypeable : public contomap::model::Typeable
+   {
    };
 };
 
@@ -92,4 +97,33 @@ TEST_F(TopicTest, occurrenceBaseProperties)
    EXPECT_TRUE(occurrence.isIn(scope));
    EXPECT_FALSE(occurrence.isIn({}));
    EXPECT_THAT(occurrence.getLocation().getSpacial(), isCloseTo(position));
+}
+
+TEST_F(TopicTest, typeableReferencesToTopic)
+{
+   TestingTypeable typeable;
+   EXPECT_FALSE(typeable.hasType());
+   {
+      auto topic = someTopic();
+      typeable.setType(topic);
+      EXPECT_TRUE(typeable.hasType());
+      auto type = typeable.getType();
+      ASSERT_TRUE(type.has_value());
+      EXPECT_EQ(&(type.value().get()), &topic);
+   }
+   EXPECT_FALSE(typeable.hasType());
+}
+
+TEST_F(TopicTest, typedReferencesInTopic)
+{
+   auto topic = someTopic();
+   {
+      std::array<TestingTypeable, 3> typeables;
+      for (auto &typeable : typeables)
+      {
+         typeable.setType(topic);
+      }
+      EXPECT_EQ(typeables.size(), topic.getTypedCount());
+   }
+   EXPECT_EQ(0, topic.getTypedCount());
 }
