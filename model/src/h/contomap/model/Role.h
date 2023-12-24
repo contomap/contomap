@@ -11,6 +11,7 @@
 #include "contomap/model/OptionalIdentifier.h"
 #include "contomap/model/Reifiable.h"
 #include "contomap/model/Style.h"
+#include "contomap/model/Typeable.h"
 
 namespace contomap::model
 {
@@ -21,7 +22,7 @@ class Topic;
 /**
  * A Role represents the nature a topic plays in an association.
  */
-class Role : public contomap::model::Reifiable<contomap::model::Topic>
+class Role : public contomap::model::Reifiable<contomap::model::Topic>, public contomap::model::Typeable
 {
 public:
    /**
@@ -75,27 +76,11 @@ public:
     */
    [[nodiscard]] contomap::model::Style getAppearance() const;
 
-   /**
-    * Assign the type of this occurrence.
-    *
-    * @param typeTopicId the identifier of the topic that describes this occurrence.
-    */
-   void setType(contomap::model::Identifier typeTopicId);
-   /**
-    * Clears the type of this occurrence.
-    */
-   void clearType();
-   /**
-    * @return the identifier of the topic that describes this occurrence, if set.
-    */
-   [[nodiscard]] contomap::model::OptionalIdentifier getType() const;
-
 private:
    void unlink();
 
    contomap::model::Identifier id;
 
-   contomap::model::OptionalIdentifier type;
    contomap::model::Style appearance;
 
    std::unique_ptr<contomap::infrastructure::Link<contomap::model::Topic>> topic;

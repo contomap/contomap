@@ -216,7 +216,7 @@ void Editor::setTypeOfSelection(contomap::model::Identifier topicId)
    {
       for (Role &role : map.findRoles(ids))
       {
-         role.setType(topicId);
+         role.setType(optionalTopic.value());
       }
    }
 }

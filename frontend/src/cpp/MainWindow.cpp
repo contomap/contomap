@@ -449,14 +449,13 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
          {
             bool roleIsSelected = selection.contains(SelectedType::Role, role.getId());
             std::string roleTitle;
-            auto optionalTypeId = role.getType();
-            if (optionalTypeId.isAssigned())
+            auto optionalType = role.getType();
+            if (optionalType.has_value())
             {
-               auto typeTopic = view.ofMap().findTopic(optionalTypeId.value());
-               roleTitle = bestTitleFor(typeTopic.value());
+               roleTitle = bestTitleFor(optionalType.value());
             }
 
-            auto roleStyle = Styles::resolve(role.getAppearance(), role.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
+            auto roleStyle = Styles::resolve(role.getAppearance(), optionalType, view.ofViewScope()).withDefaultsFrom(defaultStyle);
 
             float roleLineThickness = 1.0f;
             if (roleIsSelected)

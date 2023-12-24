@@ -948,8 +948,8 @@ TEST_P(EditorTest, settingTypeOfRole)
    then().view().ofMap().shouldHaveTopicThat(topicId, [roleId, typeTopicId](Topic const &topic) {
       Role const &role = *topic.findRoles(Identifiers::ofSingle(roleId)).begin();
       auto optionalType = role.getType();
-      ASSERT_TRUE(optionalType.isAssigned());
-      EXPECT_EQ(optionalType.value(), typeTopicId);
+      ASSERT_TRUE(optionalType.has_value());
+      EXPECT_EQ(optionalType.value().get().getId(), typeTopicId);
    });
 }
 
@@ -968,7 +968,7 @@ TEST_P(EditorTest, clearingTypeOfRole)
    then().view().ofMap().shouldHaveTopicThat(topicId, [roleId](Topic const &topic) {
       Role const &role = *topic.findRoles(Identifiers::ofSingle(roleId)).begin();
       auto optionalType = role.getType();
-      ASSERT_FALSE(optionalType.isAssigned());
+      ASSERT_FALSE(optionalType.has_value());
    });
 }
 
@@ -988,7 +988,7 @@ TEST_P(EditorTest, deletingTypeOfRoleClearsIt)
    then().view().ofMap().shouldHaveTopicThat(topicId, [roleId](Topic const &topic) {
       Role const &role = *topic.findRoles(Identifiers::ofSingle(roleId)).begin();
       auto optionalType = role.getType();
-      ASSERT_FALSE(optionalType.isAssigned());
+      ASSERT_FALSE(optionalType.has_value());
    });
 }
 
@@ -1006,7 +1006,7 @@ TEST_P(EditorTest, typeOfRoleCanNotBeSetToUnknownId)
    then().view().ofMap().shouldHaveTopicThat(topicId, [roleId](Topic const &topic) {
       Role const &role = *topic.findRoles(Identifiers::ofSingle(roleId)).begin();
       auto optionalType = role.getType();
-      ASSERT_FALSE(optionalType.isAssigned());
+      ASSERT_FALSE(optionalType.has_value());
    });
 }
 

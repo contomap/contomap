@@ -28,8 +28,7 @@ std::unique_ptr<Role> Role::from(contomap::infrastructure::serial::Decoder &code
    auto associationId = Identifier::from(coder, "association");
 
    auto role = std::make_unique<Role>(id, topicResolver(topicId), associationResolver(associationId));
-   role->type = OptionalIdentifier::from(coder, "type");
-   // TODO: throw if topicResolver can not find type
+   role->decodeTypeable(coder, topicResolver);
    role->appearance.decode(coder, "appearance", version);
    role->decodeReifiable(coder, topicResolver);
    return role;
@@ -40,7 +39,7 @@ void Role::encode(contomap::infrastructure::serial::Encoder &coder) const
    Coder::Scope scope(coder, "role");
    topic->getLinked().getId().encode(coder, "topic");
    association->getLinked().getId().encode(coder, "association");
-   type.encode(coder, "type");
+   encodeTypeable(coder);
    appearance.encode(coder, "appearance");
    encodeReifiable(coder);
 }
@@ -63,21 +62,6 @@ void Role::setAppearance(Style style)
 Style Role::getAppearance() const
 {
    return appearance;
-}
-
-void Role::setType(Identifier typeTopicId)
-{
-   type = typeTopicId;
-}
-
-void Role::clearType()
-{
-   type.clear();
-}
-
-OptionalIdentifier Role::getType() const
-{
-   return type;
 }
 
 void Role::unlink()

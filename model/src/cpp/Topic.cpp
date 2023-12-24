@@ -328,15 +328,6 @@ void Topic::removeTopicReferences(Identifier topicId)
       auto const &name = kvp.second;
       return name.scopeContains(topicId);
    });
-   for (auto &kvp : roles)
-   {
-      auto &role = kvp.second->role();
-      auto typeId = role.getType();
-      if (typeId.isAssigned() && (typeId.value() == topicId))
-      {
-         role.clearType();
-      }
-   }
 }
 
 std::optional<std::reference_wrapper<TopicName>> Topic::findNameByScope(Identifiers const &scope)
