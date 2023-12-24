@@ -95,8 +95,9 @@ std::optional<std::reference_wrapper<Topic>> Contomap::findTopic(Identifier id)
 contomap::infrastructure::Search<contomap::model::Association const> Contomap::find( // NOLINT
    std::shared_ptr<contomap::model::Filter<contomap::model::Association>> filter) const
 {
-   for (auto const &[_, association] : associations)
+   for (auto const &kvp : associations)
    {
+      auto const &association = kvp.second;
       if (filter->matches(*association, *this))
       {
          co_yield *association;
@@ -119,8 +120,9 @@ std::optional<std::reference_wrapper<Association>> Contomap::findAssociation(Ide
 
 contomap::infrastructure::Search<contomap::model::Occurrence const> Contomap::findOccurrences(Identifiers const &ids) const // NOLINT
 {
-   for (auto const &[_, topic] : topics)
+   for (auto const &kvp : topics)
    {
+      auto const &topic = kvp.second;
       for (auto &occurrence : topic->findOccurrences(ids))
       {
          co_yield occurrence;
@@ -130,8 +132,9 @@ contomap::infrastructure::Search<contomap::model::Occurrence const> Contomap::fi
 
 contomap::infrastructure::Search<contomap::model::Occurrence> Contomap::findOccurrences(Identifiers const &ids) // NOLINT
 {
-   for (auto &[_, topic] : topics)
+   for (auto &kvp : topics)
    {
+      auto &topic = kvp.second;
       for (auto &occurrence : topic->findOccurrences(ids))
       {
          co_yield occurrence;
@@ -141,8 +144,9 @@ contomap::infrastructure::Search<contomap::model::Occurrence> Contomap::findOccu
 
 contomap::infrastructure::Search<contomap::model::Role const> Contomap::findRoles(Identifiers const &ids) const // NOLINT
 {
-   for (auto const &[_, topic] : topics)
+   for (auto const &kvp : topics)
    {
+      auto const &topic = kvp.second;
       for (auto const &role : topic->findRoles(ids))
       {
          co_yield role;
@@ -152,8 +156,9 @@ contomap::infrastructure::Search<contomap::model::Role const> Contomap::findRole
 
 contomap::infrastructure::Search<contomap::model::Role> Contomap::findRoles(Identifiers const &ids) // NOLINT
 {
-   for (auto &[_, topic] : topics)
+   for (auto &kvp : topics)
    {
+      auto &topic = kvp.second;
       for (auto &role : topic->findRoles(ids))
       {
          co_yield role;
@@ -177,8 +182,9 @@ void Contomap::deleteAssociation(Identifier id)
 void Contomap::deleteOccurrence(Identifier id)
 {
    Identifiers topicsToDelete;
-   for (auto &[_, topic] : topics)
+   for (auto &kvp : topics)
    {
+      auto &topic = kvp.second;
       if (topic->removeOccurrence(id) && topicShouldBeRemoved(*topic))
       {
          topicsToDelete.add(topic->getId());
@@ -213,8 +219,9 @@ void Contomap::deleteTopicsCascading(Identifiers toDelete)
 void Contomap::deleting(Identifiers &toDelete, Topic &topic)
 {
    Identifiers associationsToDelete;
-   for (auto &[_, association] : associations)
+   for (auto &kvp : associations)
    {
+      auto &association = kvp.second;
       topic.removeRolesOf(*association);
       association->removeTopicReferences(topic.getId());
       if (association->isWithoutScope())
@@ -224,8 +231,9 @@ void Contomap::deleting(Identifiers &toDelete, Topic &topic)
    }
    deleteAssociations(associationsToDelete);
 
-   for (auto &[_, otherTopic] : topics)
+   for (auto &kvp : topics)
    {
+      auto &otherTopic = kvp.second;
       otherTopic->removeTopicReferences(topic.getId());
       if (topicShouldBeRemoved(*otherTopic))
       {

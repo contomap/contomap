@@ -51,8 +51,9 @@ void Selection::clear()
 bool Selection::hasSoleEntry() const
 {
    bool foundOne = false;
-   for (auto const &[_, specific] : identifiers)
+   for (auto const &kvp : identifiers)
    {
+      auto const &specific = kvp.second;
       size_t size = specific.size();
       if (size > 1)
       {
