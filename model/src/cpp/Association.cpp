@@ -9,7 +9,6 @@ using contomap::infrastructure::serial::Encoder;
 using contomap::model::Association;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
-using contomap::model::OptionalIdentifier;
 using contomap::model::Role;
 using contomap::model::SpacialCoordinate;
 using contomap::model::Style;

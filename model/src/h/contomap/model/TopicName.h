@@ -4,7 +4,6 @@
 #include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
-#include "contomap/model/OptionalIdentifier.h"
 #include "contomap/model/TopicNameValue.h"
 
 namespace contomap::model

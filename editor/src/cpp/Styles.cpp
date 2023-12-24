@@ -4,7 +4,6 @@ using contomap::editor::Styles;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 using contomap::model::Occurrence;
-using contomap::model::OptionalIdentifier;
 using contomap::model::Style;
 using contomap::model::Topic;
 

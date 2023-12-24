@@ -5,7 +5,6 @@
 #include "contomap/model/Coordinates.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
-#include "contomap/model/OptionalIdentifier.h"
 #include "contomap/model/Reifiable.h"
 #include "contomap/model/Role.h"
 #include "contomap/model/Style.h"
