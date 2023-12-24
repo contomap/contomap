@@ -209,7 +209,7 @@ void Editor::setTypeOfSelection(contomap::model::Identifier topicId)
       for (auto id : ids)
       {
          Association &association = map.findAssociation(id).value();
-         association.setType(topicId);
+         association.setType(optionalTopic.value());
       }
    }
    if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())

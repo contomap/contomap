@@ -9,6 +9,7 @@
 #include "contomap/model/Reifiable.h"
 #include "contomap/model/Role.h"
 #include "contomap/model/Style.h"
+#include "contomap/model/Typeable.h"
 
 namespace contomap::model
 {
@@ -18,7 +19,7 @@ class Topic;
 /**
  * An Association represents the link or relation between topics.
  */
-class Association : public contomap::model::Reifiable<contomap::model::Topic>
+class Association : public contomap::model::Reifiable<contomap::model::Topic>, public contomap::model::Typeable
 {
 public:
    /**
@@ -122,21 +123,6 @@ public:
     */
    [[nodiscard]] contomap::model::Style getAppearance() const;
 
-   /**
-    * Assign the type of this occurrence.
-    *
-    * @param typeTopicId the identifier of the topic that describes this occurrence.
-    */
-   void setType(contomap::model::Identifier typeTopicId);
-   /**
-    * Clears the type of this occurrence.
-    */
-   void clearType();
-   /**
-    * @return the identifier of the topic that describes this occurrence, if set.
-    */
-   [[nodiscard]] contomap::model::OptionalIdentifier getType() const;
-
 private:
    class RoleEntry
    {
@@ -160,7 +146,6 @@ private:
 
    contomap::model::Coordinates location;
 
-   contomap::model::OptionalIdentifier type;
    contomap::model::Style appearance;
 
    std::map<contomap::model::Identifier, std::unique_ptr<RoleEntry>> roles;

@@ -890,8 +890,8 @@ TEST_P(EditorTest, settingTypeOfAssociation)
    when().user().setsTypeOfSelectionTo(typeTopicId);
    then().view().ofMap().shouldHaveAssociationThat(associationId, [typeTopicId](Association const &association) {
       auto optionalType = association.getType();
-      ASSERT_TRUE(optionalType.isAssigned());
-      EXPECT_EQ(optionalType.value(), typeTopicId);
+      ASSERT_TRUE(optionalType.has_value());
+      EXPECT_EQ(optionalType.value().get().getId(), typeTopicId);
    });
 }
 
@@ -904,7 +904,7 @@ TEST_P(EditorTest, clearingTypeOfAssociation)
    when().user().clearsTypeOfSelection();
    then().view().ofMap().shouldHaveAssociationThat(associationId, [](Association const &association) {
       auto optionalType = association.getType();
-      ASSERT_FALSE(optionalType.isAssigned());
+      ASSERT_FALSE(optionalType.has_value());
    });
 }
 
@@ -918,7 +918,7 @@ TEST_P(EditorTest, deletingTypeOfAssociationClearsIt)
    when().user().deletesTheSelection();
    then().view().ofMap().shouldHaveAssociationThat(associationId, [](Association const &association) {
       auto optionalType = association.getType();
-      ASSERT_FALSE(optionalType.isAssigned());
+      ASSERT_FALSE(optionalType.has_value());
    });
 }
 
@@ -930,7 +930,7 @@ TEST_P(EditorTest, typeOfAssociationCanNotBeSetToUnknownId)
    when().user().setsTypeOfSelectionTo(typeTopicId);
    then().view().ofMap().shouldHaveAssociationThat(associationId, [](Association const &association) {
       auto optionalType = association.getType();
-      ASSERT_FALSE(optionalType.isAssigned());
+      ASSERT_FALSE(optionalType.has_value());
    });
 }
 

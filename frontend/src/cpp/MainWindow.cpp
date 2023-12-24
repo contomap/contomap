@@ -345,12 +345,11 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
    for (Association const &visibleAssociation : visibleAssociations)
    {
       bool associationIsSelected = selection.contains(SelectedType::Association, visibleAssociation.getId());
-      auto optionalTypeId = visibleAssociation.getType();
+      auto optionalType = visibleAssociation.getType();
       std::string nameText;
-      if (optionalTypeId.isAssigned())
+      if (optionalType.has_value())
       {
-         auto typeTopic = view.ofMap().findTopic(optionalTypeId.value());
-         nameText = bestTitleFor(typeTopic.value());
+         nameText = bestTitleFor(optionalType.value());
       }
 
       auto spacialLocation = visibleAssociation.getLocation().getSpacial().getAbsoluteReference().plus(drawOffsetIf(associationIsSelected));
@@ -387,8 +386,7 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
       associationIds.add(visibleAssociation.getId());
       associationAreasById[visibleAssociation.getId()] = area;
 
-      auto associationStyle
-         = Styles::resolve(visibleAssociation.getAppearance(), visibleAssociation.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
+      auto associationStyle = Styles::resolve(visibleAssociation.getAppearance(), optionalType, view.ofViewScope()).withDefaultsFrom(defaultStyle);
       if (associationIsSelected)
       {
          associationStyle = selectedStyle(associationStyle);

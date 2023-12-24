@@ -1,18 +1,12 @@
 #include "contomap/editor/Styles.h"
 
 using contomap::editor::Styles;
-using contomap::model::ContomapView;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 using contomap::model::Occurrence;
 using contomap::model::OptionalIdentifier;
 using contomap::model::Style;
 using contomap::model::Topic;
-
-Style Styles::resolve(Style const &localStyle, OptionalIdentifier localTypeId, Identifiers const &scope, ContomapView const &view)
-{
-   return resolve(localStyle, localTypeId.isAssigned() ? view.findTopic(localTypeId.value()) : std::optional<std::reference_wrapper<Topic const>> {}, scope, 0);
-}
 
 Style Styles::resolve(Style const &localStyle, std::optional<std::reference_wrapper<Topic const>> localType, Identifiers const &scope)
 {

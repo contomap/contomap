@@ -32,7 +32,7 @@ void Association::encodeProperties(Encoder &coder) const
    Coder::Scope propertiesScope(coder, "properties");
    scope.encode(coder, "scope");
    location.encode(coder, "location");
-   type.encode(coder, "type");
+   encodeTypeable(coder);
    appearance.encode(coder, "appearance");
    encodeReifiable(coder);
 }
@@ -42,7 +42,7 @@ void Association::decodeProperties(contomap::infrastructure::serial::Decoder &co
    Coder::Scope propertiesScope(coder, "properties");
    scope.decode(coder, "scope");
    location.decode(coder, "location", version);
-   type = OptionalIdentifier::from(coder, "type");
+   decodeTypeable(coder, topicResolver);
    appearance.decode(coder, "appearance", version);
    decodeReifiable(coder, topicResolver);
 }
@@ -96,10 +96,6 @@ void Association::removeTopicReferences(Identifier topicId)
    {
       scope.clear();
    }
-   if (type.isAssigned() && (type.value() == topicId))
-   {
-      type.clear();
-   }
 }
 
 void Association::setAppearance(Style style)
@@ -110,19 +106,4 @@ void Association::setAppearance(Style style)
 Style Association::getAppearance() const
 {
    return appearance;
-}
-
-void Association::setType(Identifier typeTopicId)
-{
-   type = typeTopicId;
-}
-
-void Association::clearType()
-{
-   type.clear();
-}
-
-OptionalIdentifier Association::getType() const
-{
-   return type;
 }
