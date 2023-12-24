@@ -1,0 +1,84 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '22 17 * * 1'
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-22.04
+    timeout-minutes: 360
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: 'c-cpp'
+          # For more details on CodeQL's query packs, refer to: https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
+          queries: security-extended,security-and-quality
+
+      - name: Install libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mesa-utils mesa-common-dev xorg-dev libxrandr-dev
+      - name: Install compilers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake gcc g++ gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 valgrind
+          pushd "${HOME}" > /dev/null || exit 1
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          ./emsdk install latest
+          ./emsdk activate latest
+          popd > /dev/null || exit 1
+      - name: Generate build files
+        run: |
+          ./build.sh --build-type RelWithDebInfo generate
+      - name: Compile and link
+        run: |
+          ./build.sh --build-type RelWithDebInfo compile
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:c-cpp"
+          upload: False
+          output: sarif-results
+
+      - name: Show available SARIF files
+        run: |
+          ls -la sarif-results/*
+
+      - name: Filter SARIF
+        uses: advanced-security/filter-sarif@v1
+        with:
+          patterns: |
+            -cmake-build-all/**/*
+            -vendor/**/*
+          input: sarif-results/cpp.sarif
+          output: sarif-results/cpp.sarif
+
+      - name: Upload SARIF
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: sarif-results/cpp.sarif
+          category: "/language:c-cpp"
+
+      - name: Upload loc as a Build Artifact
+        uses: actions/upload-artifact@v4.0.0
+        with:
+          name: sarif-results
+          path: sarif-results
+          retention-days: 1

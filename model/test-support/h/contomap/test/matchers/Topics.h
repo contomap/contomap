@@ -12,12 +12,8 @@ namespace contomap::test::matchers
 MATCHER_P(hasNameCountOf, expected, "")
 {
    contomap::model::Topic const &topic = arg;
-   size_t count = 0;
-   for ([[maybe_unused]] auto const &name : topic.allNames())
-   {
-      count++;
-   }
-   return count == static_cast<size_t>(expected);
+   auto names = topic.allNames();
+   return std::ranges::distance(names.begin(), names.end()) == static_cast<size_t>(expected);
 }
 
 MATCHER_P(hasName, expected, "")
