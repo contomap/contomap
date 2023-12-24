@@ -328,15 +328,6 @@ void Topic::removeTopicReferences(Identifier topicId)
       auto const &name = kvp.second;
       return name.scopeContains(topicId);
    });
-   for (auto &kvp : occurrences)
-   {
-      auto &occurrence = kvp.second;
-      auto typeId = occurrence->getType();
-      if (typeId.isAssigned() && (typeId.value() == topicId))
-      {
-         occurrence->clearType();
-      }
-   }
    for (auto &kvp : roles)
    {
       auto &role = kvp.second->role();

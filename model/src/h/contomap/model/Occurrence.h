@@ -7,9 +7,9 @@
 #include "contomap/model/Coordinates.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
-#include "contomap/model/OptionalIdentifier.h"
 #include "contomap/model/Reifiable.h"
 #include "contomap/model/Style.h"
+#include "contomap/model/Typeable.h"
 
 namespace contomap::model
 {
@@ -19,7 +19,7 @@ class Topic;
 /**
  * An Occurrence represents the presence of a topic.
  */
-class Occurrence : public contomap::model::Reifiable<contomap::model::Topic>
+class Occurrence : public contomap::model::Reifiable<contomap::model::Topic>, public contomap::model::Typeable
 {
 public:
    /**
@@ -115,21 +115,6 @@ public:
    [[nodiscard]] contomap::model::Style getAppearance() const;
 
    /**
-    * Assign the type of this occurrence.
-    *
-    * @param typeTopicId the identifier of the topic that describes this occurrence.
-    */
-   void setType(contomap::model::Identifier typeTopicId);
-   /**
-    * Clears the type of this occurrence.
-    */
-   void clearType();
-   /**
-    * @return the identifier of the topic that describes this occurrence, if set.
-    */
-   [[nodiscard]] contomap::model::OptionalIdentifier getType() const;
-
-   /**
     * Move the location of the occurrence by given offset.
     *
     * @param offset the offset to apply.
@@ -145,7 +130,6 @@ private:
 
    contomap::model::Coordinates location;
 
-   contomap::model::OptionalIdentifier type;
    contomap::model::Style appearance;
 };
 

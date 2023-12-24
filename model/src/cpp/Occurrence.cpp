@@ -32,8 +32,7 @@ std::unique_ptr<Occurrence> Occurrence::from(contomap::infrastructure::serial::D
    std::unique_ptr<Occurrence> occurrence(new Occurrence(id, topic));
    occurrence->scope.decode(coder, "scope");
    occurrence->location.decode(coder, "location", version);
-   occurrence->type = OptionalIdentifier::from(coder, "type");
-   // TODO: throw if topicResolver can not find type
+   occurrence->decodeTypeable(coder, topicResolver);
    occurrence->appearance.decode(coder, "appearance", version);
    occurrence->decodeReifiable(coder, topicResolver);
    return occurrence;
@@ -44,7 +43,7 @@ void Occurrence::encode(Encoder &coder) const
    Coder::Scope serialScope(coder, "occurrence");
    scope.encode(coder, "scope");
    location.encode(coder, "location");
-   type.encode(coder, "type");
+   encodeTypeable(coder);
    appearance.encode(coder, "appearance");
    encodeReifiable(coder);
 }
@@ -97,21 +96,6 @@ void Occurrence::setAppearance(Style style)
 Style Occurrence::getAppearance() const
 {
    return appearance;
-}
-
-void Occurrence::setType(Identifier typeTopicId)
-{
-   type = typeTopicId;
-}
-
-void Occurrence::clearType()
-{
-   type.clear();
-}
-
-OptionalIdentifier Occurrence::getType() const
-{
-   return type;
 }
 
 void Occurrence::moveBy(contomap::model::SpacialCoordinate::Offset offset)

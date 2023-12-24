@@ -192,7 +192,8 @@ void Editor::setAppearanceOfSelection(Style style)
 
 void Editor::setTypeOfSelection(contomap::model::Identifier topicId)
 {
-   if (!map.findTopic(topicId).has_value())
+   auto optionalTopic = map.findTopic(topicId);
+   if (!optionalTopic.has_value())
    {
       return;
    }
@@ -200,7 +201,7 @@ void Editor::setTypeOfSelection(contomap::model::Identifier topicId)
    {
       for (auto &occurrence : map.findOccurrences(ids))
       {
-         occurrence.get().setType(topicId);
+         occurrence.get().setType(optionalTopic.value());
       }
    }
    if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())

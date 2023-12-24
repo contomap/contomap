@@ -23,9 +23,14 @@ public:
    [[nodiscard]] static contomap::model::Style resolve(contomap::model::Style const &localStyle, contomap::model::OptionalIdentifier localTypeId,
       contomap::model::Identifiers const &scope, contomap::model::ContomapView const &view);
 
+   // TODO: upper variant should be dropped
+
+   [[nodiscard]] static contomap::model::Style resolve(contomap::model::Style const &localStyle,
+      std::optional<std::reference_wrapper<contomap::model::Topic const>> localType, contomap::model::Identifiers const &scope);
+
 private:
-   [[nodiscard]] static contomap::model::Style resolve(contomap::model::Style const &localStyle, contomap::model::OptionalIdentifier localTypeId,
-      contomap::model::Identifiers const &scope, contomap::model::ContomapView const &view, size_t depth);
+   [[nodiscard]] static contomap::model::Style resolve(contomap::model::Style const &localStyle,
+      std::optional<std::reference_wrapper<contomap::model::Topic const>> localType, contomap::model::Identifiers const &scope, size_t depth);
 };
 
 } // namespace contomap::editor

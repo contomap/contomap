@@ -505,8 +505,7 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
             }
          }
 
-         auto occurrenceStyle
-            = Styles::resolve(occurrence.getAppearance(), occurrence.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
+         auto occurrenceStyle = Styles::resolve(occurrence.getAppearance(), occurrence.getType(), view.ofViewScope()).withDefaultsFrom(defaultStyle);
          if (occurrenceIsSelected)
          {
             occurrenceStyle = selectedStyle(occurrenceStyle);

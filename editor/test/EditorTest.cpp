@@ -835,8 +835,8 @@ TEST_P(EditorTest, settingTypeOfOccurrence)
    when().user().setsTypeOfSelectionTo(typeTopicId);
    then().view().ofMap().shouldHaveTopicThat(topicId, [occurrenceId, typeTopicId](Topic const &topic) {
       auto optionalType = topic.getOccurrence(occurrenceId)->get().getType();
-      ASSERT_TRUE(optionalType.isAssigned());
-      EXPECT_EQ(optionalType.value(), typeTopicId);
+      ASSERT_TRUE(optionalType.has_value());
+      EXPECT_EQ(optionalType.value().get().getId(), typeTopicId);
    });
 }
 
@@ -850,7 +850,7 @@ TEST_P(EditorTest, clearingTypeOfOccurrence)
    when().user().clearsTypeOfSelection();
    then().view().ofMap().shouldHaveTopicThat(topicId, [occurrenceId](Topic const &topic) {
       auto optionalType = topic.getOccurrence(occurrenceId)->get().getType();
-      ASSERT_FALSE(optionalType.isAssigned());
+      ASSERT_FALSE(optionalType.has_value());
    });
 }
 
@@ -865,7 +865,7 @@ TEST_P(EditorTest, deletingTypeOfOccurrenceClearsIt)
    when().user().deletesTheSelection();
    then().view().ofMap().shouldHaveTopicThat(topicId, [occurrenceId](Topic const &topic) {
       auto optionalType = topic.getOccurrence(occurrenceId)->get().getType();
-      ASSERT_FALSE(optionalType.isAssigned());
+      ASSERT_FALSE(optionalType.has_value());
    });
 }
 
@@ -878,7 +878,7 @@ TEST_P(EditorTest, typeOfOccurrenceCanNotBeSetToUnknownId)
    when().user().setsTypeOfSelectionTo(typeTopicId);
    then().view().ofMap().shouldHaveTopicThat(topicId, [occurrenceId](Topic const &topic) {
       auto optionalType = topic.getOccurrence(occurrenceId)->get().getType();
-      ASSERT_FALSE(optionalType.isAssigned());
+      ASSERT_FALSE(optionalType.has_value());
    });
 }
 
