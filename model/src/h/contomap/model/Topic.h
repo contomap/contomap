@@ -50,8 +50,9 @@ public:
     * @param topicResolver the function to use for resolving topic references.
     * @param associationResolver the function to use for resolving association references.
     */
-   void decodeRelated(contomap::infrastructure::serial::Decoder &coder, uint8_t version, std::function<Topic &(contomap::model::Identifier)> topicResolver,
-      std::function<Association &(contomap::model::Identifier)> associationResolver);
+   void decodeRelated(contomap::infrastructure::serial::Decoder &coder, uint8_t version,
+      std::function<Topic &(contomap::model::Identifier)> const &topicResolver,
+      std::function<Association &(contomap::model::Identifier)> const &associationResolver);
 
    [[nodiscard]] contomap::model::Identifier getId() const override;
 

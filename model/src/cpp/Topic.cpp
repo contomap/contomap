@@ -51,15 +51,15 @@ void Topic::encodeRelated(Encoder &coder) const
    });
 }
 
-void Topic::decodeRelated(
-   Decoder &coder, uint8_t version, std::function<Topic &(Identifier)> topicResolver, std::function<Association &(Identifier)> associationResolver)
+void Topic::decodeRelated(Decoder &coder, uint8_t version, std::function<Topic &(Identifier)> const &topicResolver,
+   std::function<Association &(Identifier)> const &associationResolver)
 {
    Coder::Scope scope(coder, "related");
-   coder.codeArray("names", [this, version](Decoder &nested, size_t) {
+   coder.codeArray("names", [this, version, &topicResolver](Decoder &nested, size_t) {
       Coder::Scope nameScope(nested, "");
       auto nameId = Identifier::from(nested, "id");
-      auto name = TopicName::from(nested, version, nameId);
-      names.emplace(nameId, name);
+      auto name = TopicName::from(nested, version, nameId, topicResolver);
+      names.emplace(nameId, std::move(name));
    });
    coder.codeArray("occurrences", [this, version, &topicResolver](Decoder &nested, size_t) {
       Coder::Scope nestedScope(nested, "");

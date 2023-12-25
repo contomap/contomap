@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "contomap/infrastructure/serial/Decoder.h"
 #include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Identifier.h"
@@ -9,6 +11,8 @@
 
 namespace contomap::model
 {
+
+class Topic;
 
 /**
  * A TopicName represents the human interpretable identification of a topic.
@@ -31,9 +35,11 @@ public:
     * @param coder the decoder to use.
     * @param version the version to consider.
     * @param id the identifier of the instance.
+    * @param topicResolver the resolver to use for topics.
     * @return the decoded instance
     */
-   [[nodiscard]] static TopicName from(contomap::infrastructure::serial::Decoder &coder, uint8_t version, contomap::model::Identifier id);
+   [[nodiscard]] static TopicName from(contomap::infrastructure::serial::Decoder &coder, uint8_t version, contomap::model::Identifier id,
+      std::function<contomap::model::Topic &(contomap::model::Identifier)> const &topicResolver);
 
    /**
     * Serialize the topic name.
@@ -60,8 +66,10 @@ public:
    [[nodiscard]] contomap::model::TopicNameValue getValue() const;
 
 private:
+   explicit TopicName(contomap::model::Identifier id);
+
    contomap::model::Identifier id;
-   contomap::model::TopicNameValue value;
+   std::unique_ptr<contomap::model::TopicNameValue> value;
 };
 
 }
