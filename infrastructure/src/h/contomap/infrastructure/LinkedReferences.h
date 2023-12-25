@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 #include "contomap/infrastructure/Generator.h"
 #include "contomap/infrastructure/Link.h"
 #include "contomap/infrastructure/Referable.h"
@@ -32,6 +34,21 @@ public:
     * Default move constructor.
     */
    LinkedReferences(LinkedReferences<T> &&) = default;
+   /**
+    * Constructor with iterator initialization.
+    *
+    * @tparam Iterator the iterator type
+    * @param begin start of the range.
+    * @param end end of the range.
+    */
+   template <class Iterator> LinkedReferences(Iterator begin, Iterator end)
+   {
+      while (begin != end)
+      {
+         add(*begin);
+         ++begin;
+      }
+   }
    ~LinkedReferences() = default;
 
    /**
@@ -69,9 +86,20 @@ public:
    }
 
    /**
+    * Removes the given referable from the collection. If the collection does not contain the given referable,
+    * nothing happens.
+    *
+    * @param referable the referable to remove.
+    */
+   bool remove(contomap::infrastructure::Referable<T> const &referable)
+   {
+      return std::erase_if(references, [&referable](auto const &entry) { return &entry->getLinked() == &referable; }) > 0;
+   }
+
+   /**
     * @return a generator for all currently contained references.
     */
-   [[nodiscard]] contomap::infrastructure::Search<contomap::infrastructure::Referable<T>> allReferences() const // NOLINT
+   [[nodiscard]] contomap::infrastructure::Search<T> allReferences() const // NOLINT
    {
       for (auto const &reference : references)
       {
@@ -95,7 +123,7 @@ public:
     */
    [[nodiscard]] bool contains(contomap::infrastructure::Referable<T> const &referable) const
    {
-      return std::any_of(references.begin(), references.end(), [this, &referable](auto const &reference) { return &reference->getLinked() == &referable; });
+      return std::any_of(references.begin(), references.end(), [&referable](auto const &reference) { return &reference->getLinked() == &referable; });
    }
 
    /**

@@ -22,14 +22,25 @@ public:
 
 TEST_F(LinkedReferencesTest, referablesCanBeTracked)
 {
-   auto ref1 = std::make_unique<TestingReferable>();
+   auto ref = std::make_unique<TestingReferable>();
    LinkedReferences<TestingReferable> set;
 
-   EXPECT_FALSE(set.contains(*ref1));
-   set.add(*ref1);
-   set.add(*ref1);
-   EXPECT_TRUE(set.contains(*ref1));
-   ref1.reset();
+   EXPECT_FALSE(set.contains(*ref));
+   set.add(*ref);
+   set.add(*ref);
+   EXPECT_TRUE(set.contains(*ref));
+   ref.reset();
+   EXPECT_TRUE(set.empty());
+}
+
+TEST_F(LinkedReferencesTest, referablesCanBeRemoved)
+{
+   TestingReferable ref;
+   LinkedReferences<TestingReferable> set;
+
+   set.add(ref);
+   EXPECT_TRUE(set.contains(ref));
+   set.remove(ref);
    EXPECT_TRUE(set.empty());
 }
 
@@ -88,4 +99,15 @@ TEST_F(LinkedReferencesTest, assignment)
    EXPECT_TRUE(set1.contains(set3) && set3.contains(set1)) << "copy constructor should work";
    set3 = set2;
    EXPECT_TRUE(set2.contains(set3) && set3.contains(set2)) << "copy operator should work";
+}
+
+TEST_F(LinkedReferencesTest, iteratorConstructor)
+{
+   std::array<TestingReferable, 4> refs;
+   LinkedReferences<TestingReferable> set1;
+   set1.add(refs[0]);
+   set1.add(refs[1]);
+   auto refView = std::ranges::common_view { set1.allReferences() };
+   LinkedReferences<TestingReferable> set2(refView.begin(), refView.end());
+   EXPECT_TRUE(set1.contains(set2) && set2.contains(set1));
 }

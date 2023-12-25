@@ -1,6 +1,6 @@
 #pragma once
 
-#include "contomap/model/Identifiers.h"
+#include "contomap/editor/ViewScope.h"
 
 namespace contomap::test::fixtures
 {
@@ -8,14 +8,14 @@ namespace contomap::test::fixtures
 class ViewScopeFixture
 {
 public:
-   explicit ViewScopeFixture(contomap::model::Identifiers const &scope);
+   explicit ViewScopeFixture(contomap::editor::ViewScope const &viewScope);
 
    void shouldContain(contomap::model::Identifier id) const;
    void shouldNotContain(contomap::model::Identifier id) const;
-   void shouldBe(contomap::model::Identifiers expected) const;
+   void shouldBe(contomap::model::Identifiers const &expected) const;
 
 private:
-   contomap::model::Identifiers const &scope;
+   contomap::editor::ViewScope const &viewScope;
 };
 
 }

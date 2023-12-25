@@ -331,7 +331,7 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
                                         .with(Style::ColorType::Fill, Style::Color { .red = 0xE0, .green = 0xE0, .blue = 0xE0, .alpha = 0xFF })
                                         .with(Style::ColorType::Line, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF });
 
-   auto const &viewScope = view.ofViewScope();
+   auto const &viewScope = view.ofViewScope().identifiers();
    auto const &map = view.ofMap();
 
    Font font = GetFontDefault();
@@ -386,7 +386,7 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
       associationIds.add(visibleAssociation.getId());
       associationAreasById[visibleAssociation.getId()] = area;
 
-      auto associationStyle = Styles::resolve(visibleAssociation.getAppearance(), optionalType, view.ofViewScope()).withDefaultsFrom(defaultStyle);
+      auto associationStyle = Styles::resolve(visibleAssociation.getAppearance(), optionalType, viewScope).withDefaultsFrom(defaultStyle);
       if (associationIsSelected)
       {
          associationStyle = selectedStyle(associationStyle);
@@ -453,7 +453,7 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
                roleTitle = bestTitleFor(optionalType.value());
             }
 
-            auto roleStyle = Styles::resolve(role.getAppearance(), optionalType, view.ofViewScope()).withDefaultsFrom(defaultStyle);
+            auto roleStyle = Styles::resolve(role.getAppearance(), optionalType, viewScope).withDefaultsFrom(defaultStyle);
 
             float roleLineThickness = 1.0f;
             if (roleIsSelected)
@@ -502,7 +502,7 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
             }
          }
 
-         auto occurrenceStyle = Styles::resolve(occurrence.getAppearance(), occurrence.getType(), view.ofViewScope()).withDefaultsFrom(defaultStyle);
+         auto occurrenceStyle = Styles::resolve(occurrence.getAppearance(), occurrence.getType(), viewScope).withDefaultsFrom(defaultStyle);
          if (occurrenceIsSelected)
          {
             occurrenceStyle = selectedStyle(occurrenceStyle);
@@ -718,7 +718,7 @@ void MainWindow::drawUserInterface(RenderContext const &context)
       GuiPanel(viewScopeBounds, nullptr);
       float buttonStartX = viewScopePosition.x + padding;
 
-      auto viewScope = view.ofViewScope();
+      auto viewScope = view.ofViewScope().identifiers();
       if (lastViewScope != viewScope)
       {
          viewScopeListStartIndex = 0;
@@ -1024,7 +1024,7 @@ MapCamera::ZoomOperation MainWindow::doubledRelative(bool nearer)
 
 std::string MainWindow::bestTitleFor(Topic const &topic)
 {
-   return Names::forScopedDisplay(topic, view.ofViewScope(), view.ofMap().getDefaultScope())[0];
+   return Names::forScopedDisplay(topic, view.ofViewScope().identifiers(), view.ofMap().getDefaultScope())[0];
 }
 
 Style MainWindow::selectedStyle(Style style)

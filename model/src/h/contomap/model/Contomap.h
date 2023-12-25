@@ -23,6 +23,11 @@ public:
     */
    static Contomap newMap();
 
+   /**
+    * @return the reference to the default topic scope.
+    */
+   [[nodiscard]] contomap::model::Topic &getDefaultScopeTopic();
+
    [[nodiscard]] contomap::model::Identifier getDefaultScope() const override;
 
    /**

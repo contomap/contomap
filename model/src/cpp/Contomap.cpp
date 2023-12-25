@@ -23,6 +23,11 @@ Contomap Contomap::newMap()
    return {};
 }
 
+Topic &Contomap::getDefaultScopeTopic()
+{
+   return findTopic(getDefaultScope()).value();
+}
+
 Identifier Contomap::getDefaultScope() const
 {
    return defaultScope;

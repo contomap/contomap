@@ -3,6 +3,7 @@
 #include "contomap/editor/InputRequestHandler.h"
 #include "contomap/editor/Selection.h"
 #include "contomap/editor/View.h"
+#include "contomap/editor/ViewScope.h"
 #include "contomap/infrastructure/serial/Decoder.h"
 #include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Contomap.h"
@@ -53,7 +54,7 @@ public:
    void saveState(contomap::infrastructure::serial::Encoder &encoder, bool withSelection) override;
    [[nodiscard]] bool loadState(contomap::infrastructure::serial::Decoder &decoder) override;
 
-   [[nodiscard]] contomap::model::Identifiers const &ofViewScope() const override;
+   [[nodiscard]] contomap::editor::ViewScope const &ofViewScope() const override;
    [[nodiscard]] contomap::model::ContomapView const &ofMap() const override;
    [[nodiscard]] contomap::editor::Selection const &ofSelection() const override;
 
@@ -63,7 +64,7 @@ public:
    [[nodiscard]] static contomap::model::Identifiers scopeForTopicDefaultName();
 
 private:
-   contomap::model::Identifier newSelfContainedTopic(contomap::model::TopicNameValue value);
+   contomap::model::Identifier newSelfContainedTopic(contomap::model::TopicNameValue const &value);
    void setTopicNameInScope(contomap::model::Identifier topicId, contomap::model::Identifiers const &scope, contomap::model::TopicNameValue value);
    void createAndSelectOccurrence(contomap::model::Topic &topic, contomap::model::SpacialCoordinate location);
    void cycleSelectedOccurrence(bool forward);
@@ -73,7 +74,7 @@ private:
    static uint8_t const CURRENT_SERIAL_VERSION;
 
    contomap::model::Contomap map;
-   contomap::model::Identifiers viewScope;
+   contomap::editor::ViewScope viewScope;
    contomap::editor::Selection selection;
 };
 

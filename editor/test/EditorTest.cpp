@@ -351,7 +351,7 @@ public:
 
    Identifiers viewScope()
    {
-      return instance.ofViewScope();
+      return instance.ofViewScope().identifiers();
    }
 
    Identifiers currentAssociations()

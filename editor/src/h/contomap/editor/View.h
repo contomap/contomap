@@ -1,6 +1,7 @@
 #pragma once
 
 #include "contomap/editor/Selection.h"
+#include "contomap/editor/ViewScope.h"
 #include "contomap/model/ContomapView.h"
 
 namespace contomap::editor
@@ -17,7 +18,7 @@ public:
    /**
     * @return a view on the current view scope.
     */
-   [[nodiscard]] virtual contomap::model::Identifiers const &ofViewScope() const = 0;
+   [[nodiscard]] virtual contomap::editor::ViewScope const &ofViewScope() const = 0;
 
    /**
     * @return a view on the current contomap instance.

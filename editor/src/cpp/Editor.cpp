@@ -24,14 +24,14 @@ uint8_t const Editor::CURRENT_SERIAL_VERSION = 0x00;
 
 Editor::Editor()
    : map(Contomap::newMap())
+   , viewScope(map.getDefaultScopeTopic())
 {
-   viewScope.add(map.getDefaultScope());
 }
 
 void Editor::newMap()
 {
    map = Contomap::newMap();
-   viewScope = Identifiers::ofSingle(map.getDefaultScope());
+   viewScope = contomap::editor::ViewScope(map.getDefaultScopeTopic());
    selection.clear();
 }
 
@@ -50,10 +50,10 @@ void Editor::setTopicNameDefault(Identifier topicId, TopicNameValue value)
 
 void Editor::setTopicNameInScope(Identifier topicId, TopicNameValue value)
 {
-   setTopicNameInScope(topicId, viewScope, std::move(value));
+   setTopicNameInScope(topicId, viewScope.identifiers(), std::move(value));
 }
 
-Identifier Editor::newSelfContainedTopic(TopicNameValue value)
+Identifier Editor::newSelfContainedTopic(TopicNameValue const &value)
 {
    auto &topic = map.newTopic();
    static_cast<void>(topic.newName(scopeForTopicDefaultName(), value));
@@ -78,7 +78,7 @@ void Editor::removeTopicNameInScope(Identifier topicId)
    {
       return;
    }
-   topic.value().get().removeNameInScope(viewScope);
+   topic.value().get().removeNameInScope(viewScope.identifiers());
 }
 
 void Editor::newOccurrenceRequested(Identifier topicId, SpacialCoordinate location)
@@ -93,7 +93,7 @@ void Editor::newOccurrenceRequested(Identifier topicId, SpacialCoordinate locati
 
 Identifier Editor::newAssociationRequested(SpacialCoordinate location)
 {
-   auto &association = map.newAssociation(viewScope, location);
+   auto &association = map.newAssociation(viewScope.identifiers(), location);
    selection.setSole(SelectedType::Association, association.getId());
    return association.getId();
 }
@@ -133,7 +133,7 @@ void Editor::linkSelection()
    }
    else if (!occurrenceIds.empty())
    {
-      auto &association = map.newAssociation(viewScope, SpacialCoordinate::absoluteAt(0.0f, 0.0f));
+      auto &association = map.newAssociation(viewScope.identifiers(), SpacialCoordinate::absoluteAt(0.0f, 0.0f));
       auto topics = map.find(Topics::thatOccurAs(occurrenceIds));
       float x = 0.0f;
       float y = 0.0f;
@@ -375,24 +375,27 @@ void Editor::setViewScopeTo(Identifier id)
 
 void Editor::addToViewScope(Identifier id)
 {
-   if (!map.findTopic(id).has_value())
+   auto optionalTopic = map.findTopic(id);
+   if (!optionalTopic.has_value())
    {
       return;
    }
-   viewScope.add(id);
+   viewScope.add(optionalTopic.value());
 }
 
 void Editor::removeFromViewScope(Identifier id)
 {
-   if (!viewScope.remove(id))
+   auto optionalTopic = map.findTopic(id);
+   if (!optionalTopic.has_value())
    {
       return;
    }
-   if (viewScope.empty())
+   if (!viewScope.remove(optionalTopic.value()))
    {
-      viewScope.add(map.getDefaultScope());
+      return;
    }
    selection.clear();
+   verifyViewScopeIsStable();
 }
 
 void Editor::cycleSelectedOccurrenceForward()
@@ -415,7 +418,7 @@ void Editor::cycleSelectedOccurrence(bool forward)
    for (Topic &topic : map.find(Topics::thatOccurAs(Identifiers::ofSingle(originalOccurrenceId))))
    {
       auto const &nextOccurrence = forward ? topic.nextOccurrenceAfter(originalOccurrenceId) : topic.previousOccurrenceBefore(originalOccurrenceId);
-      viewScope = nextOccurrence.getScope();
+      setViewScopeTo(nextOccurrence.getScope());
       selection.setSole(SelectedType::Occurrence, nextOccurrence.getId());
    }
 }
@@ -428,13 +431,13 @@ void Editor::selectClosestOccurrenceOf(Identifier topicId)
       return;
    }
    Topic &topic = optionalTopic.value();
-   auto optionalOccurrence = topic.closestOccurrenceTo(viewScope);
+   auto optionalOccurrence = topic.closestOccurrenceTo(viewScope.identifiers());
    if (!optionalOccurrence.has_value())
    {
       return;
    }
    Occurrence const &occurrence = optionalOccurrence.value();
-   viewScope = occurrence.getScope();
+   setViewScopeTo(occurrence.getScope());
    selection.setSole(SelectedType::Occurrence, occurrence.getId());
 }
 
@@ -442,7 +445,7 @@ void Editor::saveState(Encoder &encoder, bool withSelection)
 {
    encoder.code("version", CURRENT_SERIAL_VERSION);
    map.encode(encoder);
-   viewScope.encode(encoder, "viewScope");
+   viewScope.encode(encoder);
    {
       Coder::Scope selectionScope(encoder, "selection");
       uint8_t selectionFlag = withSelection ? 0x01 : 0x00;
@@ -457,7 +460,7 @@ void Editor::saveState(Encoder &encoder, bool withSelection)
 bool Editor::loadState(Decoder &decoder)
 {
    Contomap newMap = contomap::model::Contomap::newMap();
-   Identifiers newViewScope;
+   ViewScope newViewScope;
    Selection newSelection;
    uint8_t serialVersion = 0x00;
 
@@ -465,7 +468,8 @@ bool Editor::loadState(Decoder &decoder)
    {
       decoder.code("version", serialVersion);
       newMap.decode(decoder, serialVersion);
-      newViewScope.decode(decoder, "viewScope");
+      auto topicResolver = [&newMap](Identifier id) { return newMap.findTopic(id).value(); };
+      newViewScope = ViewScope::from(decoder, topicResolver);
       {
          Coder::Scope selectionScope(decoder, "selection");
          uint8_t selectionFlag = 0x00;
@@ -492,7 +496,7 @@ bool Editor::loadState(Decoder &decoder)
    return true;
 }
 
-Identifiers const &Editor::ofViewScope() const
+contomap::editor::ViewScope const &Editor::ofViewScope() const
 {
    return viewScope;
 }
@@ -509,30 +513,25 @@ contomap::editor::Selection const &Editor::ofSelection() const
 
 void Editor::createAndSelectOccurrence(contomap::model::Topic &topic, contomap::model::SpacialCoordinate location)
 {
-   auto &occurrence = topic.newOccurrence(viewScope, location);
+   auto &occurrence = topic.newOccurrence(viewScope.identifiers(), location);
    selection.setSole(SelectedType::Occurrence, occurrence.getId());
 }
 
-void Editor::setViewScopeTo(contomap::model::Identifiers const &ids)
+void Editor::setViewScopeTo(Identifiers const &ids)
 {
-   viewScope = ids;
+   viewScope = ViewScope();
+   for (auto const &id : ids)
+   {
+      viewScope.add(map.findTopic(id).value());
+   }
    selection.clear();
 }
 
 void Editor::verifyViewScopeIsStable()
 {
-   Identifiers unknownIds;
-
-   for (auto id : viewScope)
+   if (viewScope.empty())
    {
-      if (!map.findTopic(id).has_value())
-      {
-         unknownIds.add(id);
-      }
-   }
-   for (auto id : unknownIds)
-   {
-      removeFromViewScope(id);
+      viewScope = ViewScope(map.getDefaultScopeTopic());
    }
 }
 
