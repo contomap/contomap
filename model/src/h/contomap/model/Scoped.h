@@ -42,6 +42,11 @@ public:
    void decodeScoped(contomap::infrastructure::serial::Decoder &coder, std::function<contomap::model::Topic &(contomap::model::Identifier)> const &resolver);
 
    /**
+    * @return the topic identifiers of this scope.
+    */
+   [[nodiscard]] contomap::model::Identifiers const &getScope() const;
+
+   /**
     * Return true if this instance is in the given scope.
     *
     * @param thatScope the scope to look for.

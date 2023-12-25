@@ -26,6 +26,11 @@ void Scoped::decodeScoped(
    }
 }
 
+Identifiers const &Scoped::getScope() const
+{
+   return topicIds;
+}
+
 bool Scoped::isIn(Identifiers const &thatScope) const
 {
    return thatScope.contains(topicIds);

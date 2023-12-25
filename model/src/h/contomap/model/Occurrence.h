@@ -8,6 +8,7 @@
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
 #include "contomap/model/Reifiable.h"
+#include "contomap/model/Scoped.h"
 #include "contomap/model/Style.h"
 #include "contomap/model/Typeable.h"
 
@@ -19,7 +20,7 @@ class Topic;
 /**
  * An Occurrence represents the presence of a topic.
  */
-class Occurrence : public contomap::model::Reifiable<contomap::model::Topic>, public contomap::model::Typeable
+class Occurrence : public contomap::model::Reifiable<contomap::model::Topic>, public contomap::model::Typeable, public contomap::model::Scoped
 {
 public:
    /**
@@ -63,45 +64,9 @@ public:
    [[nodiscard]] contomap::model::Topic const &getTopic() const;
 
    /**
-    * @return the scope of this occurrence.
-    */
-   [[nodiscard]] contomap::model::Identifiers const &getScope() const;
-
-   /**
     * @return the location of this occurrence
     */
    [[nodiscard]] contomap::model::Coordinates const &getLocation() const;
-
-   /**
-    * Return true if this instance is in the given scope.
-    *
-    * @param thatScope the scope to look for.
-    * @return true if the occurrence is in given scope.
-    */
-   [[nodiscard]] bool isIn(contomap::model::Identifiers const &thatScope) const;
-
-   /**
-    * Return true if the scope contains the given identifier.
-    *
-    * @param thatId the identifier to check .
-    * @return true in case the identifier is part of the scope.
-    */
-   [[nodiscard]] bool scopeContains(contomap::model::Identifier thatId) const;
-
-   /**
-    * Use this method to sort occurrences according to scope.
-    *
-    * @param other the other occurrence to compare to.
-    * @return true if this occurrence has a narrower (longer) scope than the other. Also returns true if same size but smaller ID values.
-    */
-   [[nodiscard]] bool hasNarrowerScopeThan(Occurrence const &other) const;
-   /**
-    * Use this method to determine whether an occurrence is equivalent when considering scopes.
-    *
-    * @param other the other occurrence to compare to.
-    * @return true if this and the other occurrence have the same size of their scopes.
-    */
-   [[nodiscard]] bool hasSameScopeSizeAs(Occurrence const &other) const;
 
    /**
     * Set the style of the appearance.
@@ -126,10 +91,8 @@ private:
 
    contomap::model::Identifier id;
    contomap::model::Topic &topic;
-   contomap::model::Identifiers scope;
 
    contomap::model::Coordinates location;
-
    contomap::model::Style appearance;
 };
 

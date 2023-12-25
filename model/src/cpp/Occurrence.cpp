@@ -11,9 +11,9 @@ using contomap::model::Style;
 using contomap::model::Topic;
 
 Occurrence::Occurrence(Identifier id, Topic &topic, Identifiers scope, SpacialCoordinate spacial)
-   : id(id)
+   : Scoped(std::move(scope))
+   , id(id)
    , topic(topic)
-   , scope(std::move(scope))
    , location(spacial)
 {
 }
@@ -29,7 +29,7 @@ std::unique_ptr<Occurrence> Occurrence::from(contomap::infrastructure::serial::D
 {
    Coder::Scope serialScope(coder, "occurrence");
    std::unique_ptr<Occurrence> occurrence(new Occurrence(id, topic));
-   occurrence->scope.decode(coder, "scope");
+   occurrence->decodeScoped(coder, topicResolver);
    occurrence->location.decode(coder, "location", version);
    occurrence->decodeTypeable(coder, topicResolver);
    occurrence->appearance.decode(coder, "appearance", version);
@@ -40,7 +40,7 @@ std::unique_ptr<Occurrence> Occurrence::from(contomap::infrastructure::serial::D
 void Occurrence::encode(Encoder &coder) const
 {
    Coder::Scope serialScope(coder, "occurrence");
-   scope.encode(coder, "scope");
+   encodeScoped(coder);
    location.encode(coder, "location");
    encodeTypeable(coder);
    appearance.encode(coder, "appearance");
@@ -57,34 +57,9 @@ Topic const &Occurrence::getTopic() const
    return topic;
 }
 
-Identifiers const &Occurrence::getScope() const
-{
-   return scope;
-}
-
 contomap::model::Coordinates const &Occurrence::getLocation() const
 {
    return location;
-}
-
-bool Occurrence::isIn(Identifiers const &thatScope) const
-{
-   return thatScope.contains(scope);
-}
-
-bool Occurrence::scopeContains(Identifier thatId) const
-{
-   return scope.contains(thatId);
-}
-
-bool Occurrence::hasNarrowerScopeThan(Occurrence const &other) const
-{
-   return (scope.size() > other.scope.size()) || (hasSameScopeSizeAs(other) && (scope < other.scope));
-}
-
-bool Occurrence::hasSameScopeSizeAs(Occurrence const &other) const
-{
-   return scope.size() == other.scope.size();
 }
 
 void Occurrence::setAppearance(Style style)

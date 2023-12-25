@@ -306,7 +306,7 @@ void Topic::removeTopicReferences(Topic const &otherTopic)
 {
    std::erase_if(occurrences, [&otherTopic](auto const &kvp) {
       auto const &occurrence = kvp.second;
-      return occurrence->scopeContains(otherTopic.getId());
+      return occurrence->scopeContains(otherTopic);
    });
    std::erase_if(names, [&otherTopic](auto const &kvp) {
       auto const &name = kvp.second;
