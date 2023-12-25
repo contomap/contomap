@@ -28,7 +28,7 @@ public:
     */
    [[nodiscard]] contomap::model::Topic &getDefaultScopeTopic();
 
-   [[nodiscard]] contomap::model::Identifier getDefaultScope() const override;
+   [[nodiscard]] contomap::model::Topic const &getDefaultScopeTopic() const override;
 
    /**
     * Creates a new topic and adds it to the map.

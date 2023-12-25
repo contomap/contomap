@@ -89,7 +89,7 @@ std::optional<Identifier> LocateTopicAndActDialog::TopicList::draw(Rectangle bou
    bool somethingFocused = false;
    for (Topic const &topic : topics)
    {
-      for (std::string const &name : Names::forDisplay(topic, view.getDefaultScope()))
+      for (std::string const &name : Names::forDisplay(topic, view.getDefaultScopeTopic()))
       {
          if (!selectedIndex.has_value())
          {

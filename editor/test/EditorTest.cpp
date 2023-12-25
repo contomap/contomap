@@ -346,7 +346,7 @@ public:
 
    Identifier defaultViewScope()
    {
-      return instance.ofMap().getDefaultScope();
+      return instance.ofMap().getDefaultScopeTopic().getId();
    }
 
    Identifiers viewScope()

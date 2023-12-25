@@ -21,9 +21,9 @@ public:
    virtual ~ContomapView() = default;
 
    /**
-    * @return the identifier of the default topic scope.
+    * @return the reference to the default topic scope.
     */
-   [[nodiscard]] virtual contomap::model::Identifier getDefaultScope() const = 0;
+   [[nodiscard]] virtual contomap::model::Topic const &getDefaultScopeTopic() const = 0;
 
    /**
     * Find topics that match a certain filter.

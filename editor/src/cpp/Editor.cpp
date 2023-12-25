@@ -361,7 +361,7 @@ void Editor::addToViewScopeFromSelection()
 
 void Editor::setViewScopeToDefault()
 {
-   setViewScopeTo(Identifiers::ofSingle(map.getDefaultScope()));
+   setViewScopeTo(Identifiers::ofSingle(map.getDefaultScopeTopic().getId()));
 }
 
 void Editor::setViewScopeTo(Identifier id)

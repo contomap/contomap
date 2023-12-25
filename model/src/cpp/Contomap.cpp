@@ -25,12 +25,12 @@ Contomap Contomap::newMap()
 
 Topic &Contomap::getDefaultScopeTopic()
 {
-   return findTopic(getDefaultScope()).value();
+   return findTopic(defaultScope).value();
 }
 
-Identifier Contomap::getDefaultScope() const
+Topic const &Contomap::getDefaultScopeTopic() const
 {
-   return defaultScope;
+   return findTopic(defaultScope).value();
 }
 
 Topic &Contomap::newTopic()

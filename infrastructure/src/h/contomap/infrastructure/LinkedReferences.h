@@ -135,7 +135,7 @@ public:
    [[nodiscard]] bool contains(LinkedReferences<T> const &other) const
    {
       return std::all_of(
-         other.references.begin(), other.references.end(), [this](auto const &otherLinkEntry) { return contains(otherLinkEntry->getLinked()); });
+         other.references.begin(), other.references.end(), [this](auto const &otherLinkEntry) { return this->contains(otherLinkEntry->getLinked()); });
    }
 
 private:
