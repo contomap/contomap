@@ -1,0 +1,46 @@
+#pragma once
+
+#include <list>
+#include <variant>
+
+#include "contomap/infrastructure/Link.h"
+
+namespace contomap::infrastructure
+{
+
+/**
+ * Referable describes something that can be kept referenced by LinkedReferences.
+ *
+ * @tparam T the concrete type of the referable.
+ */
+template <class T> class Referable
+{
+public:
+   /**
+    * @return the refined referable to this instance.
+    */
+   virtual T &refine() = 0;
+
+   /**
+    * Creates a link to this referable.
+    *
+    * @param referableUnlinked the function to pass on to the returned link.
+    * @return the link that refers to this instance.
+    */
+   std::unique_ptr<contomap::infrastructure::Link<T>> linkReference(std::function<void()> referableUnlinked)
+   {
+      static std::monostate sentinel;
+      auto localLinkEntry = references.insert(references.end(), std::unique_ptr<Link<std::monostate>> {});
+      auto links = Links::between(refine(), std::move(referableUnlinked), sentinel, [this, localLinkEntry]() { references.erase(localLinkEntry); });
+      *localLinkEntry = std::move(links.second);
+      return std::move(links.first);
+   }
+
+protected:
+   virtual ~Referable() = default;
+
+private:
+   std::list<std::unique_ptr<contomap::infrastructure::Link<std::monostate>>> references;
+};
+
+}
