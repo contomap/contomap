@@ -166,27 +166,9 @@ void Editor::deleteSelection()
 
 void Editor::setAppearanceOfSelection(Style style)
 {
-   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   for (contomap::model::Styleable &styleable : Selections::allStyleableFrom(selection, map))
    {
-      for (auto &occurrence : map.findOccurrences(ids))
-      {
-         occurrence.get().setAppearance(style);
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
-   {
-      for (auto id : ids)
-      {
-         Association &association = map.findAssociation(id).value();
-         association.setAppearance(style);
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
-   {
-      for (Role &role : map.findRoles(ids))
-      {
-         role.setAppearance(style);
-      }
+      styleable.setAppearance(style);
    }
 }
 
@@ -197,27 +179,9 @@ void Editor::setTypeOfSelection(contomap::model::Identifier topicId)
    {
       return;
    }
-   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   for (contomap::model::Typeable &typeable : Selections::allTypeableFrom(selection, map))
    {
-      for (auto &occurrence : map.findOccurrences(ids))
-      {
-         occurrence.get().setType(optionalTopic.value());
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
-   {
-      for (auto id : ids)
-      {
-         Association &association = map.findAssociation(id).value();
-         association.setType(optionalTopic.value());
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
-   {
-      for (Role &role : map.findRoles(ids))
-      {
-         role.setType(optionalTopic.value());
-      }
+      typeable.setType(optionalTopic.value());
    }
 }
 
@@ -229,27 +193,9 @@ void Editor::setTypeOfSelection(contomap::model::TopicNameValue name)
 
 void Editor::clearTypeOfSelection()
 {
-   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   for (contomap::model::Typeable &typeable : Selections::allTypeableFrom(selection, map))
    {
-      for (auto &occurrence : map.findOccurrences(ids))
-      {
-         occurrence.get().clearType();
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
-   {
-      for (auto id : ids)
-      {
-         Association &association = map.findAssociation(id).value();
-         association.clearType();
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
-   {
-      for (Role &role : map.findRoles(ids))
-      {
-         role.clearType();
-      }
+      typeable.clearType();
    }
 }
 
@@ -260,27 +206,9 @@ void Editor::setReifierOfSelection(contomap::model::Identifier topicId)
    {
       return;
    }
-   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   for (contomap::model::Reifiable<Topic> &reifiable : Selections::allReifiableFrom(selection, map))
    {
-      for (auto &occurrence : map.findOccurrences(ids))
-      {
-         occurrence.get().setReifier(topic.value());
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
-   {
-      for (auto id : ids)
-      {
-         Association &association = map.findAssociation(id).value();
-         association.setReifier(topic.value());
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
-   {
-      for (Role &role : map.findRoles(ids))
-      {
-         role.setReifier(topic.value());
-      }
+      reifiable.setReifier(topic.value());
    }
 }
 
@@ -292,61 +220,28 @@ void Editor::setReifierOfSelection(TopicNameValue name)
 
 void Editor::clearReifierOfSelection()
 {
-   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   for (contomap::model::Reifiable<Topic> &reifiable : Selections::allReifiableFrom(selection, map))
    {
-      for (auto &occurrence : map.findOccurrences(ids))
-      {
-         occurrence.get().clearReifier();
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
-   {
-      for (auto id : ids)
-      {
-         Association &association = map.findAssociation(id).value();
-         association.clearReifier();
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
-   {
-      for (Role &role : map.findRoles(ids))
-      {
-         role.clearReifier();
-      }
+      reifiable.clearReifier();
    }
 }
 
 void Editor::moveSelectionBy(contomap::model::SpacialCoordinate::Offset offset)
 {
-   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   for (Occurrence &occurrence : Selections::selectedOccurrences(selection, map))
    {
-      for (auto &occurrence : map.findOccurrences(ids))
-      {
-         occurrence.get().moveBy(offset);
-      }
+      occurrence.moveBy(offset);
    }
-   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
+   for (Association &association : Selections::selectedAssociations(selection, map))
    {
-      for (auto id : ids)
-      {
-         Association &association = map.findAssociation(id).value();
-         association.moveBy(offset);
-      }
+      association.moveBy(offset);
    }
 }
 
 void Editor::setViewScopeFromSelection()
 {
    auto &occurrenceIds = selection.of(SelectedType::Occurrence);
-   Identifiers newViewScope;
-   for (Topic &topic : map.find(Topics::thatOccurAs(occurrenceIds)))
-   {
-      newViewScope.add(topic.getId());
-   }
-   if (!newViewScope.empty())
-   {
-      setViewScopeTo(newViewScope);
-   }
+   setViewScopeTo(std::views::common(map.find(Topics::thatOccurAs(occurrenceIds))));
 }
 
 void Editor::addToViewScopeFromSelection()
@@ -355,7 +250,7 @@ void Editor::addToViewScopeFromSelection()
    Identifiers newViewScope;
    for (Topic &topic : map.find(Topics::thatOccurAs(occurrenceIds)))
    {
-      addToViewScope(topic.getId());
+      viewScope.add(topic);
    }
 }
 

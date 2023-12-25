@@ -1,6 +1,8 @@
 #pragma once
 
 #include "contomap/editor/Selection.h"
+#include "contomap/infrastructure/Generator.h"
+#include "contomap/model/Contomap.h"
 #include "contomap/model/ContomapView.h"
 #include "contomap/model/Style.h"
 
@@ -52,6 +54,41 @@ public:
     */
    [[nodiscard]] static std::optional<std::reference_wrapper<contomap::model::Reifiable<contomap::model::Topic> const>> firstReifiableFrom(
       contomap::editor::Selection const &selection, contomap::model::ContomapView const &view);
+
+   /**
+    * Provide a view on all the typeables from the selection.
+    *
+    * @param selection the selection to extract.
+    * @param map the map to use for transformation.
+    * @return a search that provides all selected typeables.
+    */
+   [[nodiscard]] static contomap::infrastructure::Search<contomap::model::Typeable> allTypeableFrom(
+      contomap::editor::Selection const &selection, contomap::model::Contomap &map);
+   /**
+    * Provide a view on all the reifiables from the selection.
+    *
+    * @param selection the selection to extract.
+    * @param map the map to use for transformation.
+    * @return a search that provides all selected reifiables.
+    */
+   [[nodiscard]] static contomap::infrastructure::Search<contomap::model::Reifiable<contomap::model::Topic>> allReifiableFrom(
+      contomap::editor::Selection const &selection, contomap::model::Contomap &map);
+   /**
+    * Provide a view on all the styleables from the selection.
+    *
+    * @param selection the selection to extract.
+    * @param map the map to use for transformation.
+    * @return a search that provides all selected styleables.
+    */
+   [[nodiscard]] static contomap::infrastructure::Search<contomap::model::Styleable> allStyleableFrom(
+      contomap::editor::Selection const &selection, contomap::model::Contomap &map);
+
+   [[nodiscard]] static contomap::infrastructure::Search<contomap::model::Occurrence> selectedOccurrences(
+      contomap::editor::Selection const &selection, contomap::model::Contomap &map);
+   [[nodiscard]] static contomap::infrastructure::Search<contomap::model::Association> selectedAssociations(
+      contomap::editor::Selection const &selection, contomap::model::Contomap &map);
+   [[nodiscard]] static contomap::infrastructure::Search<contomap::model::Role> selectedRoles(
+      contomap::editor::Selection const &selection, contomap::model::Contomap &map);
 };
 
 } // namespace contomap::editor

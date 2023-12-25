@@ -72,7 +72,7 @@ private:
    void cycleSelectedOccurrence(bool forward);
    void setViewScopeTo(contomap::model::Identifiers const &ids);
    template <class Range>
-      requires std::ranges::forward_range<Range>
+      requires std::ranges::range<Range>
    void setViewScopeTo(Range topics)
    {
       viewScope.clear();
