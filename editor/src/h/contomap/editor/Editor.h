@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ranges>
+
 #include "contomap/editor/InputRequestHandler.h"
 #include "contomap/editor/Selection.h"
 #include "contomap/editor/View.h"
@@ -69,6 +71,17 @@ private:
    void createAndSelectOccurrence(contomap::model::Topic &topic, contomap::model::SpacialCoordinate location);
    void cycleSelectedOccurrence(bool forward);
    void setViewScopeTo(contomap::model::Identifiers const &ids);
+   template <class Range>
+      requires std::ranges::forward_range<Range>
+   void setViewScopeTo(Range topics)
+   {
+      viewScope.clear();
+      for (contomap::model::Topic &topic : topics)
+      {
+         viewScope.add(topic);
+      }
+      selection.clear();
+   }
    void verifyViewScopeIsStable();
 
    static uint8_t const CURRENT_SERIAL_VERSION;

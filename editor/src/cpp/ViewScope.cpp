@@ -25,6 +25,11 @@ void ViewScope::encode(Encoder &coder) const
    coder.codeArray("viewScope", allTopics.begin(), allTopics.end(), [](Encoder &nested, Topic const &topic) { topic.getId().encode(nested, ""); });
 }
 
+void ViewScope::clear()
+{
+   topics.clear();
+}
+
 Identifiers ViewScope::identifiers() const
 {
    Identifiers result;

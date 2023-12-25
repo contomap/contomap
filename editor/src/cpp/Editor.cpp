@@ -361,16 +361,17 @@ void Editor::addToViewScopeFromSelection()
 
 void Editor::setViewScopeToDefault()
 {
-   setViewScopeTo(Identifiers::ofSingle(map.getDefaultScopeTopic().getId()));
+   setViewScopeTo(std::views::single(std::ref(map.getDefaultScopeTopic())));
 }
 
 void Editor::setViewScopeTo(Identifier id)
 {
-   if (!map.findTopic(id).has_value())
+   auto optionalTopic = map.findTopic(id);
+   if (!optionalTopic.has_value())
    {
       return;
    }
-   setViewScopeTo(Identifiers::ofSingle(id));
+   setViewScopeTo(std::views::single(std::ref(optionalTopic.value())));
 }
 
 void Editor::addToViewScope(Identifier id)
@@ -519,7 +520,7 @@ void Editor::createAndSelectOccurrence(contomap::model::Topic &topic, contomap::
 
 void Editor::setViewScopeTo(Identifiers const &ids)
 {
-   viewScope = ViewScope();
+   viewScope.clear();
    for (auto const &id : ids)
    {
       viewScope.add(map.findTopic(id).value());
@@ -531,7 +532,7 @@ void Editor::verifyViewScopeIsStable()
 {
    if (viewScope.empty())
    {
-      viewScope = ViewScope(map.getDefaultScopeTopic());
+      viewScope.add(map.getDefaultScopeTopic());
    }
 }
 

@@ -69,6 +69,14 @@ public:
    LinkedReferences &operator=(LinkedReferences<T> &&) = default;
 
    /**
+    * Clears the set to be empty.
+    */
+   void clear()
+   {
+      references.clear();
+   }
+
+   /**
     * Adds the given referable to the collection. If the collection already contains the given referable,
     * no additional link will be established.
     *

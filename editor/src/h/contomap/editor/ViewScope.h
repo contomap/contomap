@@ -42,6 +42,11 @@ public:
    void encode(contomap::infrastructure::serial::Encoder &coder) const;
 
    /**
+    * Clears the view scope.
+    */
+   void clear();
+
+   /**
     * @return a scope list
     */
    [[nodiscard]] contomap::model::Identifiers identifiers() const;
