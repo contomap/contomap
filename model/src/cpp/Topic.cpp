@@ -161,22 +161,6 @@ std::unique_ptr<Link<Topic>> Topic::link(Role &role, std::function<void()> topic
    return std::move(links.first);
 }
 
-void Topic::removeRolesOf(Association &association)
-{
-   Identifiers toRemove;
-   for (auto const &[roleId, entry] : roles)
-   {
-      if (entry->role().getParent() == association.getId())
-      {
-         toRemove.add(roleId);
-      }
-   }
-   std::erase_if(roles, [&toRemove](auto const &kvp) {
-      auto const &entry = kvp.second;
-      return toRemove.contains(entry->role().getId());
-   });
-}
-
 void Topic::removeRole(Identifier roleId)
 {
    roles.erase(roleId);

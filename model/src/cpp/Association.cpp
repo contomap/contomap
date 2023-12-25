@@ -71,9 +71,9 @@ bool Association::isIn(Identifiers const &thatScope) const
    return thatScope.contains(scope);
 }
 
-bool Association::isWithoutScope() const
+bool Association::scopeContains(Topic const &topic) const
 {
-   return scope.empty();
+   return scope.contains(topic.getId());
 }
 
 std::unique_ptr<Link<Association>> Association::link(Role &role, std::function<void()> associationUnlinked)
@@ -87,14 +87,6 @@ std::unique_ptr<Link<Association>> Association::link(Role &role, std::function<v
 bool Association::hasRoles() const
 {
    return !roles.empty();
-}
-
-void Association::removeTopicReferences(Identifier topicId)
-{
-   if (scope.contains(topicId))
-   {
-      scope.clear();
-   }
 }
 
 void Association::setAppearance(Style style)

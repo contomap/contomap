@@ -86,9 +86,12 @@ public:
    [[nodiscard]] bool isIn(contomap::model::Identifiers const &thatScope) const;
 
    /**
-    * @return true if the association is nowhere presented.
+    * Return true if the scope of this instance contains given topic.
+    *
+    * @param topic the topic to check on.
+    * @return true if the scope contains given topic.
     */
-   [[nodiscard]] bool isWithoutScope() const;
+   [[nodiscard]] bool scopeContains(contomap::model::Topic const &topic) const;
 
    /**
     * Establishes a link with given role.
@@ -103,13 +106,6 @@ public:
     * @return true if the association has at least one role.
     */
    [[nodiscard]] bool hasRoles() const;
-
-   /**
-    * Remove any references this association might haven to this topic.
-    *
-    * @param topicId the identifier of the topic to clear.
-    */
-   void removeTopicReferences(contomap::model::Identifier topicId);
 
    /**
     * Set the style of the appearance.

@@ -218,18 +218,10 @@ void Contomap::deleteTopicsCascading(Identifiers toDelete)
 
 void Contomap::deleting(Identifiers &toDelete, Topic &topic)
 {
-   Identifiers associationsToDelete;
-   for (auto &kvp : associations)
-   {
-      auto &association = kvp.second;
-      topic.removeRolesOf(*association);
-      association->removeTopicReferences(topic.getId());
-      if (association->isWithoutScope())
-      {
-         associationsToDelete.add(association->getId());
-      }
-   }
-   deleteAssociations(associationsToDelete);
+   std::erase_if(associations, [&topic](auto const &kvp) {
+      auto const &association = kvp.second;
+      return association->scopeContains(topic);
+   });
 
    for (auto &kvp : topics)
    {

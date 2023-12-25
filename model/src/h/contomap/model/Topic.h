@@ -112,13 +112,6 @@ public:
    [[nodiscard]] std::unique_ptr<contomap::infrastructure::Link<Topic>> link(contomap::model::Role &role, std::function<void()> topicUnlinked);
 
    /**
-    * Remove all the roles for given association.
-    *
-    * @param association the association to no longer relate to.
-    */
-   void removeRolesOf(contomap::model::Association &association);
-
-   /**
     * Removes the role with given identifier from this topic.
     *
     * @param roleId the role to remove.
