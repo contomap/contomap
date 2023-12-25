@@ -6,6 +6,7 @@
 
 #include "contomap/infrastructure/Generator.h"
 #include "contomap/infrastructure/Link.h"
+#include "contomap/infrastructure/Referable.h"
 #include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Association.h"
 #include "contomap/model/Identifier.h"
@@ -21,7 +22,7 @@ namespace contomap::model
 /**
  * A Topic captures the information about a particular subject.
  */
-class Topic : public contomap::model::Reifier<Topic>
+class Topic : public contomap::infrastructure::Referable<Topic>, public contomap::model::Reifier<Topic>
 {
 public:
    /**
