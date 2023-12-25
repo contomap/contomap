@@ -247,7 +247,6 @@ void Editor::setViewScopeFromSelection()
 void Editor::addToViewScopeFromSelection()
 {
    auto &occurrenceIds = selection.of(SelectedType::Occurrence);
-   Identifiers newViewScope;
    for (Topic &topic : map.find(Topics::thatOccurAs(occurrenceIds)))
    {
       viewScope.add(topic);
@@ -310,13 +309,16 @@ void Editor::cycleSelectedOccurrence(bool forward)
    {
       return;
    }
-   Identifier originalOccurrenceId = *selection.of(SelectedType::Occurrence).begin();
-   for (Topic &topic : map.find(Topics::thatOccurAs(Identifiers::ofSingle(originalOccurrenceId))))
+   auto optionalOccurrence = Selections::firstOccurrenceFrom(selection, map);
+   if (!optionalOccurrence.has_value())
    {
-      auto const &nextOccurrence = forward ? topic.nextOccurrenceAfter(originalOccurrenceId) : topic.previousOccurrenceBefore(originalOccurrenceId);
-      setViewScopeTo(nextOccurrence.getScope());
-      selection.setSole(SelectedType::Occurrence, nextOccurrence.getId());
+      return;
    }
+   Occurrence const &currentOccurrence = optionalOccurrence.value();
+   Topic const &topic = currentOccurrence.getTopic();
+   auto const &nextOccurrence = forward ? topic.nextOccurrenceAfter(currentOccurrence.getId()) : topic.previousOccurrenceBefore(currentOccurrence.getId());
+   setViewScopeTo(nextOccurrence.getScope());
+   selection.setSole(SelectedType::Occurrence, nextOccurrence.getId());
 }
 
 void Editor::selectClosestOccurrenceOf(Identifier topicId)
