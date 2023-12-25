@@ -10,6 +10,7 @@
 #include "contomap/model/Role.h"
 #include "contomap/model/Scoped.h"
 #include "contomap/model/Style.h"
+#include "contomap/model/Styleable.h"
 #include "contomap/model/Typeable.h"
 
 namespace contomap::model
@@ -23,7 +24,8 @@ class Topic;
 class Association : public contomap::infrastructure::Referable<Association>,
                     public contomap::model::Reifiable<contomap::model::Topic>,
                     public contomap::model::Typeable,
-                    public contomap::model::Scoped
+                    public contomap::model::Scoped,
+                    public contomap::model::Styleable
 {
 public:
    /**
@@ -98,16 +100,8 @@ public:
     */
    [[nodiscard]] bool hasRoles() const;
 
-   /**
-    * Set the style of the appearance.
-    *
-    * @param style the new style to set.
-    */
-   void setAppearance(contomap::model::Style style);
-   /**
-    * @return the current style of the appearance.
-    */
-   [[nodiscard]] contomap::model::Style getAppearance() const;
+   void setAppearance(contomap::model::Style style) override;
+   [[nodiscard]] contomap::model::Style getAppearance() const override;
 
 private:
    class RoleEntry

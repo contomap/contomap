@@ -11,6 +11,7 @@
 #include "contomap/model/Identifiers.h"
 #include "contomap/model/Reifiable.h"
 #include "contomap/model/Style.h"
+#include "contomap/model/Styleable.h"
 #include "contomap/model/Typeable.h"
 
 namespace contomap::model
@@ -22,7 +23,10 @@ class Topic;
 /**
  * A Role represents the nature a topic plays in an association.
  */
-class Role : public contomap::infrastructure::Referable<Role>, public contomap::model::Reifiable<contomap::model::Topic>, public contomap::model::Typeable
+class Role : public contomap::infrastructure::Referable<Role>,
+             public contomap::model::Reifiable<contomap::model::Topic>,
+             public contomap::model::Typeable,
+             public contomap::model::Styleable
 {
 public:
    /**
@@ -67,16 +71,8 @@ public:
     */
    [[nodiscard]] Identifier getParent() const;
 
-   /**
-    * Set the style of the appearance.
-    *
-    * @param style the new style to set.
-    */
-   void setAppearance(contomap::model::Style style);
-   /**
-    * @return the current style of the appearance.
-    */
-   [[nodiscard]] contomap::model::Style getAppearance() const;
+   void setAppearance(contomap::model::Style style) override;
+   [[nodiscard]] contomap::model::Style getAppearance() const override;
 
 private:
    void unlink();
