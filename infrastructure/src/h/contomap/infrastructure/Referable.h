@@ -8,7 +8,8 @@ namespace contomap::infrastructure
 {
 
 /**
- * Referable describes something that can be kept referenced by LinkedReferences.
+ * Referable describes something that can be kept referenced by LinkedReferences and other uni-directional
+ * entities. Others can refer to this instance, yet a Referable doesn't know the details about its references.
  *
  * @tparam T the concrete type of the referable.
  */
