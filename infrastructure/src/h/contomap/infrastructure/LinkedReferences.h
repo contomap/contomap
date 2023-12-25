@@ -98,6 +98,7 @@ public:
     * nothing happens.
     *
     * @param referable the referable to remove.
+    * @returns true if the given referable was contained before.
     */
    bool remove(contomap::infrastructure::Referable<T> const &referable)
    {

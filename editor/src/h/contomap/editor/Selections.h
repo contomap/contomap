@@ -83,10 +83,31 @@ public:
    [[nodiscard]] static contomap::infrastructure::Search<contomap::model::Styleable> allStyleableFrom(
       contomap::editor::Selection const &selection, contomap::model::Contomap &map);
 
+   /**
+    * Provide a search over the occurrence references from the selection.
+    *
+    * @param selection the selection to extract.
+    * @param map the map to use for transformation.
+    * @return a search that provides all occurrences.
+    */
    [[nodiscard]] static contomap::infrastructure::Search<contomap::model::Occurrence> selectedOccurrences(
       contomap::editor::Selection const &selection, contomap::model::Contomap &map);
+   /**
+    * Provide a search over the association references from the selection.
+    *
+    * @param selection the selection to extract.
+    * @param map the map to use for transformation.
+    * @return a search that provides all associations.
+    */
    [[nodiscard]] static contomap::infrastructure::Search<contomap::model::Association> selectedAssociations(
       contomap::editor::Selection const &selection, contomap::model::Contomap &map);
+   /**
+    * Provide a search over the role references from the selection.
+    *
+    * @param selection the selection to extract.
+    * @param map the map to use for transformation.
+    * @return a search that provides all roles.
+    */
    [[nodiscard]] static contomap::infrastructure::Search<contomap::model::Role> selectedRoles(
       contomap::editor::Selection const &selection, contomap::model::Contomap &map);
 };

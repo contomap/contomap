@@ -30,6 +30,7 @@ public:
     *
     * @param coder the decoder to use.
     * @param resolver the function to resolve the instances of topics.
+    * @returns the decoded ViewScope instance.
     */
    [[nodiscard]] static ViewScope from(
       contomap::infrastructure::serial::Decoder &coder, std::function<contomap::model::Topic &(contomap::model::Identifier)> const &resolver);
