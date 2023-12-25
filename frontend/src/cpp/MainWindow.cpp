@@ -806,7 +806,7 @@ void MainWindow::requestNewFile()
 
 void MainWindow::requestLoad()
 {
-   pendingDialog = std::make_unique<contomap::frontend::LoadDialog>(environment, layout, [this](std::string const &filePath) { load(filePath); });
+   pendingDialog = std::make_unique<contomap::frontend::LoadDialog>(environment, [this](std::string const &filePath) { load(filePath); });
 }
 
 void MainWindow::requestSave()
