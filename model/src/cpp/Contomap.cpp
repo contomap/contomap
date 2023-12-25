@@ -302,4 +302,5 @@ void Contomap::decode(Decoder &coder, uint8_t version)
    });
 
    defaultScope = Identifier::from(coder, "defaultScope");
+   topicResolver(defaultScope);
 }

@@ -386,8 +386,6 @@ bool Editor::loadState(Decoder &decoder)
       return false;
    }
 
-   // TODO: verify new state is consistent -> proper references
-
    map = std::move(newMap);
    viewScope = newViewScope;
    selection = newSelection;

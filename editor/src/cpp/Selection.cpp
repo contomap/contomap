@@ -13,15 +13,21 @@ using contomap::model::Identifiers;
 using contomap::model::Occurrence;
 using contomap::model::Role;
 
-Selection Selection::from(Decoder &coder, uint8_t, std::function<Occurrence &(Identifier)> const &, std::function<Association &(Identifier)> const &,
-   std::function<Role &(Identifier)> const &)
+Selection Selection::from(Decoder &coder, uint8_t, std::function<Occurrence &(Identifier)> const &occurrenceResolver,
+   std::function<Association &(Identifier)> const &associationResolver, std::function<Role &(Identifier)> const &roleResolver)
 {
    Selection instance;
    Coder::Scope scope(coder, "selection");
-   auto decode = [&instance, &coder](SelectedType type, std::string const &name) { instance.identifiers[type].decode(coder, name); };
-   decode(SelectedType::Occurrence, "occurrences");
-   decode(SelectedType::Association, "associations");
-   decode(SelectedType::Role, "roles");
+   auto decode = [&instance, &coder]<class T>(SelectedType type, std::string const &name, std::function<T &(Identifier)> resolver) {
+      instance.identifiers[type].decode(coder, name);
+      for (Identifier id : instance.identifiers[type])
+      {
+         resolver(id);
+      }
+   };
+   decode(SelectedType::Occurrence, "occurrences", occurrenceResolver);
+   decode(SelectedType::Association, "associations", associationResolver);
+   decode(SelectedType::Role, "roles", roleResolver);
    return instance;
 }
 
