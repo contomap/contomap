@@ -226,7 +226,7 @@ void Contomap::deleting(Identifiers &toDelete, Topic &topic)
    for (auto &kvp : topics)
    {
       auto &otherTopic = kvp.second;
-      otherTopic->removeTopicReferences(topic.getId());
+      otherTopic->removeTopicReferences(topic);
       if (topicShouldBeRemoved(*otherTopic))
       {
          toDelete.add(otherTopic->getId());

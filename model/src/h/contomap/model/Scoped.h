@@ -57,6 +57,29 @@ public:
     */
    [[nodiscard]] bool scopeContains(contomap::model::Topic const &topic) const;
 
+   /**
+    * Return true if the scope equals the given one.
+    *
+    * @param thatScope the scope to test for.
+    * @return true in case the two scope values are equal.
+    */
+   [[nodiscard]] bool scopeEquals(contomap::model::Identifiers const &thatScope) const;
+
+   /**
+    * Use this method to sort scoped entities according to scope.
+    *
+    * @param other the other scoped to compare to.
+    * @return true if this instance has a narrower (longer) scope than the other. Also returns true if same size but smaller ID values.
+    */
+   [[nodiscard]] bool hasNarrowerScopeThan(Scoped const &other) const;
+   /**
+    * Use this method to determine whether a scoped entity is equivalent when considering scopes.
+    *
+    * @param other the other scoped to compare to.
+    * @return true if this and the other entities have the same size of their scopes.
+    */
+   [[nodiscard]] bool hasSameScopeSizeAs(Scoped const &other) const;
+
 private:
    contomap::model::Identifiers topicIds;
 };

@@ -240,11 +240,11 @@ public:
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role> findRoles(contomap::model::Identifiers const &ids);
 
    /**
-    * Removes any reference to the given identified topic.
+    * Removes any reference to the given topic.
     *
-    * @param topicId the identifier of the topic that shall no longer be referenced.
+    * @param otherTopic the reference to the topic that shall no longer be referenced.
     */
-   void removeTopicReferences(contomap::model::Identifier topicId);
+   void removeTopicReferences(Topic const &otherTopic);
 
    void setReified(contomap::model::Reified &item) final;
    void clearReified() final;

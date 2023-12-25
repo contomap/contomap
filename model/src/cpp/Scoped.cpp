@@ -35,3 +35,18 @@ bool Scoped::scopeContains(Topic const &topic) const
 {
    return topicIds.contains(topic.getId());
 }
+
+bool Scoped::scopeEquals(Identifiers const &thatScope) const
+{
+   return topicIds == thatScope;
+}
+
+bool Scoped::hasNarrowerScopeThan(Scoped const &other) const
+{
+   return (topicIds.size() > other.topicIds.size()) || (hasSameScopeSizeAs(other) && (topicIds < other.topicIds));
+}
+
+bool Scoped::hasSameScopeSizeAs(Scoped const &other) const
+{
+   return topicIds.size() == other.topicIds.size();
+}

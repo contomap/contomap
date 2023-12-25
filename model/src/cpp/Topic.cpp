@@ -302,15 +302,15 @@ Search<Role> Topic::findRoles(contomap::model::Identifiers const &ids) // NOLINT
    }
 }
 
-void Topic::removeTopicReferences(Identifier topicId)
+void Topic::removeTopicReferences(Topic const &otherTopic)
 {
-   std::erase_if(occurrences, [&topicId](auto const &kvp) {
+   std::erase_if(occurrences, [&otherTopic](auto const &kvp) {
       auto const &occurrence = kvp.second;
-      return occurrence->scopeContains(topicId);
+      return occurrence->scopeContains(otherTopic.getId());
    });
-   std::erase_if(names, [&topicId](auto const &kvp) {
+   std::erase_if(names, [&otherTopic](auto const &kvp) {
       auto const &name = kvp.second;
-      return name.scopeContains(topicId);
+      return name.scopeContains(otherTopic);
    });
 }
 
