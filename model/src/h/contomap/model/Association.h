@@ -7,6 +7,7 @@
 #include "contomap/model/Identifiers.h"
 #include "contomap/model/Reifiable.h"
 #include "contomap/model/Role.h"
+#include "contomap/model/Scoped.h"
 #include "contomap/model/Style.h"
 #include "contomap/model/Typeable.h"
 
@@ -18,7 +19,7 @@ class Topic;
 /**
  * An Association represents the link or relation between topics.
  */
-class Association : public contomap::model::Reifiable<contomap::model::Topic>, public contomap::model::Typeable
+class Association : public contomap::model::Reifiable<contomap::model::Topic>, public contomap::model::Typeable, public contomap::model::Scoped
 {
 public:
    /**
@@ -78,22 +79,6 @@ public:
    void moveBy(SpacialCoordinate::Offset offset);
 
    /**
-    * Return true if this instance is in the given scope.
-    *
-    * @param thatScope the scope to look for.
-    * @return true if the association is in given scope.
-    */
-   [[nodiscard]] bool isIn(contomap::model::Identifiers const &thatScope) const;
-
-   /**
-    * Return true if the scope of this instance contains given topic.
-    *
-    * @param topic the topic to check on.
-    * @return true if the scope contains given topic.
-    */
-   [[nodiscard]] bool scopeContains(contomap::model::Topic const &topic) const;
-
-   /**
     * Establishes a link with given role.
     *
     * @param role the role instance to link with.
@@ -137,12 +122,8 @@ private:
    };
 
    contomap::model::Identifier id;
-   contomap::model::Identifiers scope;
-
    contomap::model::Coordinates location;
-
    contomap::model::Style appearance;
-
    std::map<contomap::model::Identifier, std::unique_ptr<RoleEntry>> roles;
 };
 

@@ -20,8 +20,8 @@ Association::Association(Identifier id)
 }
 
 Association::Association(Identifier id, Identifiers scope, SpacialCoordinate spacial)
-   : id(id)
-   , scope(std::move(scope))
+   : Scoped(std::move(scope))
+   , id(id)
    , location(spacial)
 {
 }
@@ -29,7 +29,7 @@ Association::Association(Identifier id, Identifiers scope, SpacialCoordinate spa
 void Association::encodeProperties(Encoder &coder) const
 {
    Coder::Scope propertiesScope(coder, "properties");
-   scope.encode(coder, "scope");
+   encodeScoped(coder);
    location.encode(coder, "location");
    encodeTypeable(coder);
    appearance.encode(coder, "appearance");
@@ -39,7 +39,7 @@ void Association::encodeProperties(Encoder &coder) const
 void Association::decodeProperties(contomap::infrastructure::serial::Decoder &coder, uint8_t version, std::function<Topic &(Identifier)> const &topicResolver)
 {
    Coder::Scope propertiesScope(coder, "properties");
-   scope.decode(coder, "scope");
+   decodeScoped(coder, topicResolver);
    location.decode(coder, "location", version);
    decodeTypeable(coder, topicResolver);
    appearance.decode(coder, "appearance", version);
@@ -64,16 +64,6 @@ void Association::moveTo(SpacialCoordinate absolutePosition)
 void Association::moveBy(SpacialCoordinate::Offset offset)
 {
    location.moveBy(offset);
-}
-
-bool Association::isIn(Identifiers const &thatScope) const
-{
-   return thatScope.contains(scope);
-}
-
-bool Association::scopeContains(Topic const &topic) const
-{
-   return scope.contains(topic.getId());
 }
 
 std::unique_ptr<Link<Association>> Association::link(Role &role, std::function<void()> associationUnlinked)
