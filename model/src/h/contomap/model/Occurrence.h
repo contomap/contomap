@@ -2,6 +2,7 @@
 
 #include <memory>
 
+#include "contomap/infrastructure/Referable.h"
 #include "contomap/infrastructure/serial/Decoder.h"
 #include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Coordinates.h"
@@ -20,7 +21,10 @@ class Topic;
 /**
  * An Occurrence represents the presence of a topic.
  */
-class Occurrence : public contomap::model::Reifiable<contomap::model::Topic>, public contomap::model::Typeable, public contomap::model::Scoped
+class Occurrence : public contomap::infrastructure::Referable<Occurrence>,
+                   public contomap::model::Reifiable<contomap::model::Topic>,
+                   public contomap::model::Typeable,
+                   public contomap::model::Scoped
 {
 public:
    /**
@@ -32,6 +36,8 @@ public:
     * @param spacial the known, initial point where the occurrence is happening.
     */
    Occurrence(contomap::model::Identifier id, contomap::model::Topic &topic, contomap::model::Identifiers scope, contomap::model::SpacialCoordinate spacial);
+
+   Occurrence &refine() override;
 
    /**
     * Deserializes the occurrence.

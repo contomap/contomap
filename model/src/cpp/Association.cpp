@@ -26,6 +26,11 @@ Association::Association(Identifier id, Identifiers scope, SpacialCoordinate spa
 {
 }
 
+Association &Association::refine()
+{
+   return *this;
+}
+
 void Association::encodeProperties(Encoder &coder) const
 {
    Coder::Scope propertiesScope(coder, "properties");

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "contomap/infrastructure/Link.h"
+#include "contomap/infrastructure/Referable.h"
 #include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Coordinates.h"
 #include "contomap/model/Identifier.h"
@@ -19,7 +20,10 @@ class Topic;
 /**
  * An Association represents the link or relation between topics.
  */
-class Association : public contomap::model::Reifiable<contomap::model::Topic>, public contomap::model::Typeable, public contomap::model::Scoped
+class Association : public contomap::infrastructure::Referable<Association>,
+                    public contomap::model::Reifiable<contomap::model::Topic>,
+                    public contomap::model::Typeable,
+                    public contomap::model::Scoped
 {
 public:
    /**
@@ -36,6 +40,8 @@ public:
     * @param spacial the known, initial point where the association is happening.
     */
    Association(contomap::model::Identifier id, contomap::model::Identifiers scope, contomap::model::SpacialCoordinate spacial);
+
+   Association &refine() override;
 
    /**
     * Serializes the properties of the association.

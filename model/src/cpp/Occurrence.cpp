@@ -24,6 +24,11 @@ Occurrence::Occurrence(Identifier id, Topic &topic)
 {
 }
 
+Occurrence &Occurrence::refine()
+{
+   return *this;
+}
+
 std::unique_ptr<Occurrence> Occurrence::from(contomap::infrastructure::serial::Decoder &coder, uint8_t version, contomap::model::Identifier id, Topic &topic,
    std::function<Topic &(contomap::model::Identifier)> const &topicResolver)
 {

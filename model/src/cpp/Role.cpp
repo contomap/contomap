@@ -18,6 +18,11 @@ Role::Role(Identifier id, Topic &topic, Association &association)
 {
 }
 
+Role &Role::refine()
+{
+   return *this;
+}
+
 std::unique_ptr<Role> Role::from(contomap::infrastructure::serial::Decoder &coder, uint8_t version, contomap::model::Identifier id,
    std::function<Topic &(contomap::model::Identifier)> const &topicResolver,
    std::function<Association &(contomap::model::Identifier)> const &associationResolver)
