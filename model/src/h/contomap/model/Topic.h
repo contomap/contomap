@@ -256,6 +256,9 @@ public:
    void clearReified() final;
 
 private:
+   struct Typed
+   {
+   };
    class RoleEntry
    {
    public:
@@ -283,7 +286,7 @@ private:
 
    contomap::model::Identifier id;
 
-   std::list<std::unique_ptr<contomap::infrastructure::Link<std::monostate>>> typed;
+   std::list<std::unique_ptr<contomap::infrastructure::Link<Typed>>> typed;
 
    std::map<contomap::model::Identifier, contomap::model::TopicName> names;
    std::map<contomap::model::Identifier, std::unique_ptr<contomap::model::Occurrence>> occurrences;

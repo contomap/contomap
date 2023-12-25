@@ -82,8 +82,8 @@ Identifier Topic::getId() const
 
 std::unique_ptr<Link<Topic>> Topic::linkTyped(std::function<void()> topicUnlinked)
 {
-   static std::monostate sentinel;
-   auto localLinkEntry = typed.insert(typed.end(), std::unique_ptr<Link<std::monostate>> {});
+   static Typed sentinel;
+   auto localLinkEntry = typed.insert(typed.end(), std::unique_ptr<Link<Typed>> {});
    auto links = Links::between(*this, std::move(topicUnlinked), sentinel, [this, localLinkEntry]() { typed.erase(localLinkEntry); });
    *localLinkEntry = std::move(links.second);
    return std::move(links.first);

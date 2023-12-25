@@ -1,7 +1,6 @@
 #pragma once
 
 #include <list>
-#include <variant>
 
 #include "contomap/infrastructure/Link.h"
 
@@ -29,8 +28,8 @@ public:
     */
    std::unique_ptr<contomap::infrastructure::Link<T>> linkReference(std::function<void()> referableUnlinked)
    {
-      static std::monostate sentinel;
-      auto localLinkEntry = references.insert(references.end(), std::unique_ptr<Link<std::monostate>> {});
+      static Reference sentinel;
+      auto localLinkEntry = references.insert(references.end(), std::unique_ptr<Link<Reference>> {});
       auto links = Links::between(refine(), std::move(referableUnlinked), sentinel, [this, localLinkEntry]() { references.erase(localLinkEntry); });
       *localLinkEntry = std::move(links.second);
       return std::move(links.first);
@@ -40,7 +39,10 @@ protected:
    virtual ~Referable() = default;
 
 private:
-   std::list<std::unique_ptr<contomap::infrastructure::Link<std::monostate>>> references;
+   struct Reference
+   {
+   };
+   std::list<std::unique_ptr<contomap::infrastructure::Link<Reference>>> references;
 };
 
 }
