@@ -344,7 +344,7 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
    auto visibleAssociations = map.find(Associations::thatAreIn(viewScope));
    for (Association const &visibleAssociation : visibleAssociations)
    {
-      bool associationIsSelected = selection.contains(SelectedType::Association, visibleAssociation.getId());
+      bool associationIsSelected = selection.contains(visibleAssociation);
       auto optionalType = visibleAssociation.getType();
       std::string nameText;
       if (optionalType.has_value())
@@ -412,7 +412,7 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
 
       for (Occurrence const &occurrence : visibleTopic.occurrencesIn(viewScope))
       {
-         bool occurrenceIsSelected = selection.contains(SelectedType::Occurrence, occurrence.getId());
+         bool occurrenceIsSelected = selection.contains(occurrence);
          auto spacialLocation = occurrence.getLocation().getSpacial().getAbsoluteReference().plus(drawOffsetIf(occurrenceIsSelected));
          Vector2 projectedLocation { .x = spacialLocation.X(), .y = spacialLocation.Y() };
 
@@ -445,7 +445,7 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
 
          for (Role const &role : roles)
          {
-            bool roleIsSelected = selection.contains(SelectedType::Role, role.getId());
+            bool roleIsSelected = selection.contains(role);
             std::string roleTitle;
             auto optionalType = role.getType();
             if (optionalType.has_value())

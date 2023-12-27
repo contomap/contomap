@@ -94,7 +94,7 @@ void Editor::newOccurrenceRequested(Identifier topicId, SpacialCoordinate locati
 Identifier Editor::newAssociationRequested(SpacialCoordinate location)
 {
    auto &association = map.newAssociation(viewScope.identifiers(), location);
-   selection.setSole(SelectedType::Association, association.getId());
+   selection.setSole(association);
    return association.getId();
 }
 
@@ -151,7 +151,7 @@ void Editor::linkSelection()
          }
       }
       association.moveTo(SpacialCoordinate::absoluteAt(x / static_cast<float>(count), y / static_cast<float>(count)));
-      selection.setSole(SelectedType::Association, association.getId());
+      selection.setSole(association);
    }
 }
 
@@ -318,7 +318,7 @@ void Editor::cycleSelectedOccurrence(bool forward)
    Topic const &topic = currentOccurrence.getTopic();
    auto const &nextOccurrence = forward ? topic.nextOccurrenceAfter(currentOccurrence.getId()) : topic.previousOccurrenceBefore(currentOccurrence.getId());
    setViewScopeTo(nextOccurrence.getScope());
-   selection.setSole(SelectedType::Occurrence, nextOccurrence.getId());
+   selection.setSole(nextOccurrence);
 }
 
 void Editor::selectClosestOccurrenceOf(Identifier topicId)
@@ -336,7 +336,7 @@ void Editor::selectClosestOccurrenceOf(Identifier topicId)
    }
    Occurrence const &occurrence = optionalOccurrence.value();
    setViewScopeTo(occurrence.getScope());
-   selection.setSole(SelectedType::Occurrence, occurrence.getId());
+   selection.setSole(occurrence);
 }
 
 void Editor::saveState(Encoder &encoder, bool withSelection)
@@ -410,7 +410,7 @@ contomap::editor::Selection const &Editor::ofSelection() const
 void Editor::createAndSelectOccurrence(contomap::model::Topic &topic, contomap::model::SpacialCoordinate location)
 {
    auto &occurrence = topic.newOccurrence(viewScope.identifiers(), location);
-   selection.setSole(SelectedType::Occurrence, occurrence.getId());
+   selection.setSole(occurrence);
 }
 
 void Editor::setViewScopeTo(Identifiers const &ids)

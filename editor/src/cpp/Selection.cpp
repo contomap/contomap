@@ -13,6 +13,10 @@ using contomap::model::Identifiers;
 using contomap::model::Occurrence;
 using contomap::model::Role;
 
+template <> SelectedType const Selection::Marker<Occurrence>::TYPE = SelectedType::Occurrence;
+template <> SelectedType const Selection::Marker<Association>::TYPE = SelectedType::Association;
+template <> SelectedType const Selection::Marker<Role>::TYPE = SelectedType::Role;
+
 Selection Selection::from(Decoder &coder, uint8_t, std::function<Occurrence &(Identifier)> const &occurrenceResolver,
    std::function<Association &(Identifier)> const &associationResolver, std::function<Role &(Identifier)> const &roleResolver)
 {

@@ -79,6 +79,17 @@ public:
    void setSole(contomap::editor::SelectedType type, contomap::model::Identifier id);
 
    /**
+    * Set the sole selection to be for the referenced type.
+    *
+    * @param type the type that the identifier refers to.
+    * @param id identifier of the selected thing.
+    */
+   template <class T> void setSole(T &entry)
+   {
+      setSole(typeOf<T>(), entry.getId());
+   }
+
+   /**
     * Toggles the selection of the identified thing.
     *
     * @param type the type that the identifier refers to.
@@ -96,6 +107,18 @@ public:
    [[nodiscard]] bool contains(contomap::editor::SelectedType type, contomap::model::Identifier id) const;
 
    /**
+    * Determines whether a specific thing is part of the selection.
+    *
+    * @tparam T the type of the thing to check.
+    * @param entry the reference to the thing to check.
+    * @return true if the referenced thing is in the selection.
+    */
+   template <class T> [[nodiscard]] bool contains(T const &entry) const
+   {
+      return contains(typeOf<T>(), entry.getId());
+   }
+
+   /**
     * Provide the set of selected identifiers for given type.
     *
     * @param type the type to filter for.
@@ -104,6 +127,16 @@ public:
    [[nodiscard]] contomap::model::Identifiers const &of(contomap::editor::SelectedType type) const;
 
 private:
+   template <class T> struct Marker
+   {
+      static contomap::editor::SelectedType const TYPE;
+   };
+
+   template <class T> static constexpr contomap::editor::SelectedType typeOf()
+   {
+      return Marker<typename std::remove_const<T>::type>::TYPE;
+   }
+
    std::map<contomap::editor::SelectedType, contomap::model::Identifiers> identifiers;
 };
 
