@@ -71,18 +71,10 @@ public:
    [[nodiscard]] bool hasSoleEntryFor(contomap::editor::SelectedType type) const;
 
    /**
-    * Set the sole selection to be for the identified type.
-    *
-    * @param type the type that the identifier refers to.
-    * @param id identifier of the selected thing.
-    */
-   void setSole(contomap::editor::SelectedType type, contomap::model::Identifier id);
-
-   /**
     * Set the sole selection to be for the referenced type.
     *
-    * @param type the type that the identifier refers to.
-    * @param id identifier of the selected thing.
+    * @tparam T the type of the thing.
+    * @param entry the thing to select.
     */
    template <class T> void setSole(T &entry)
    {
@@ -90,12 +82,15 @@ public:
    }
 
    /**
-    * Toggles the selection of the identified thing.
+    * Toggles the selection of the referenced thing.
     *
-    * @param type the type that the identifier refers to.
-    * @param id identifier for the selected thing.
+    * @tparam T the type of the thing.
+    * @param entry the thing to toggle.
     */
-   void toggle(contomap::editor::SelectedType type, contomap::model::Identifier id);
+   template <class T> void toggle(T &entry)
+   {
+      toggle(typeOf<T>(), entry.getId());
+   }
 
    /**
     * Determines whether a specific thing is part of the selection.
@@ -128,13 +123,8 @@ private:
       return Marker<typename std::remove_const<T>::type>::TYPE;
    }
 
-   /**
-    * Determines whether a specific thing is part of the selection.
-    *
-    * @param type the type that the identifier refers to.
-    * @param id identifier for the occurrence to check.
-    * @return true if the identified thing is in the selection.
-    */
+   void setSole(contomap::editor::SelectedType type, contomap::model::Identifier id);
+   void toggle(contomap::editor::SelectedType type, contomap::model::Identifier id);
    [[nodiscard]] bool contains(contomap::editor::SelectedType type, contomap::model::Identifier id) const;
 
    std::map<contomap::editor::SelectedType, contomap::model::Identifiers> identifiers;

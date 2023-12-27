@@ -105,13 +105,37 @@ void Editor::clearSelection()
 
 void Editor::modifySelection(SelectedType type, Identifier id, SelectionAction action)
 {
-   if (action == SelectionAction::Set)
+   auto modify = [this, action]<class T>(std::reference_wrapper<T> entry) {
+      if (action == SelectionAction::Set)
+      {
+         selection.setSole(entry.get());
+      }
+      else if (action == SelectionAction::Toggle)
+      {
+         selection.toggle(entry.get());
+      }
+   };
+   if (type == SelectedType::Occurrence)
    {
-      selection.setSole(type, id);
+      for (auto &occurrence : map.findOccurrences(Identifiers::ofSingle(id)))
+      {
+         modify(occurrence);
+      }
    }
-   else if (action == SelectionAction::Toggle)
+   else if (type == SelectedType::Association)
    {
-      selection.toggle(type, id);
+      auto optionalAssociation = map.findAssociation(id);
+      if (optionalAssociation.has_value())
+      {
+         modify(optionalAssociation.value());
+      }
+   }
+   else if (type == SelectedType::Role)
+   {
+      for (auto &role : map.findRoles(Identifiers::ofSingle(id)))
+      {
+         modify(role);
+      }
    }
 }
 
