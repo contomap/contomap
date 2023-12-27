@@ -100,15 +100,6 @@ public:
    /**
     * Determines whether a specific thing is part of the selection.
     *
-    * @param type the type that the identifier refers to.
-    * @param id identifier for the occurrence to check.
-    * @return true if the identified thing is in the selection.
-    */
-   [[nodiscard]] bool contains(contomap::editor::SelectedType type, contomap::model::Identifier id) const;
-
-   /**
-    * Determines whether a specific thing is part of the selection.
-    *
     * @tparam T the type of the thing to check.
     * @param entry the reference to the thing to check.
     * @return true if the referenced thing is in the selection.
@@ -136,6 +127,15 @@ private:
    {
       return Marker<typename std::remove_const<T>::type>::TYPE;
    }
+
+   /**
+    * Determines whether a specific thing is part of the selection.
+    *
+    * @param type the type that the identifier refers to.
+    * @param id identifier for the occurrence to check.
+    * @return true if the identified thing is in the selection.
+    */
+   [[nodiscard]] bool contains(contomap::editor::SelectedType type, contomap::model::Identifier id) const;
 
    std::map<contomap::editor::SelectedType, contomap::model::Identifiers> identifiers;
 };
