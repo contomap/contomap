@@ -169,12 +169,20 @@ public:
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence const> occurrencesIn(contomap::model::Identifiers scope) const;
 
    /**
+    * Return a Search for all occurrences that are in given scope.
+    *
+    * @param scope the scope to look for.
+    * @return a Search matching the given scope.
+    */
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence> occurrencesIn(contomap::model::Identifiers scope);
+
+   /**
     * Tries to find an occurrence that ideally is closest to the provided scope.
     *
     * @param scope the scope to look for.
     * @return a reference to the occurrence closest to given scope.
     */
-   [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Occurrence const>> closestOccurrenceTo(contomap::model::Identifiers const &scope) const;
+   [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Occurrence>> closestOccurrenceTo(contomap::model::Identifiers const &scope);
 
    /**
     * Determines the occurrence that follows the given one.
@@ -182,7 +190,7 @@ public:
     * @param reference the identifier of the occurrence to determine.
     * @return reference to an occurrence.
     */
-   [[nodiscard]] contomap::model::Occurrence const &nextOccurrenceAfter(contomap::model::Identifier reference) const;
+   [[nodiscard]] contomap::model::Occurrence &nextOccurrenceAfter(contomap::model::Identifier reference);
 
    /**
     * Determines the occurrence that precedes the given one.
@@ -190,7 +198,7 @@ public:
     * @param reference the identifier of the occurrence to determine.
     * @return reference to an occurrence.
     */
-   [[nodiscard]] contomap::model::Occurrence const &previousOccurrenceBefore(contomap::model::Identifier reference) const;
+   [[nodiscard]] contomap::model::Occurrence &previousOccurrenceBefore(contomap::model::Identifier reference);
 
    /**
     * Resolve the occurrence with given identifier.

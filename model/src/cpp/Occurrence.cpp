@@ -57,6 +57,11 @@ Identifier Occurrence::getId() const
    return id;
 }
 
+Topic &Occurrence::getTopic()
+{
+   return topic;
+}
+
 Topic const &Occurrence::getTopic() const
 {
    return topic;

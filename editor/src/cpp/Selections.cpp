@@ -149,18 +149,23 @@ Search<contomap::model::Styleable> Selections::allStyleableFrom(contomap::editor
 
 Search<contomap::model::Occurrence> Selections::selectedOccurrences(Selection const &selection, Contomap &map)
 {
-   return map.findOccurrences(selection.of(SelectedType::Occurrence));
+   return selection.of<Occurrence>();
+   // return map.findOccurrences(selection.of(SelectedType::Occurrence));
 }
 
 Search<contomap::model::Association> Selections::selectedAssociations(Selection const &selection, Contomap &map)
 {
+   return selection.of<contomap::model::Association>();
+   /*
    for (auto id : selection.of(SelectedType::Association))
    {
       co_yield map.findAssociation(id).value();
    }
+    */
 }
 
 Search<contomap::model::Role> Selections::selectedRoles(Selection const &selection, Contomap &map)
 {
-   return map.findRoles(selection.of(SelectedType::Role));
+   return selection.of<contomap::model::Role>();
+   // return map.findRoles(selection.of(SelectedType::Role));
 }

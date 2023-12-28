@@ -9,12 +9,23 @@
 namespace contomap::infrastructure
 {
 
+class Sized
+{
+public:
+   virtual void clear() = 0;
+
+   [[nodiscard]] virtual size_t size() const = 0;
+
+protected:
+   virtual ~Sized() = default;
+};
+
 /**
  * LinkedReferences is a set of referable entities.
  *
  * @tparam T the type of the referables.
  */
-template <class T> class LinkedReferences
+template <class T> class LinkedReferences : public Sized
 {
 public:
    /**
@@ -49,7 +60,7 @@ public:
          ++begin;
       }
    }
-   ~LinkedReferences() = default;
+   ~LinkedReferences() override = default;
 
    /**
     * Copy operator.
@@ -71,7 +82,7 @@ public:
    /**
     * Clears the set to be empty.
     */
-   void clear()
+   void clear() override
    {
       references.clear();
    }
@@ -122,6 +133,11 @@ public:
    [[nodiscard]] bool empty() const
    {
       return references.empty();
+   }
+
+   [[nodiscard]] size_t size() const override
+   {
+      return references.size();
    }
 
    /**

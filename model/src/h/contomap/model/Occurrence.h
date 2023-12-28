@@ -69,6 +69,10 @@ public:
    /**
     * @return the topic this occurrence represents.
     */
+   [[nodiscard]] contomap::model::Topic &getTopic();
+   /**
+    * @return the topic this occurrence represents.
+    */
    [[nodiscard]] contomap::model::Topic const &getTopic() const;
 
    /**

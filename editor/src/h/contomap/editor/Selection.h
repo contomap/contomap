@@ -1,8 +1,11 @@
 #pragma once
 
 #include <map>
+#include <variant>
 
 #include "contomap/editor/SelectedType.h"
+#include "contomap/infrastructure/Generator.h"
+#include "contomap/infrastructure/LinkedReferences.h"
 #include "contomap/infrastructure/serial/Decoder.h"
 #include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Association.h"
@@ -19,10 +22,13 @@ namespace contomap::editor
 class Selection
 {
 public:
+   /** Base type to refer to for template arguments. */
+   template <typename T> using BaseType = typename std::remove_cv<T>::type;
+
    /**
     * Default constructor.
     */
-   Selection() = default;
+   Selection();
 
    /**
     * Deserialize a selection.
@@ -76,9 +82,11 @@ public:
     * @tparam T the type of the thing.
     * @param entry the thing to select.
     */
-   template <class T> void setSole(T &entry)
+   template <class T> void setSole(BaseType<T> &entry)
    {
-      setSole(typeOf<T>(), entry.getId());
+      // setSole(typeOf<T>(), entry.getId());
+      clear();
+      listFor<BaseType<T>>().add(entry);
    }
 
    /**
@@ -87,9 +95,18 @@ public:
     * @tparam T the type of the thing.
     * @param entry the thing to toggle.
     */
-   template <class T> void toggle(T &entry)
+   template <class T> void toggle(BaseType<T> &entry)
    {
-      toggle(typeOf<T>(), entry.getId());
+      // toggle(typeOf<T>(), entry.getId());
+      auto &list = listFor<BaseType<T>>();
+      if (list.contains(entry))
+      {
+         list.remove(entry);
+      }
+      else
+      {
+         list.add(entry);
+      }
    }
 
    /**
@@ -101,7 +118,8 @@ public:
     */
    template <class T> [[nodiscard]] bool contains(T const &entry) const
    {
-      return contains(typeOf<T>(), entry.getId());
+      return listFor<BaseType<T>>().contains(entry);
+      // return contains(typeOf<T>(), entry.getId());
    }
 
    /**
@@ -110,9 +128,50 @@ public:
     * @param type the type to filter for.
     * @return a set of identifiers for the given selected type.
     */
-   [[nodiscard]] contomap::model::Identifiers const &of(contomap::editor::SelectedType type) const;
+   [[nodiscard]] contomap::model::Identifiers of(contomap::editor::SelectedType type) const
+   {
+      contomap::model::Identifiers result;
+
+      if (type == contomap::editor::SelectedType::Occurrence)
+      {
+         auto occurrences = of<contomap::model::Occurrence>();
+         for (contomap::model::Occurrence const &occurrence : occurrences)
+         {
+            result.add(occurrence.getId());
+         }
+      }
+      else if (type == contomap::editor::SelectedType::Association)
+      {
+         auto associations = of<contomap::model::Association>();
+         for (contomap::model::Association const &association : associations)
+         {
+            result.add(association.getId());
+         }
+      }
+      else if (type == contomap::editor::SelectedType::Role)
+      {
+         auto roles = of<contomap::model::Role>();
+         for (contomap::model::Role const &role : roles)
+         {
+            result.add(role.getId());
+         }
+      }
+
+      return result;
+   }
+
+   /**
+    * @return a search of all occurrences in the selection.
+    */
+   template <class T> [[nodiscard]] contomap::infrastructure::Search<T> of() const
+   {
+      return listFor<T>().allReferences();
+   }
 
 private:
+   using SelectionList = std::variant<contomap::infrastructure::LinkedReferences<contomap::model::Occurrence>,
+      contomap::infrastructure::LinkedReferences<contomap::model::Association>, contomap::infrastructure::LinkedReferences<contomap::model::Role>>;
+
    template <class T> struct Marker
    {
       static contomap::editor::SelectedType const TYPE;
@@ -123,11 +182,61 @@ private:
       return Marker<typename std::remove_const<T>::type>::TYPE;
    }
 
+   template <class T> contomap::infrastructure::LinkedReferences<T> &listFor()
+   {
+      return std::get<contomap::infrastructure::LinkedReferences<T>>(lists.at(static_cast<size_t>(typeOf<T>())));
+      /*
+      auto it = lists.find(typeOf<T>());
+      if (it == lists.end())
+      {
+         auto ptr = std::make_unique<SelectionList>(contomap::infrastructure::LinkedReferences<T> {});
+         // it = lists.emplace(std::move(ptr)).first;
+      }
+      return std::get<contomap::infrastructure::LinkedReferences<T>>(*it->second);
+      */
+   }
+
+   template <class T> contomap::infrastructure::LinkedReferences<T> const &listFor() const
+   {
+      return std::get<contomap::infrastructure::LinkedReferences<T>>(lists.at(static_cast<size_t>(typeOf<T>())));
+      /*
+      static contomap::infrastructure::LinkedReferences<T> const empty;
+      auto it = lists.find(typeOf<T>());
+      if (it == lists.end())
+      {
+         return empty;
+      }
+      return std::get<contomap::infrastructure::LinkedReferences<T>>(*it->second);
+       */
+   }
+
+   [[nodiscard]] static contomap::infrastructure::Sized const &asSized(SelectionList const &list);
+   [[nodiscard]] static contomap::infrastructure::Sized &asSized(SelectionList &list);
+
+   template <class T> void encodeList(contomap::infrastructure::serial::Encoder &coder, std::string const &name) const
+   {
+      auto &list = listFor<T>();
+      auto view = std::views::common(list.allReferences());
+      coder.codeArray(name, view.begin(), view.end(), [](contomap::infrastructure::serial::Encoder &nested, T const &ref) { ref.getId().encode(nested, ""); });
+   }
+
+   template <class T>
+   void decodeList(contomap::infrastructure::serial::Decoder &coder, std::string const &name, std::function<T &(contomap::model::Identifier)> const &resolver)
+   {
+      auto &list = listFor<T>();
+      coder.codeArray(name,
+         [&list, &resolver](contomap::infrastructure::serial::Decoder &nested, size_t) { list.add(resolver(contomap::model::Identifier::from(nested, ""))); });
+   }
+
+   /*
    void setSole(contomap::editor::SelectedType type, contomap::model::Identifier id);
    void toggle(contomap::editor::SelectedType type, contomap::model::Identifier id);
    [[nodiscard]] bool contains(contomap::editor::SelectedType type, contomap::model::Identifier id) const;
+   */
 
-   std::map<contomap::editor::SelectedType, contomap::model::Identifiers> identifiers;
+   // std::map<contomap::editor::SelectedType, contomap::model::Identifiers> identifiers;
+   // std::map<contomap::editor::SelectedType, std::unique_ptr<SelectionList>> lists;
+   std::array<SelectionList, 3> lists;
 };
 
 } // namespace contomap::frontend

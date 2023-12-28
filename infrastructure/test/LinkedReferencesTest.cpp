@@ -1,4 +1,5 @@
 #include <array>
+#include <variant>
 
 #include <gmock/gmock.h>
 
@@ -14,6 +15,14 @@ public:
    {
    public:
       TestingReferable &refine() override
+      {
+         return *this;
+      }
+   };
+   class TestingReferableAlt : public Referable<TestingReferableAlt>
+   {
+   public:
+      TestingReferableAlt &refine() override
       {
          return *this;
       }
@@ -110,4 +119,20 @@ TEST_F(LinkedReferencesTest, iteratorConstructor)
    auto refView = std::ranges::common_view { set1.allReferences() };
    LinkedReferences<TestingReferable> set2(refView.begin(), refView.end());
    EXPECT_TRUE(set1.contains(set2) && set2.contains(set1));
+}
+
+TEST_F(LinkedReferencesTest, variantToSized)
+{
+   using Variants = std::variant<LinkedReferences<TestingReferable>, LinkedReferences<TestingReferableAlt>>;
+   Variants v;
+   LinkedReferences<TestingReferable> a;
+   LinkedReferences<TestingReferableAlt> b;
+   v = a;
+   std::optional<std::reference_wrapper<contomap::infrastructure::Sized>> sizedA;
+   std::visit([&sizedA](contomap::infrastructure::Sized &sized) { sizedA = sized; }, v);
+   EXPECT_TRUE(sizedA.has_value());
+   v = b;
+   std::optional<std::reference_wrapper<contomap::infrastructure::Sized>> sizedB;
+   std::visit([&sizedB](contomap::infrastructure::Sized &sized) { sizedB = sized; }, v);
+   EXPECT_TRUE(sizedB.has_value());
 }

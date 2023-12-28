@@ -193,10 +193,22 @@ Search<Occurrence const> Topic::occurrencesIn(contomap::model::Identifiers scope
    }
 }
 
-std::optional<std::reference_wrapper<Occurrence const>> Topic::closestOccurrenceTo(contomap::model::Identifiers const &scope) const
+Search<Occurrence> Topic::occurrencesIn(contomap::model::Identifiers scope) // NOLINT
+{
+   for (auto const &kvp : occurrences)
+   {
+      auto &occurrence = kvp.second;
+      if (occurrence->isIn(scope))
+      {
+         co_yield *occurrence;
+      }
+   }
+}
+
+std::optional<std::reference_wrapper<Occurrence>> Topic::closestOccurrenceTo(contomap::model::Identifiers const &scope)
 {
    auto scopedView = std::ranges::common_view(occurrencesIn(scope));
-   std::vector<std::reference_wrapper<Occurrence const>> candidates(scopedView.begin(), scopedView.end());
+   std::vector<std::reference_wrapper<Occurrence>> candidates(scopedView.begin(), scopedView.end());
    if (candidates.empty())
    {
       for (auto const &occurrence : occurrences)
@@ -213,7 +225,7 @@ std::optional<std::reference_wrapper<Occurrence const>> Topic::closestOccurrence
    return candidates[0];
 }
 
-Occurrence const &Topic::nextOccurrenceAfter(Identifier reference) const
+Occurrence &Topic::nextOccurrenceAfter(Identifier reference)
 {
    auto it = occurrences.find(reference);
    if (it == occurrences.end())
@@ -224,7 +236,7 @@ Occurrence const &Topic::nextOccurrenceAfter(Identifier reference) const
    return (it != occurrences.end()) ? *it->second : *occurrences.begin()->second;
 }
 
-Occurrence const &Topic::previousOccurrenceBefore(Identifier reference) const
+Occurrence &Topic::previousOccurrenceBefore(Identifier reference)
 {
    auto it = occurrences.find(reference);
    if (it == occurrences.end())

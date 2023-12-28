@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 #include "contomap/editor/Selection.h"
 #include "contomap/infrastructure/Generator.h"
 #include "contomap/model/Contomap.h"
@@ -8,6 +10,21 @@
 
 namespace contomap::editor
 {
+
+// from https://codereview.stackexchange.com/questions/208121/add-const-or-remove-const-based-on-another-type
+template <typename U> struct constness_of
+{
+   enum
+   {
+      value = std::is_const<U>::value
+   };
+   template <typename T> struct applied_to
+   {
+      using type = typename std::conditional<value, typename std::add_const<T>::type, typename std::remove_const<T>::type>::type;
+   };
+
+   template <typename T> using applied_to_t = typename applied_to<T>::type;
+};
 
 /**
  * Selections provides helper functions for resolving items.
@@ -24,6 +41,17 @@ public:
     */
    [[nodiscard]] static std::optional<std::reference_wrapper<contomap::model::Occurrence const>> firstOccurrenceFrom(
       contomap::editor::Selection const &selection, contomap::model::ContomapView const &view);
+
+   template <class SelectionType>
+   [[nodiscard]] static std::optional<std::reference_wrapper<typename constness_of<SelectionType>::template applied_to_t<contomap::model::Occurrence>>>
+   firstOccurrenceFrom(SelectionType &selection)
+   {
+      for (auto &occurrence : selection.template of<contomap::model::Occurrence>())
+      {
+         return { occurrence };
+      }
+      return {};
+   }
 
    /**
     * Retrieves the first topic from the selection of occurrences.
