@@ -5,12 +5,14 @@ using contomap::editor::SelectedType;
 using contomap::editor::Selection;
 using contomap::editor::Selections;
 using contomap::infrastructure::Search;
+using contomap::model::Association;
 using contomap::model::Contomap;
 using contomap::model::ContomapView;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 using contomap::model::Occurrence;
 using contomap::model::Reifiable;
+using contomap::model::Role;
 using contomap::model::Style;
 using contomap::model::Topic;
 using contomap::model::Topics;
@@ -101,15 +103,15 @@ std::optional<std::reference_wrapper<Reifiable<Topic> const>> Selections::firstR
 
 Search<contomap::model::Typeable> Selections::allTypeableFrom(contomap::editor::Selection const &selection, contomap::model::Contomap &map)
 {
-   for (auto &occurrence : selectedOccurrences(selection, map))
+   for (auto &occurrence : selection.of<Occurrence>())
    {
       co_yield occurrence;
    }
-   for (auto &association : selectedAssociations(selection, map))
+   for (auto &association : selection.of<Association>())
    {
       co_yield association;
    }
-   for (auto &role : selectedRoles(selection, map))
+   for (auto &role : selection.of<Role>())
    {
       co_yield role;
    }
@@ -117,15 +119,15 @@ Search<contomap::model::Typeable> Selections::allTypeableFrom(contomap::editor::
 
 Search<contomap::model::Reifiable<Topic>> Selections::allReifiableFrom(contomap::editor::Selection const &selection, contomap::model::Contomap &map)
 {
-   for (auto &occurrence : selectedOccurrences(selection, map))
+   for (auto &occurrence : selection.of<Occurrence>())
    {
       co_yield occurrence;
    }
-   for (auto &association : selectedAssociations(selection, map))
+   for (auto &association : selection.of<Association>())
    {
       co_yield association;
    }
-   for (auto &role : selectedRoles(selection, map))
+   for (auto &role : selection.of<Role>())
    {
       co_yield role;
    }
@@ -133,39 +135,16 @@ Search<contomap::model::Reifiable<Topic>> Selections::allReifiableFrom(contomap:
 
 Search<contomap::model::Styleable> Selections::allStyleableFrom(contomap::editor::Selection const &selection, contomap::model::Contomap &map)
 {
-   for (auto &occurrence : selectedOccurrences(selection, map))
+   for (auto &occurrence : selection.of<Occurrence>())
    {
       co_yield occurrence;
    }
-   for (auto &association : selectedAssociations(selection, map))
+   for (auto &association : selection.of<Association>())
    {
       co_yield association;
    }
-   for (auto &role : selectedRoles(selection, map))
+   for (auto &role : selection.of<Role>())
    {
       co_yield role;
    }
-}
-
-Search<contomap::model::Occurrence> Selections::selectedOccurrences(Selection const &selection, Contomap &map)
-{
-   return selection.of<Occurrence>();
-   // return map.findOccurrences(selection.of(SelectedType::Occurrence));
-}
-
-Search<contomap::model::Association> Selections::selectedAssociations(Selection const &selection, Contomap &map)
-{
-   return selection.of<contomap::model::Association>();
-   /*
-   for (auto id : selection.of(SelectedType::Association))
-   {
-      co_yield map.findAssociation(id).value();
-   }
-    */
-}
-
-Search<contomap::model::Role> Selections::selectedRoles(Selection const &selection, Contomap &map)
-{
-   return selection.of<contomap::model::Role>();
-   // return map.findRoles(selection.of(SelectedType::Role));
 }
