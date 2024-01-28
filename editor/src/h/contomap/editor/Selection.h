@@ -84,7 +84,6 @@ public:
     */
    template <class T> void setSole(BaseType<T> &entry)
    {
-      // setSole(typeOf<T>(), entry.getId());
       clear();
       listFor<BaseType<T>>().add(entry);
    }
@@ -97,7 +96,6 @@ public:
     */
    template <class T> void toggle(BaseType<T> &entry)
    {
-      // toggle(typeOf<T>(), entry.getId());
       auto &list = listFor<BaseType<T>>();
       if (list.contains(entry))
       {
@@ -119,7 +117,6 @@ public:
    template <class T> [[nodiscard]] bool contains(T const &entry) const
    {
       return listFor<BaseType<T>>().contains(entry);
-      // return contains(typeOf<T>(), entry.getId());
    }
 
    /**
@@ -182,32 +179,14 @@ private:
       return Marker<typename std::remove_const<T>::type>::TYPE;
    }
 
-   template <class T> contomap::infrastructure::LinkedReferences<T> &listFor()
+   template <class T> [[nodiscard]] contomap::infrastructure::LinkedReferences<T> &listFor()
    {
       return std::get<contomap::infrastructure::LinkedReferences<T>>(lists.at(static_cast<size_t>(typeOf<T>())));
-      /*
-      auto it = lists.find(typeOf<T>());
-      if (it == lists.end())
-      {
-         auto ptr = std::make_unique<SelectionList>(contomap::infrastructure::LinkedReferences<T> {});
-         // it = lists.emplace(std::move(ptr)).first;
-      }
-      return std::get<contomap::infrastructure::LinkedReferences<T>>(*it->second);
-      */
    }
 
-   template <class T> contomap::infrastructure::LinkedReferences<T> const &listFor() const
+   template <class T> [[nodiscard]] contomap::infrastructure::LinkedReferences<T> const &listFor() const
    {
       return std::get<contomap::infrastructure::LinkedReferences<T>>(lists.at(static_cast<size_t>(typeOf<T>())));
-      /*
-      static contomap::infrastructure::LinkedReferences<T> const empty;
-      auto it = lists.find(typeOf<T>());
-      if (it == lists.end())
-      {
-         return empty;
-      }
-      return std::get<contomap::infrastructure::LinkedReferences<T>>(*it->second);
-       */
    }
 
    [[nodiscard]] static contomap::infrastructure::Sized const &asSized(SelectionList const &list);
@@ -228,14 +207,6 @@ private:
          [&list, &resolver](contomap::infrastructure::serial::Decoder &nested, size_t) { list.add(resolver(contomap::model::Identifier::from(nested, ""))); });
    }
 
-   /*
-   void setSole(contomap::editor::SelectedType type, contomap::model::Identifier id);
-   void toggle(contomap::editor::SelectedType type, contomap::model::Identifier id);
-   [[nodiscard]] bool contains(contomap::editor::SelectedType type, contomap::model::Identifier id) const;
-   */
-
-   // std::map<contomap::editor::SelectedType, contomap::model::Identifiers> identifiers;
-   // std::map<contomap::editor::SelectedType, std::unique_ptr<SelectionList>> lists;
    std::array<SelectionList, 3> lists;
 };
 

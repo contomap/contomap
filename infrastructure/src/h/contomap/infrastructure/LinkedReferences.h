@@ -9,11 +9,20 @@
 namespace contomap::infrastructure
 {
 
+/**
+ * Sized describes a container of references.
+ */
 class Sized
 {
 public:
+   /**
+    * Requests to clear the container of all references.
+    */
    virtual void clear() = 0;
 
+   /**
+    * @return the number of contained references.
+    */
    [[nodiscard]] virtual size_t size() const = 0;
 
 protected:

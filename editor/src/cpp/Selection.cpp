@@ -37,46 +37,15 @@ Selection Selection::from(Decoder &coder, uint8_t, std::function<Occurrence &(Id
    instance.decodeList<Occurrence>(coder, "occurrences", occurrenceResolver);
    instance.decodeList<Association>(coder, "associations", associationResolver);
    instance.decodeList<Role>(coder, "roles", roleResolver);
-   /*
-   auto decode = [&instance, &coder]<class T>(SelectedType type, std::string const &name, std::function<T &(Identifier)> resolver) {
-      instance.identifiers[type].decode(coder, name);
-      for (Identifier id : instance.identifiers[type])
-      {
-         resolver(id);
-      }
-   };
-   decode(SelectedType::Occurrence, "occurrences", occurrenceResolver);
-   decode(SelectedType::Association, "associations", associationResolver);
-   decode(SelectedType::Role, "roles", roleResolver);
-   */
    return instance;
 }
 
 void Selection::encode(Encoder &coder) const
 {
    Coder::Scope scope(coder, "selection");
-   /*
-   auto encodeList = [this, &coder]<class T>(std::string const &name, T *ptr = nullptr) {
-      auto &list = listFor<T>();
-
-      for (auto const &ref : list.allReferences())
-      {
-      }
-   };
-   */
    encodeList<Occurrence>(coder, "occurrences");
    encodeList<Association>(coder, "associations");
    encodeList<Role>(coder, "roles");
-   /*
-   static Identifiers const EMPTY;
-   auto encode = [this, &coder](SelectedType type, std::string const &name) {
-      auto const &ids = identifiers.contains(type) ? identifiers.at(type) : EMPTY;
-      ids.encode(coder, name);
-   };
-   encode(SelectedType::Occurrence, "occurrences");
-   encode(SelectedType::Association, "associations");
-   encode(SelectedType::Role, "roles");
-   */
 }
 
 bool Selection::empty() const
@@ -90,7 +59,6 @@ void Selection::clear()
    {
       asSized(list).clear();
    }
-   // lists.clear();
 }
 
 bool Selection::hasSoleEntry() const
@@ -110,49 +78,7 @@ bool Selection::hasSoleEntryFor(SelectedType type) const
       }
    }
    return true;
-   /*
-   return std::all_of(lists.begin(), lists.end(), [type](auto const &list) {
-      auto otherType = kvp.first;
-      auto const &sized = asSized(*kvp.second);
-      return ((otherType == type) && (sized.size() == 1)) || ((otherType != type) && (sized.size() == 0));
-   });
-   */
 }
-/*
-void Selection::setSole(SelectedType type, Identifier id)
-{
-   clear();
-   identifiers[type].add(id);
-}
-
-void Selection::toggle(SelectedType type, Identifier id)
-{
-   auto &specific = identifiers[type];
-   if (specific.contains(id))
-   {
-      specific.remove(id);
-   }
-   else
-   {
-      specific.add(id);
-   }
-}
-
-bool Selection::contains(SelectedType type, Identifier id) const
-{
-   auto it = identifiers.find(type);
-   return (it != identifiers.end()) && (it->second.contains(id));
-}
-*/
-
-/*
-Identifiers const &Selection::of(SelectedType type) const
-{
-   static Identifiers const empty;
-   auto it = identifiers.find(type);
-   return (it != identifiers.end()) ? it->second : empty;
-}
-*/
 
 Sized const &Selection::asSized(SelectionList const &list)
 {
