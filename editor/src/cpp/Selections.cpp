@@ -17,6 +17,7 @@ using contomap::model::Style;
 using contomap::model::Styleable;
 using contomap::model::Topic;
 using contomap::model::Topics;
+using contomap::model::Typeable;
 
 std::optional<std::reference_wrapper<Occurrence const>> Selections::firstOccurrenceFrom(Selection const &selection)
 {
@@ -70,50 +71,17 @@ std::optional<std::reference_wrapper<Reifiable<Topic> const>> Selections::firstR
    return {};
 }
 
-Search<contomap::model::Typeable> Selections::allTypeableFrom(contomap::editor::Selection const &selection)
+Search<Typeable> Selections::allTypeableFrom(contomap::editor::Selection const &selection)
 {
-   for (auto &occurrence : selection.of<Occurrence>())
-   {
-      co_yield occurrence;
-   }
-   for (auto &association : selection.of<Association>())
-   {
-      co_yield association;
-   }
-   for (auto &role : selection.of<Role>())
-   {
-      co_yield role;
-   }
+   return allFrom<Typeable, Typeable, Occurrence, Association, Role>(selection, [](Typeable &t) -> Typeable & { return t; });
 }
 
 Search<contomap::model::Reifiable<Topic>> Selections::allReifiableFrom(contomap::editor::Selection const &selection)
 {
-   for (auto &occurrence : selection.of<Occurrence>())
-   {
-      co_yield occurrence;
-   }
-   for (auto &association : selection.of<Association>())
-   {
-      co_yield association;
-   }
-   for (auto &role : selection.of<Role>())
-   {
-      co_yield role;
-   }
+   return allFrom<Reifiable<Topic>, Reifiable<Topic>, Occurrence, Association, Role>(selection, [](Reifiable<Topic> &r) -> Reifiable<Topic> & { return r; });
 }
 
-Search<contomap::model::Styleable> Selections::allStyleableFrom(contomap::editor::Selection const &selection)
+Search<Styleable> Selections::allStyleableFrom(contomap::editor::Selection const &selection)
 {
-   for (auto &occurrence : selection.of<Occurrence>())
-   {
-      co_yield occurrence;
-   }
-   for (auto &association : selection.of<Association>())
-   {
-      co_yield association;
-   }
-   for (auto &role : selection.of<Role>())
-   {
-      co_yield role;
-   }
+   return allFrom<Styleable, Styleable, Occurrence, Association, Role>(selection, [](Styleable &s) -> Styleable & { return s; });
 }

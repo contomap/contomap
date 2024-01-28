@@ -99,6 +99,25 @@ public:
     * @return a search that provides all selected styleables.
     */
    [[nodiscard]] static contomap::infrastructure::Search<contomap::model::Styleable> allStyleableFrom(contomap::editor::Selection const &selection);
+
+private:
+   template <typename R, typename Base> static contomap::infrastructure::Search<R> allFrom(contomap::editor::Selection const &, std::function<R &(Base &)>)
+   {
+      return {};
+   }
+
+   template <typename R, typename Base, typename Type, typename... Types>
+   static contomap::infrastructure::Search<R> allFrom(contomap::editor::Selection const &selection, std::function<R &(Base &)> toR)
+   {
+      for (auto &entry : selection.of<Type>())
+      {
+         co_yield toR(entry);
+      }
+      for (R &r : allFrom<R, Base, Types...>(selection, toR))
+      {
+         co_yield r;
+      }
+   }
 };
 
 } // namespace contomap::editor
