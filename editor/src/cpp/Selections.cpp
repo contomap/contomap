@@ -14,89 +14,58 @@ using contomap::model::Occurrence;
 using contomap::model::Reifiable;
 using contomap::model::Role;
 using contomap::model::Style;
+using contomap::model::Styleable;
 using contomap::model::Topic;
 using contomap::model::Topics;
 
 std::optional<std::reference_wrapper<Occurrence const>> Selections::firstOccurrenceFrom(Selection const &selection, ContomapView const &view)
 {
-   auto const &occurrences = selection.of(SelectedType::Occurrence);
-   auto first = occurrences.begin();
-   if (first == occurrences.end())
+   for (Occurrence const &occurrence : selection.of<Occurrence>())
    {
-      return {};
+      return occurrence;
    }
-   Identifier occurrenceId = *first;
-   auto topics = view.find(Topics::thatOccurAs(Identifiers::ofSingle(occurrenceId)));
-   auto firstTopic = topics.begin();
-   if (firstTopic == topics.end())
-   {
-      return {};
-   }
-   return (*firstTopic).get().getOccurrence(occurrenceId);
+   return {};
 }
 
 std::optional<std::reference_wrapper<Topic const>> Selections::topicOfFirstOccurrenceFrom(Selection const &selection, ContomapView const &view)
 {
-   auto const &occurrences = selection.of(SelectedType::Occurrence);
-   auto first = occurrences.begin();
-   if (first == occurrences.end())
+   for (Occurrence const &occurrence : selection.of<Occurrence>())
    {
-      return {};
+      return occurrence.getTopic();
    }
-   Identifier occurrenceId = *first;
-   auto topics = view.find(Topics::thatOccurAs(Identifiers::ofSingle(occurrenceId)));
-   auto firstTopic = topics.begin();
-   if (firstTopic == topics.end())
-   {
-      return {};
-   }
-   return { (*firstTopic).get() };
+   return {};
 }
 
 std::optional<Style> Selections::firstAppearanceFrom(Selection const &selection, ContomapView const &view)
 {
-   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   for (Styleable const &styleable : selection.of<Occurrence>())
    {
-      for (auto const &occurrence : view.findOccurrences(ids))
-      {
-         return occurrence.get().getAppearance();
-      }
+      return styleable.getAppearance();
    }
-   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
+   for (Styleable const &styleable : selection.of<Association>())
    {
-      auto const &association = view.findAssociation(*ids.begin());
-      return association.value().get().getAppearance();
+      return styleable.getAppearance();
    }
-   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
+   for (Styleable const &styleable : selection.of<Role>())
    {
-      for (auto const &role : view.findRoles(ids))
-      {
-         return role.get().getAppearance();
-      }
+      return styleable.getAppearance();
    }
    return {};
 }
 
 std::optional<std::reference_wrapper<Reifiable<Topic> const>> Selections::firstReifiableFrom(Selection const &selection, ContomapView const &view)
 {
-   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   for (Reifiable<Topic> const &reifiable : selection.of<Occurrence>())
    {
-      for (auto const &occurrence : view.findOccurrences(ids))
-      {
-         return occurrence.get();
-      }
+      return reifiable;
    }
-   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
+   for (Reifiable<Topic> const &reifiable : selection.of<Association>())
    {
-      auto const &association = view.findAssociation(*ids.begin());
-      return association.value().get();
+      return reifiable;
    }
-   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
+   for (Reifiable<Topic> const &reifiable : selection.of<Role>())
    {
-      for (auto const &role : view.findRoles(ids))
-      {
-         return role.get();
-      }
+      return reifiable;
    }
    return {};
 }
