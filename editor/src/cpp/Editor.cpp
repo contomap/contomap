@@ -192,7 +192,7 @@ void Editor::deleteSelection()
 
 void Editor::setAppearanceOfSelection(Style style)
 {
-   for (contomap::model::Styleable &styleable : Selections::allStyleableFrom(selection, map))
+   for (contomap::model::Styleable &styleable : Selections::allStyleableFrom(selection))
    {
       styleable.setAppearance(style);
    }
@@ -205,7 +205,7 @@ void Editor::setTypeOfSelection(contomap::model::Identifier topicId)
    {
       return;
    }
-   for (contomap::model::Typeable &typeable : Selections::allTypeableFrom(selection, map))
+   for (contomap::model::Typeable &typeable : Selections::allTypeableFrom(selection))
    {
       typeable.setType(optionalTopic.value());
    }
@@ -219,7 +219,7 @@ void Editor::setTypeOfSelection(contomap::model::TopicNameValue name)
 
 void Editor::clearTypeOfSelection()
 {
-   for (contomap::model::Typeable &typeable : Selections::allTypeableFrom(selection, map))
+   for (contomap::model::Typeable &typeable : Selections::allTypeableFrom(selection))
    {
       typeable.clearType();
    }
@@ -232,7 +232,7 @@ void Editor::setReifierOfSelection(contomap::model::Identifier topicId)
    {
       return;
    }
-   for (contomap::model::Reifiable<Topic> &reifiable : Selections::allReifiableFrom(selection, map))
+   for (contomap::model::Reifiable<Topic> &reifiable : Selections::allReifiableFrom(selection))
    {
       reifiable.setReifier(topic.value());
    }
@@ -246,7 +246,7 @@ void Editor::setReifierOfSelection(TopicNameValue name)
 
 void Editor::clearReifierOfSelection()
 {
-   for (contomap::model::Reifiable<Topic> &reifiable : Selections::allReifiableFrom(selection, map))
+   for (contomap::model::Reifiable<Topic> &reifiable : Selections::allReifiableFrom(selection))
    {
       reifiable.clearReifier();
    }

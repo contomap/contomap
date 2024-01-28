@@ -18,7 +18,7 @@ using contomap::model::Styleable;
 using contomap::model::Topic;
 using contomap::model::Topics;
 
-std::optional<std::reference_wrapper<Occurrence const>> Selections::firstOccurrenceFrom(Selection const &selection, ContomapView const &view)
+std::optional<std::reference_wrapper<Occurrence const>> Selections::firstOccurrenceFrom(Selection const &selection)
 {
    for (Occurrence const &occurrence : selection.of<Occurrence>())
    {
@@ -27,7 +27,7 @@ std::optional<std::reference_wrapper<Occurrence const>> Selections::firstOccurre
    return {};
 }
 
-std::optional<std::reference_wrapper<Topic const>> Selections::topicOfFirstOccurrenceFrom(Selection const &selection, ContomapView const &view)
+std::optional<std::reference_wrapper<Topic const>> Selections::topicOfFirstOccurrenceFrom(Selection const &selection)
 {
    for (Occurrence const &occurrence : selection.of<Occurrence>())
    {
@@ -36,7 +36,7 @@ std::optional<std::reference_wrapper<Topic const>> Selections::topicOfFirstOccur
    return {};
 }
 
-std::optional<Style> Selections::firstAppearanceFrom(Selection const &selection, ContomapView const &view)
+std::optional<Style> Selections::firstAppearanceFrom(Selection const &selection)
 {
    for (Styleable const &styleable : selection.of<Occurrence>())
    {
@@ -53,7 +53,7 @@ std::optional<Style> Selections::firstAppearanceFrom(Selection const &selection,
    return {};
 }
 
-std::optional<std::reference_wrapper<Reifiable<Topic> const>> Selections::firstReifiableFrom(Selection const &selection, ContomapView const &view)
+std::optional<std::reference_wrapper<Reifiable<Topic> const>> Selections::firstReifiableFrom(Selection const &selection)
 {
    for (Reifiable<Topic> const &reifiable : selection.of<Occurrence>())
    {
@@ -70,7 +70,7 @@ std::optional<std::reference_wrapper<Reifiable<Topic> const>> Selections::firstR
    return {};
 }
 
-Search<contomap::model::Typeable> Selections::allTypeableFrom(contomap::editor::Selection const &selection, contomap::model::Contomap &map)
+Search<contomap::model::Typeable> Selections::allTypeableFrom(contomap::editor::Selection const &selection)
 {
    for (auto &occurrence : selection.of<Occurrence>())
    {
@@ -86,7 +86,7 @@ Search<contomap::model::Typeable> Selections::allTypeableFrom(contomap::editor::
    }
 }
 
-Search<contomap::model::Reifiable<Topic>> Selections::allReifiableFrom(contomap::editor::Selection const &selection, contomap::model::Contomap &map)
+Search<contomap::model::Reifiable<Topic>> Selections::allReifiableFrom(contomap::editor::Selection const &selection)
 {
    for (auto &occurrence : selection.of<Occurrence>())
    {
@@ -102,7 +102,7 @@ Search<contomap::model::Reifiable<Topic>> Selections::allReifiableFrom(contomap:
    }
 }
 
-Search<contomap::model::Styleable> Selections::allStyleableFrom(contomap::editor::Selection const &selection, contomap::model::Contomap &map)
+Search<contomap::model::Styleable> Selections::allStyleableFrom(contomap::editor::Selection const &selection)
 {
    for (auto &occurrence : selection.of<Occurrence>())
    {

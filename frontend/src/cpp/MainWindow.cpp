@@ -258,7 +258,7 @@ void MainWindow::jumpToFirstOccurrenceOf(Identifier topicId)
 
 void MainWindow::panCameraToSelectedOccurrence()
 {
-   auto occurrence = Selections::firstOccurrenceFrom(view.ofSelection(), view.ofMap());
+   auto occurrence = Selections::firstOccurrenceFrom(view.ofSelection());
    if (occurrence.has_value())
    {
       auto newLocation = occurrence.value().get().getLocation().getSpacial().getAbsoluteReference();
@@ -684,13 +684,13 @@ void MainWindow::drawUserInterface(RenderContext const &context)
 
       leftIconButtonsBounds.x += (iconSize + padding);
       GuiSetTooltip("Go to reifier");
-      if (!view.ofSelection().hasSoleEntry() || !Selections::firstReifiableFrom(view.ofSelection(), view.ofMap()).value().get().getReifier().has_value())
+      if (!view.ofSelection().hasSoleEntry() || !Selections::firstReifiableFrom(view.ofSelection()).value().get().getReifier().has_value())
       {
          GuiDisable();
       }
       if (GuiButton(leftIconButtonsBounds, "[R]"))
       {
-         auto optionalReifiable = Selections::firstReifiableFrom(view.ofSelection(), view.ofMap());
+         auto optionalReifiable = Selections::firstReifiableFrom(view.ofSelection());
          if (optionalReifiable.has_value())
          {
             contomap::model::Reifiable<Topic> const &reifiable = optionalReifiable.value();
@@ -868,7 +868,7 @@ void MainWindow::openNewLocateTopicAndActDialog()
 
 void MainWindow::openSetTopicNameDefaultDialog()
 {
-   auto topic = Selections::topicOfFirstOccurrenceFrom(view.ofSelection(), view.ofMap());
+   auto topic = Selections::topicOfFirstOccurrenceFrom(view.ofSelection());
    if (!topic.has_value())
    {
       return;
@@ -879,7 +879,7 @@ void MainWindow::openSetTopicNameDefaultDialog()
 
 void MainWindow::openSetTopicNameInScopeDialog()
 {
-   auto topic = Selections::topicOfFirstOccurrenceFrom(view.ofSelection(), view.ofMap());
+   auto topic = Selections::topicOfFirstOccurrenceFrom(view.ofSelection());
    if (!topic.has_value())
    {
       return;
@@ -890,7 +890,7 @@ void MainWindow::openSetTopicNameInScopeDialog()
 
 void MainWindow::openEditStyleDialog()
 {
-   auto style = Selections::firstAppearanceFrom(view.ofSelection(), view.ofMap());
+   auto style = Selections::firstAppearanceFrom(view.ofSelection());
    if (!style.has_value())
    {
       return;
