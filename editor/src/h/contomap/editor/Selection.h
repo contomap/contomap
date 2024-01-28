@@ -139,7 +139,7 @@ private:
    using SelectionList = std::variant<contomap::infrastructure::LinkedReferences<contomap::model::Occurrence>,
       contomap::infrastructure::LinkedReferences<contomap::model::Association>, contomap::infrastructure::LinkedReferences<contomap::model::Role>>;
 
-   static constexpr size_t SELECTION_TYPES_COUNT = 3;
+   static constexpr size_t SELECTION_TYPES_COUNT = std::variant_size_v<SelectionList>;
 
    using SelectionLists = std::array<SelectionList, SELECTION_TYPES_COUNT>;
 
