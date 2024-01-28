@@ -189,8 +189,8 @@ private:
       return std::get<contomap::infrastructure::LinkedReferences<T>>(lists.at(static_cast<size_t>(typeOf<T>())));
    }
 
-   [[nodiscard]] static contomap::infrastructure::Sized const &asSized(SelectionList const &list);
-   [[nodiscard]] static contomap::infrastructure::Sized &asSized(SelectionList &list);
+   [[nodiscard]] static contomap::infrastructure::References const &asReferences(SelectionList const &list);
+   [[nodiscard]] static contomap::infrastructure::References &asReferences(SelectionList &list);
 
    template <class T> void encodeList(contomap::infrastructure::serial::Encoder &coder, std::string const &name) const
    {

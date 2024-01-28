@@ -121,18 +121,18 @@ TEST_F(LinkedReferencesTest, iteratorConstructor)
    EXPECT_TRUE(set1.contains(set2) && set2.contains(set1));
 }
 
-TEST_F(LinkedReferencesTest, variantToSized)
+TEST_F(LinkedReferencesTest, variantToReferences)
 {
    using Variants = std::variant<LinkedReferences<TestingReferable>, LinkedReferences<TestingReferableAlt>>;
    Variants v;
    LinkedReferences<TestingReferable> a;
    LinkedReferences<TestingReferableAlt> b;
    v = a;
-   std::optional<std::reference_wrapper<contomap::infrastructure::Sized>> sizedA;
-   std::visit([&sizedA](contomap::infrastructure::Sized &sized) { sizedA = sized; }, v);
-   EXPECT_TRUE(sizedA.has_value());
+   std::optional<std::reference_wrapper<contomap::infrastructure::References>> referencesA;
+   std::visit([&referencesA](contomap::infrastructure::References &references) { referencesA = references; }, v);
+   EXPECT_TRUE(referencesA.has_value());
    v = b;
-   std::optional<std::reference_wrapper<contomap::infrastructure::Sized>> sizedB;
-   std::visit([&sizedB](contomap::infrastructure::Sized &sized) { sizedB = sized; }, v);
-   EXPECT_TRUE(sizedB.has_value());
+   std::optional<std::reference_wrapper<contomap::infrastructure::References>> referencesB;
+   std::visit([&referencesB](contomap::infrastructure::References &references) { referencesB = references; }, v);
+   EXPECT_TRUE(referencesB.has_value());
 }

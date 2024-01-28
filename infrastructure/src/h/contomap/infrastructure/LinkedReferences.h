@@ -10,9 +10,9 @@ namespace contomap::infrastructure
 {
 
 /**
- * Sized describes a container of references.
+ * References describes a container of references in an untyped manner.
  */
-class Sized
+class References
 {
 public:
    /**
@@ -26,7 +26,7 @@ public:
    [[nodiscard]] virtual size_t size() const = 0;
 
 protected:
-   virtual ~Sized() = default;
+   virtual ~References() = default;
 };
 
 /**
@@ -34,7 +34,7 @@ protected:
  *
  * @tparam T the type of the referables.
  */
-template <class T> class LinkedReferences : public Sized
+template <class T> class LinkedReferences : public References
 {
 public:
    /**
