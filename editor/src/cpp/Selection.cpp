@@ -71,8 +71,8 @@ bool Selection::hasSoleEntryFor(SelectedType type) const
    for (size_t i = 0; i < lists.size(); i++)
    {
       auto otherType = static_cast<SelectedType>(i);
-      auto const &sized = asReferences(lists[i]);
-      if (((otherType == type) && (sized.size() != 1)) || ((otherType != type) && (sized.size() != 0)))
+      auto const &references = asReferences(lists[i]);
+      if (((otherType == type) && (references.size() != 1)) || ((otherType != type) && (references.size() != 0)))
       {
          return false;
       }
@@ -80,16 +80,26 @@ bool Selection::hasSoleEntryFor(SelectedType type) const
    return true;
 }
 
+Identifiers Selection::of(contomap::editor::SelectedType type) const
+{
+   static std::array<std::function<contomap::model::Identifiers(SelectionLists const &)>, SELECTION_TYPES_COUNT> const identifiersOf {
+      identifiersFor<Occurrence>(),
+      identifiersFor<Association>(),
+      identifiersFor<Role>(),
+   };
+   return identifiersOf.at(static_cast<size_t>(type))(lists);
+}
+
 References const &Selection::asReferences(SelectionList const &list)
 {
-   std::optional<std::reference_wrapper<References const>> optionalSized;
-   std::visit([&optionalSized](References const &sized) { optionalSized = sized; }, list);
-   return optionalSized.value();
+   std::optional<std::reference_wrapper<References const>> optionalReferences;
+   std::visit([&optionalReferences](References const &references) { optionalReferences = references; }, list);
+   return optionalReferences.value();
 }
 
 References &Selection::asReferences(SelectionList &list)
 {
-   std::optional<std::reference_wrapper<References>> optionalSized;
-   std::visit([&optionalSized](References &sized) { optionalSized = sized; }, list);
-   return optionalSized.value();
+   std::optional<std::reference_wrapper<References>> optionalReferences;
+   std::visit([&optionalReferences](References &references) { optionalReferences = references; }, list);
+   return optionalReferences.value();
 }

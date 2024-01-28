@@ -125,34 +125,7 @@ public:
     * @param type the type to filter for.
     * @return a set of identifiers for the given selected type.
     */
-   [[nodiscard]] contomap::model::Identifiers of(contomap::editor::SelectedType type) const
-   {
-      contomap::model::Identifiers result;
-
-      if (type == contomap::editor::SelectedType::Occurrence)
-      {
-         for (contomap::model::Identifiable const &entry : of<contomap::model::Occurrence>())
-         {
-            result.add(entry.getId());
-         }
-      }
-      else if (type == contomap::editor::SelectedType::Association)
-      {
-         for (contomap::model::Identifiable const &entry : of<contomap::model::Association>())
-         {
-            result.add(entry.getId());
-         }
-      }
-      else if (type == contomap::editor::SelectedType::Role)
-      {
-         for (contomap::model::Identifiable const &entry : of<contomap::model::Role>())
-         {
-            result.add(entry.getId());
-         }
-      }
-
-      return result;
-   }
+   [[nodiscard]] contomap::model::Identifiers of(contomap::editor::SelectedType type) const;
 
    /**
     * @return a search of all occurrences in the selection.
@@ -165,6 +138,10 @@ public:
 private:
    using SelectionList = std::variant<contomap::infrastructure::LinkedReferences<contomap::model::Occurrence>,
       contomap::infrastructure::LinkedReferences<contomap::model::Association>, contomap::infrastructure::LinkedReferences<contomap::model::Role>>;
+
+   static constexpr size_t SELECTION_TYPES_COUNT = 3;
+
+   using SelectionLists = std::array<SelectionList, SELECTION_TYPES_COUNT>;
 
    template <class T> struct Marker
    {
@@ -186,8 +163,21 @@ private:
       return std::get<contomap::infrastructure::LinkedReferences<T>>(lists.at(static_cast<size_t>(typeOf<T>())));
    }
 
-   [[nodiscard]] static contomap::infrastructure::References const &asReferences(SelectionList const &list);
-   [[nodiscard]] static contomap::infrastructure::References &asReferences(SelectionList &list);
+   [[nodiscard]] static contomap::infrastructure::References const &asReferences(SelectionList const &references);
+   [[nodiscard]] static contomap::infrastructure::References &asReferences(SelectionList &references);
+
+   template <class T> [[nodiscard]] static std::function<contomap::model::Identifiers(SelectionLists const &)> identifiersFor()
+   {
+      return [](SelectionLists const &selectionLists) {
+         contomap::model::Identifiers ids;
+         auto const &references = std::get<contomap::infrastructure::LinkedReferences<T>>(selectionLists.at(static_cast<size_t>(typeOf<T>())));
+         for (contomap::model::Identifiable const &reference : references.allReferences())
+         {
+            ids.add(reference.getId());
+         }
+         return ids;
+      };
+   }
 
    template <class T> void encodeList(contomap::infrastructure::serial::Encoder &coder, std::string const &name) const
    {
@@ -204,7 +194,7 @@ private:
          [&list, &resolver](contomap::infrastructure::serial::Decoder &nested, size_t) { list.add(resolver(contomap::model::Identifier::from(nested, ""))); });
    }
 
-   std::array<SelectionList, 3> lists;
+   SelectionLists lists;
 };
 
 } // namespace contomap::frontend
