@@ -254,11 +254,11 @@ void Editor::clearReifierOfSelection()
 
 void Editor::moveSelectionBy(contomap::model::SpacialCoordinate::Offset offset)
 {
-   for (Occurrence &occurrence : Selections::selectedOccurrences(selection, map))
+   for (Occurrence &occurrence : selection.of<Occurrence>())
    {
       occurrence.moveBy(offset);
    }
-   for (Association &association : Selections::selectedAssociations(selection, map))
+   for (Association &association : selection.of<Association>())
    {
       association.moveBy(offset);
    }
@@ -272,17 +272,10 @@ void Editor::setViewScopeFromSelection()
 
 void Editor::addToViewScopeFromSelection()
 {
-   for (Occurrence &occurrence : Selections::selectedOccurrences(selection, map))
+   for (Occurrence &occurrence : selection.of<Occurrence>())
    {
       viewScope.add(occurrence.getTopic());
    }
-   /*
-   auto &occurrenceIds = selection.of(SelectedType::Occurrence);
-   for (Topic &topic : map.find(Topics::thatOccurAs(occurrenceIds)))
-   {
-      viewScope.add(topic);
-   }
-   */
 }
 
 void Editor::setViewScopeToDefault()
