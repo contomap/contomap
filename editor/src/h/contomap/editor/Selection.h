@@ -131,26 +131,23 @@ public:
 
       if (type == contomap::editor::SelectedType::Occurrence)
       {
-         auto occurrences = of<contomap::model::Occurrence>();
-         for (contomap::model::Occurrence const &occurrence : occurrences)
+         for (contomap::model::Identifiable const &entry : of<contomap::model::Occurrence>())
          {
-            result.add(occurrence.getId());
+            result.add(entry.getId());
          }
       }
       else if (type == contomap::editor::SelectedType::Association)
       {
-         auto associations = of<contomap::model::Association>();
-         for (contomap::model::Association const &association : associations)
+         for (contomap::model::Identifiable const &entry : of<contomap::model::Association>())
          {
-            result.add(association.getId());
+            result.add(entry.getId());
          }
       }
       else if (type == contomap::editor::SelectedType::Role)
       {
-         auto roles = of<contomap::model::Role>();
-         for (contomap::model::Role const &role : roles)
+         for (contomap::model::Identifiable const &entry : of<contomap::model::Role>())
          {
-            result.add(role.getId());
+            result.add(entry.getId());
          }
       }
 

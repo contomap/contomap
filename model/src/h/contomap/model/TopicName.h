@@ -4,6 +4,7 @@
 
 #include "contomap/infrastructure/serial/Decoder.h"
 #include "contomap/infrastructure/serial/Encoder.h"
+#include "contomap/model/Identifiable.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
 #include "contomap/model/Scoped.h"
@@ -17,7 +18,7 @@ class Topic;
 /**
  * A TopicName represents the human interpretable identification of a topic.
  */
-class TopicName : public contomap::model::Scoped
+class TopicName : public contomap::model::Scoped, public contomap::model::Identifiable
 {
 public:
    /**
@@ -48,10 +49,7 @@ public:
     */
    void encode(contomap::infrastructure::serial::Encoder &coder) const;
 
-   /**
-    * @return the unique identifier of this name.
-    */
-   [[nodiscard]] contomap::model::Identifier getId() const;
+   [[nodiscard]] contomap::model::Identifier getId() const override;
 
    /**
     * Sets the new value of the name.

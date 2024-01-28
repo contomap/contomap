@@ -6,6 +6,7 @@
 #include "contomap/infrastructure/serial/Decoder.h"
 #include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Coordinates.h"
+#include "contomap/model/Identifiable.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
 #include "contomap/model/Reifiable.h"
@@ -23,6 +24,7 @@ class Topic;
  * An Occurrence represents the presence of a topic.
  */
 class Occurrence : public contomap::infrastructure::Referable<Occurrence>,
+                   public contomap::model::Identifiable,
                    public contomap::model::Reifiable<contomap::model::Topic>,
                    public contomap::model::Typeable,
                    public contomap::model::Scoped,
@@ -61,10 +63,7 @@ public:
     */
    void encode(contomap::infrastructure::serial::Encoder &coder) const;
 
-   /**
-    * @return the unique identifier of this occurrence instance.
-    */
-   [[nodiscard]] contomap::model::Identifier getId() const;
+   [[nodiscard]] contomap::model::Identifier getId() const override;
 
    /**
     * @return the topic this occurrence represents.

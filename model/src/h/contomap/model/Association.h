@@ -4,6 +4,7 @@
 #include "contomap/infrastructure/Referable.h"
 #include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Coordinates.h"
+#include "contomap/model/Identifiable.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
 #include "contomap/model/Reifiable.h"
@@ -22,6 +23,7 @@ class Topic;
  * An Association represents the link or relation between topics.
  */
 class Association : public contomap::infrastructure::Referable<Association>,
+                    public contomap::model::Identifiable,
                     public contomap::model::Reifiable<contomap::model::Topic>,
                     public contomap::model::Typeable,
                     public contomap::model::Scoped,
@@ -62,10 +64,7 @@ public:
    void decodeProperties(contomap::infrastructure::serial::Decoder &coder, uint8_t version,
       std::function<contomap::model::Topic &(contomap::model::Identifier)> const &topicResolver);
 
-   /**
-    * @return the unique identifier of this association instance.
-    */
-   [[nodiscard]] contomap::model::Identifier getId() const;
+   [[nodiscard]] contomap::model::Identifier getId() const override;
 
    /**
     * @return the location of this association

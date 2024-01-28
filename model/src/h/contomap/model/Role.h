@@ -7,6 +7,7 @@
 #include "contomap/infrastructure/Referable.h"
 #include "contomap/infrastructure/serial/Decoder.h"
 #include "contomap/infrastructure/serial/Encoder.h"
+#include "contomap/model/Identifiable.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
 #include "contomap/model/Reifiable.h"
@@ -24,6 +25,7 @@ class Topic;
  * A Role represents the nature a topic plays in an association.
  */
 class Role : public contomap::infrastructure::Referable<Role>,
+             public contomap::model::Identifiable,
              public contomap::model::Reifiable<contomap::model::Topic>,
              public contomap::model::Typeable,
              public contomap::model::Styleable
@@ -61,10 +63,7 @@ public:
     */
    void encode(contomap::infrastructure::serial::Encoder &coder) const;
 
-   /**
-    * @return the primary identifier of this role.
-    */
-   [[nodiscard]] Identifier getId() const;
+   [[nodiscard]] Identifier getId() const override;
 
    /**
     * @return the primary identifier of the association this role is part of.
