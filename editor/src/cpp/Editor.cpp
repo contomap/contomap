@@ -266,8 +266,7 @@ void Editor::moveSelectionBy(contomap::model::SpacialCoordinate::Offset offset)
 
 void Editor::setViewScopeFromSelection()
 {
-   auto occurrenceIds = selection.of(SelectedType::Occurrence);
-   setViewScopeTo(std::views::common(map.find(Topics::thatOccurAs(occurrenceIds))));
+   setViewScopeTo(selection.of<Occurrence>() | std::views::transform([](Occurrence &occurrence) -> Topic & { return occurrence.getTopic(); }));
 }
 
 void Editor::addToViewScopeFromSelection()
