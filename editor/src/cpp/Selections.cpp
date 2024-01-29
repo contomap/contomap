@@ -39,15 +39,7 @@ std::optional<std::reference_wrapper<Topic const>> Selections::topicOfFirstOccur
 
 std::optional<Style> Selections::firstAppearanceFrom(Selection const &selection)
 {
-   for (Styleable const &styleable : selection.of<Occurrence>())
-   {
-      return styleable.getAppearance();
-   }
-   for (Styleable const &styleable : selection.of<Association>())
-   {
-      return styleable.getAppearance();
-   }
-   for (Styleable const &styleable : selection.of<Role>())
+   for (Styleable const &styleable : allStyleableFrom(selection))
    {
       return styleable.getAppearance();
    }
@@ -56,15 +48,7 @@ std::optional<Style> Selections::firstAppearanceFrom(Selection const &selection)
 
 std::optional<std::reference_wrapper<Reifiable<Topic> const>> Selections::firstReifiableFrom(Selection const &selection)
 {
-   for (Reifiable<Topic> const &reifiable : selection.of<Occurrence>())
-   {
-      return reifiable;
-   }
-   for (Reifiable<Topic> const &reifiable : selection.of<Association>())
-   {
-      return reifiable;
-   }
-   for (Reifiable<Topic> const &reifiable : selection.of<Role>())
+   for (Reifiable<Topic> const &reifiable : allReifiableFrom(selection))
    {
       return reifiable;
    }
