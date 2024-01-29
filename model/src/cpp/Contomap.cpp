@@ -123,18 +123,6 @@ std::optional<std::reference_wrapper<Association>> Contomap::findAssociation(Ide
    return (it != associations.end()) ? std::optional<std::reference_wrapper<Association>>(*it->second) : std::optional<std::reference_wrapper<Association>>();
 }
 
-contomap::infrastructure::Search<contomap::model::Occurrence const> Contomap::findOccurrences(Identifiers const &ids) const // NOLINT
-{
-   for (auto const &kvp : topics)
-   {
-      auto const &topic = kvp.second;
-      for (auto &occurrence : topic->findOccurrences(ids))
-      {
-         co_yield occurrence;
-      }
-   }
-}
-
 contomap::infrastructure::Search<contomap::model::Occurrence> Contomap::findOccurrences(Identifiers const &ids) // NOLINT
 {
    for (auto &kvp : topics)
@@ -143,18 +131,6 @@ contomap::infrastructure::Search<contomap::model::Occurrence> Contomap::findOccu
       for (auto &occurrence : topic->findOccurrences(ids))
       {
          co_yield occurrence;
-      }
-   }
-}
-
-contomap::infrastructure::Search<contomap::model::Role const> Contomap::findRoles(Identifiers const &ids) const // NOLINT
-{
-   for (auto const &kvp : topics)
-   {
-      auto const &topic = kvp.second;
-      for (auto const &role : topic->findRoles(ids))
-      {
-         co_yield role;
       }
    }
 }

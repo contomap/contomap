@@ -107,7 +107,6 @@ public:
     * @return a Search instance that can be iterated once.
     */
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence> findOccurrences(contomap::model::Identifiers const &ids);
-   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence const> findOccurrences(contomap::model::Identifiers const &ids) const override;
    /**
     * Find roles by their identifier.
     *
@@ -115,7 +114,6 @@ public:
     * @return a Search instance that can be iterated once.
     */
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role> findRoles(contomap::model::Identifiers const &ids);
-   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role const> findRoles(contomap::model::Identifiers const &ids) const override;
 
    /**
     * Serializes the map with given coder.
