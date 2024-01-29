@@ -211,7 +211,7 @@ void Editor::setTypeOfSelection(contomap::model::Identifier topicId)
    }
 }
 
-void Editor::setTypeOfSelection(contomap::model::TopicNameValue name)
+void Editor::setTypeOfSelection(TopicNameValue name)
 {
    auto topicId = newSelfContainedTopic(name);
    setTypeOfSelection(topicId);
