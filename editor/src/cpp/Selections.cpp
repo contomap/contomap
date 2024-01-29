@@ -19,15 +19,6 @@ using contomap::model::Topic;
 using contomap::model::Topics;
 using contomap::model::Typeable;
 
-std::optional<std::reference_wrapper<Occurrence const>> Selections::firstOccurrenceFrom(Selection const &selection)
-{
-   for (Occurrence const &occurrence : selection.of<Occurrence>())
-   {
-      return occurrence;
-   }
-   return {};
-}
-
 std::optional<std::reference_wrapper<Topic const>> Selections::topicOfFirstOccurrenceFrom(Selection const &selection)
 {
    for (Occurrence const &occurrence : selection.of<Occurrence>())
