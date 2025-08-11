@@ -1,12 +1,15 @@
 #pragma once
 
+#include <list>
 #include <map>
 #include <memory>
 
 #include "contomap/infrastructure/Generator.h"
 #include "contomap/infrastructure/Link.h"
+#include "contomap/infrastructure/Referable.h"
 #include "contomap/infrastructure/serial/Encoder.h"
 #include "contomap/model/Association.h"
+#include "contomap/model/Identifiable.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Occurrence.h"
 #include "contomap/model/Reified.h"
@@ -20,7 +23,7 @@ namespace contomap::model
 /**
  * A Topic captures the information about a particular subject.
  */
-class Topic : public contomap::model::Reifier<Topic>
+class Topic : public contomap::infrastructure::Referable<Topic>, public contomap::model::Reifier<Topic>, public contomap::model::Identifiable
 {
 public:
    /**
@@ -48,10 +51,24 @@ public:
     * @param topicResolver the function to use for resolving topic references.
     * @param associationResolver the function to use for resolving association references.
     */
-   void decodeRelated(contomap::infrastructure::serial::Decoder &coder, uint8_t version, std::function<Topic &(contomap::model::Identifier)> topicResolver,
-      std::function<Association &(contomap::model::Identifier)> associationResolver);
+   void decodeRelated(contomap::infrastructure::serial::Decoder &coder, uint8_t version,
+      std::function<Topic &(contomap::model::Identifier)> const &topicResolver,
+      std::function<Association &(contomap::model::Identifier)> const &associationResolver);
 
    [[nodiscard]] contomap::model::Identifier getId() const override;
+
+   /**
+    * Links the topic to be the type of a typed entity.
+    *
+    * @param topicUnlinked the function to pass on to the returned link.
+    * @return the link that refers to this instance.
+    */
+   [[nodiscard]] std::unique_ptr<contomap::infrastructure::Link<Topic>> linkTyped(std::function<void()> topicUnlinked);
+
+   /**
+    * @return the number of entities this topic is the type of.
+    */
+   [[nodiscard]] size_t getTypedCount() const;
 
    /**
     * Adds a new name to the topic.
@@ -95,13 +112,6 @@ public:
     * @return the link that refers to this instance.
     */
    [[nodiscard]] std::unique_ptr<contomap::infrastructure::Link<Topic>> link(contomap::model::Role &role, std::function<void()> topicUnlinked);
-
-   /**
-    * Remove all the roles for given association.
-    *
-    * @param association the association to no longer relate to.
-    */
-   void removeRolesOf(contomap::model::Association &association);
 
    /**
     * Removes the role with given identifier from this topic.
@@ -160,12 +170,20 @@ public:
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence const> occurrencesIn(contomap::model::Identifiers scope) const;
 
    /**
+    * Return a Search for all occurrences that are in given scope.
+    *
+    * @param scope the scope to look for.
+    * @return a Search matching the given scope.
+    */
+   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence> occurrencesIn(contomap::model::Identifiers scope);
+
+   /**
     * Tries to find an occurrence that ideally is closest to the provided scope.
     *
     * @param scope the scope to look for.
     * @return a reference to the occurrence closest to given scope.
     */
-   [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Occurrence const>> closestOccurrenceTo(contomap::model::Identifiers const &scope) const;
+   [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::Occurrence>> closestOccurrenceTo(contomap::model::Identifiers const &scope);
 
    /**
     * Determines the occurrence that follows the given one.
@@ -173,7 +191,7 @@ public:
     * @param reference the identifier of the occurrence to determine.
     * @return reference to an occurrence.
     */
-   [[nodiscard]] contomap::model::Occurrence const &nextOccurrenceAfter(contomap::model::Identifier reference) const;
+   [[nodiscard]] contomap::model::Occurrence &nextOccurrenceAfter(contomap::model::Identifier reference);
 
    /**
     * Determines the occurrence that precedes the given one.
@@ -181,7 +199,7 @@ public:
     * @param reference the identifier of the occurrence to determine.
     * @return reference to an occurrence.
     */
-   [[nodiscard]] contomap::model::Occurrence const &previousOccurrenceBefore(contomap::model::Identifier reference) const;
+   [[nodiscard]] contomap::model::Occurrence &previousOccurrenceBefore(contomap::model::Identifier reference);
 
    /**
     * Resolve the occurrence with given identifier.
@@ -232,16 +250,19 @@ public:
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role> findRoles(contomap::model::Identifiers const &ids);
 
    /**
-    * Removes any reference to the given identified topic.
+    * Removes any reference to the given topic.
     *
-    * @param topicId the identifier of the topic that shall no longer be referenced.
+    * @param otherTopic the reference to the topic that shall no longer be referenced.
     */
-   void removeTopicReferences(contomap::model::Identifier topicId);
+   void removeTopicReferences(Topic const &otherTopic);
 
    void setReified(contomap::model::Reified &item) final;
    void clearReified() final;
 
 private:
+   struct Typed
+   {
+   };
    class RoleEntry
    {
    public:
@@ -268,6 +289,8 @@ private:
    [[nodiscard]] std::optional<std::reference_wrapper<contomap::model::TopicName>> findNameByScope(contomap::model::Identifiers const &scope);
 
    contomap::model::Identifier id;
+
+   std::list<std::unique_ptr<contomap::infrastructure::Link<Typed>>> typed;
 
    std::map<contomap::model::Identifier, contomap::model::TopicName> names;
    std::map<contomap::model::Identifier, std::unique_ptr<contomap::model::Occurrence>> occurrences;

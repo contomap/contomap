@@ -6,11 +6,11 @@ using contomap::model::Identifiers;
 using contomap::model::Topic;
 using contomap::model::TopicName;
 
-std::vector<std::string> Names::forDisplay(Topic const &topic, Identifier defaultScope)
+std::vector<std::string> Names::forDisplay(Topic const &topic, Topic const &defaultScope)
 {
    std::vector<std::string> result;
 
-   if (topic.getId() == defaultScope)
+   if (&topic == &defaultScope)
    {
       result.emplace_back("---");
    }
@@ -26,11 +26,11 @@ std::vector<std::string> Names::forDisplay(Topic const &topic, Identifier defaul
    return result;
 }
 
-std::vector<std::string> Names::forScopedDisplay(Topic const &topic, Identifiers const &scope, Identifier defaultScope)
+std::vector<std::string> Names::forScopedDisplay(Topic const &topic, Identifiers const &scope, Topic const &defaultScope)
 {
    std::vector<std::string> result;
 
-   if (topic.getId() == defaultScope)
+   if (&topic == &defaultScope)
    {
       result.emplace_back("---");
    }

@@ -212,7 +212,7 @@ function main {
         testDefault ""
       ;;
       "valgrind")
-        testDefault "valgrind --error-exitcode=2 --show-error-list=yes"
+        testDefault "valgrind --error-exitcode=2 --leak-check=full --show-leak-kinds=all --show-error-list=yes"
       ;;
       "lint")
         lint

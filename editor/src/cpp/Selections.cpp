@@ -4,95 +4,59 @@
 using contomap::editor::SelectedType;
 using contomap::editor::Selection;
 using contomap::editor::Selections;
+using contomap::infrastructure::Search;
+using contomap::model::Association;
+using contomap::model::Contomap;
 using contomap::model::ContomapView;
 using contomap::model::Identifier;
 using contomap::model::Identifiers;
 using contomap::model::Occurrence;
 using contomap::model::Reifiable;
+using contomap::model::Role;
 using contomap::model::Style;
+using contomap::model::Styleable;
 using contomap::model::Topic;
 using contomap::model::Topics;
+using contomap::model::Typeable;
 
-std::optional<std::reference_wrapper<Occurrence const>> Selections::firstOccurrenceFrom(Selection const &selection, ContomapView const &view)
+std::optional<std::reference_wrapper<Topic const>> Selections::topicOfFirstOccurrenceFrom(Selection const &selection)
 {
-   auto const &occurrences = selection.of(SelectedType::Occurrence);
-   auto first = occurrences.begin();
-   if (first == occurrences.end())
+   for (Occurrence const &occurrence : selection.of<Occurrence>())
    {
-      return {};
-   }
-   Identifier occurrenceId = *first;
-   auto topics = view.find(Topics::thatOccurAs(Identifiers::ofSingle(occurrenceId)));
-   auto firstTopic = topics.begin();
-   if (firstTopic == topics.end())
-   {
-      return {};
-   }
-   return (*firstTopic).get().getOccurrence(occurrenceId);
-}
-
-std::optional<std::reference_wrapper<Topic const>> Selections::topicOfFirstOccurrenceFrom(Selection const &selection, ContomapView const &view)
-{
-   auto const &occurrences = selection.of(SelectedType::Occurrence);
-   auto first = occurrences.begin();
-   if (first == occurrences.end())
-   {
-      return {};
-   }
-   Identifier occurrenceId = *first;
-   auto topics = view.find(Topics::thatOccurAs(Identifiers::ofSingle(occurrenceId)));
-   auto firstTopic = topics.begin();
-   if (firstTopic == topics.end())
-   {
-      return {};
-   }
-   return { (*firstTopic).get() };
-}
-
-std::optional<Style> Selections::firstAppearanceFrom(Selection const &selection, ContomapView const &view)
-{
-   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
-   {
-      for (auto const &occurrence : view.findOccurrences(ids))
-      {
-         return occurrence.get().getAppearance();
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
-   {
-      auto const &association = view.findAssociation(*ids.begin());
-      return association.value().get().getAppearance();
-   }
-   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
-   {
-      for (auto const &role : view.findRoles(ids))
-      {
-         return role.get().getAppearance();
-      }
+      return occurrence.getTopic();
    }
    return {};
 }
 
-std::optional<std::reference_wrapper<Reifiable<Topic> const>> Selections::firstReifiableFrom(Selection const &selection, ContomapView const &view)
+std::optional<Style> Selections::firstAppearanceFrom(Selection const &selection)
 {
-   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   for (Styleable const &styleable : allStyleableFrom(selection))
    {
-      for (auto const &occurrence : view.findOccurrences(ids))
-      {
-         return occurrence.get();
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
-   {
-      auto const &association = view.findAssociation(*ids.begin());
-      return association.value().get();
-   }
-   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
-   {
-      for (auto const &role : view.findRoles(ids))
-      {
-         return role.get();
-      }
+      return styleable.getAppearance();
    }
    return {};
+}
+
+std::optional<std::reference_wrapper<Reifiable<Topic> const>> Selections::firstReifiableFrom(Selection const &selection)
+{
+   for (Reifiable<Topic> const &reifiable : allReifiableFrom(selection))
+   {
+      return reifiable;
+   }
+   return {};
+}
+
+Search<Typeable> Selections::allTypeableFrom(contomap::editor::Selection const &selection)
+{
+   return allFrom<Typeable, Typeable, Occurrence, Association, Role>(selection, [](Typeable &t) -> Typeable & { return t; });
+}
+
+Search<contomap::model::Reifiable<Topic>> Selections::allReifiableFrom(contomap::editor::Selection const &selection)
+{
+   return allFrom<Reifiable<Topic>, Reifiable<Topic>, Occurrence, Association, Role>(selection, [](Reifiable<Topic> &r) -> Reifiable<Topic> & { return r; });
+}
+
+Search<Styleable> Selections::allStyleableFrom(contomap::editor::Selection const &selection)
+{
+   return allFrom<Styleable, Styleable, Occurrence, Association, Role>(selection, [](Styleable &s) -> Styleable & { return s; });
 }

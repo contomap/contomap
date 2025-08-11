@@ -6,7 +6,6 @@
 
 #include "contomap/frontend/Dialog.h"
 #include "contomap/frontend/DisplayEnvironment.h"
-#include "contomap/frontend/Layout.h"
 
 namespace contomap::frontend
 {
@@ -24,17 +23,15 @@ public:
     * Constructor.
     *
     * @param environment the environment to use for requesting native dialogs.
-    * @param layout the layout to work with when drawing.
     * @param loadFunction the function to call on confirmation.
     */
-   LoadDialog(contomap::frontend::DisplayEnvironment &environment, contomap::frontend::Layout const &layout, LoadFunction loadFunction);
+   LoadDialog(contomap::frontend::DisplayEnvironment &environment, LoadFunction loadFunction);
    ~LoadDialog() override = default;
 
    bool draw(contomap::frontend::RenderContext const &context) override;
 
 private:
    contomap::frontend::DisplayEnvironment &environment;
-   contomap::frontend::Layout layout;
    LoadFunction loadFunction;
    std::array<char, 1024> newFilePath {};
 };

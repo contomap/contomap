@@ -346,12 +346,12 @@ public:
 
    Identifier defaultViewScope()
    {
-      return instance.ofMap().getDefaultScope();
+      return instance.ofMap().getDefaultScopeTopic().getId();
    }
 
    Identifiers viewScope()
    {
-      return instance.ofViewScope();
+      return instance.ofViewScope().identifiers();
    }
 
    Identifiers currentAssociations()
@@ -835,8 +835,8 @@ TEST_P(EditorTest, settingTypeOfOccurrence)
    when().user().setsTypeOfSelectionTo(typeTopicId);
    then().view().ofMap().shouldHaveTopicThat(topicId, [occurrenceId, typeTopicId](Topic const &topic) {
       auto optionalType = topic.getOccurrence(occurrenceId)->get().getType();
-      ASSERT_TRUE(optionalType.isAssigned());
-      EXPECT_EQ(optionalType.value(), typeTopicId);
+      ASSERT_TRUE(optionalType.has_value());
+      EXPECT_EQ(optionalType.value().get().getId(), typeTopicId);
    });
 }
 
@@ -850,7 +850,7 @@ TEST_P(EditorTest, clearingTypeOfOccurrence)
    when().user().clearsTypeOfSelection();
    then().view().ofMap().shouldHaveTopicThat(topicId, [occurrenceId](Topic const &topic) {
       auto optionalType = topic.getOccurrence(occurrenceId)->get().getType();
-      ASSERT_FALSE(optionalType.isAssigned());
+      ASSERT_FALSE(optionalType.has_value());
    });
 }
 
@@ -865,7 +865,7 @@ TEST_P(EditorTest, deletingTypeOfOccurrenceClearsIt)
    when().user().deletesTheSelection();
    then().view().ofMap().shouldHaveTopicThat(topicId, [occurrenceId](Topic const &topic) {
       auto optionalType = topic.getOccurrence(occurrenceId)->get().getType();
-      ASSERT_FALSE(optionalType.isAssigned());
+      ASSERT_FALSE(optionalType.has_value());
    });
 }
 
@@ -878,7 +878,7 @@ TEST_P(EditorTest, typeOfOccurrenceCanNotBeSetToUnknownId)
    when().user().setsTypeOfSelectionTo(typeTopicId);
    then().view().ofMap().shouldHaveTopicThat(topicId, [occurrenceId](Topic const &topic) {
       auto optionalType = topic.getOccurrence(occurrenceId)->get().getType();
-      ASSERT_FALSE(optionalType.isAssigned());
+      ASSERT_FALSE(optionalType.has_value());
    });
 }
 
@@ -890,8 +890,8 @@ TEST_P(EditorTest, settingTypeOfAssociation)
    when().user().setsTypeOfSelectionTo(typeTopicId);
    then().view().ofMap().shouldHaveAssociationThat(associationId, [typeTopicId](Association const &association) {
       auto optionalType = association.getType();
-      ASSERT_TRUE(optionalType.isAssigned());
-      EXPECT_EQ(optionalType.value(), typeTopicId);
+      ASSERT_TRUE(optionalType.has_value());
+      EXPECT_EQ(optionalType.value().get().getId(), typeTopicId);
    });
 }
 
@@ -904,7 +904,7 @@ TEST_P(EditorTest, clearingTypeOfAssociation)
    when().user().clearsTypeOfSelection();
    then().view().ofMap().shouldHaveAssociationThat(associationId, [](Association const &association) {
       auto optionalType = association.getType();
-      ASSERT_FALSE(optionalType.isAssigned());
+      ASSERT_FALSE(optionalType.has_value());
    });
 }
 
@@ -918,7 +918,7 @@ TEST_P(EditorTest, deletingTypeOfAssociationClearsIt)
    when().user().deletesTheSelection();
    then().view().ofMap().shouldHaveAssociationThat(associationId, [](Association const &association) {
       auto optionalType = association.getType();
-      ASSERT_FALSE(optionalType.isAssigned());
+      ASSERT_FALSE(optionalType.has_value());
    });
 }
 
@@ -930,7 +930,7 @@ TEST_P(EditorTest, typeOfAssociationCanNotBeSetToUnknownId)
    when().user().setsTypeOfSelectionTo(typeTopicId);
    then().view().ofMap().shouldHaveAssociationThat(associationId, [](Association const &association) {
       auto optionalType = association.getType();
-      ASSERT_FALSE(optionalType.isAssigned());
+      ASSERT_FALSE(optionalType.has_value());
    });
 }
 
@@ -948,8 +948,8 @@ TEST_P(EditorTest, settingTypeOfRole)
    then().view().ofMap().shouldHaveTopicThat(topicId, [roleId, typeTopicId](Topic const &topic) {
       Role const &role = *topic.findRoles(Identifiers::ofSingle(roleId)).begin();
       auto optionalType = role.getType();
-      ASSERT_TRUE(optionalType.isAssigned());
-      EXPECT_EQ(optionalType.value(), typeTopicId);
+      ASSERT_TRUE(optionalType.has_value());
+      EXPECT_EQ(optionalType.value().get().getId(), typeTopicId);
    });
 }
 
@@ -968,7 +968,7 @@ TEST_P(EditorTest, clearingTypeOfRole)
    then().view().ofMap().shouldHaveTopicThat(topicId, [roleId](Topic const &topic) {
       Role const &role = *topic.findRoles(Identifiers::ofSingle(roleId)).begin();
       auto optionalType = role.getType();
-      ASSERT_FALSE(optionalType.isAssigned());
+      ASSERT_FALSE(optionalType.has_value());
    });
 }
 
@@ -988,7 +988,7 @@ TEST_P(EditorTest, deletingTypeOfRoleClearsIt)
    then().view().ofMap().shouldHaveTopicThat(topicId, [roleId](Topic const &topic) {
       Role const &role = *topic.findRoles(Identifiers::ofSingle(roleId)).begin();
       auto optionalType = role.getType();
-      ASSERT_FALSE(optionalType.isAssigned());
+      ASSERT_FALSE(optionalType.has_value());
    });
 }
 
@@ -1006,7 +1006,7 @@ TEST_P(EditorTest, typeOfRoleCanNotBeSetToUnknownId)
    then().view().ofMap().shouldHaveTopicThat(topicId, [roleId](Topic const &topic) {
       Role const &role = *topic.findRoles(Identifiers::ofSingle(roleId)).begin();
       auto optionalType = role.getType();
-      ASSERT_FALSE(optionalType.isAssigned());
+      ASSERT_FALSE(optionalType.has_value());
    });
 }
 

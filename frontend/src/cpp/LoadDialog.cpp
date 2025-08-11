@@ -1,4 +1,3 @@
-#include <cstring>
 #include <string>
 
 #include <raygui/raygui.h>
@@ -9,9 +8,8 @@ using contomap::frontend::DisplayEnvironment;
 using contomap::frontend::LoadDialog;
 using contomap::frontend::RenderContext;
 
-LoadDialog::LoadDialog(contomap::frontend::DisplayEnvironment &environment, contomap::frontend::Layout const &layout, LoadFunction loadFunction)
+LoadDialog::LoadDialog(contomap::frontend::DisplayEnvironment &environment, LoadFunction loadFunction)
    : environment(environment)
-   , layout(layout)
    , loadFunction(std::move(loadFunction))
 {
    newFilePath.fill(0x00);

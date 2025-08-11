@@ -24,8 +24,8 @@ static Identifiers someScope()
 
 TEST(NamesTest, defaultIfNoneApplies)
 {
-   Topic topic(Identifier::random());
-   auto result = Names::forDisplay(topic, Identifier::random());
+   auto topic = someTopic();
+   auto result = Names::forDisplay(topic, someTopic());
    std::vector<std::string> expected { "???" };
    EXPECT_EQ(result, expected);
 }
@@ -33,7 +33,7 @@ TEST(NamesTest, defaultIfNoneApplies)
 TEST(NamesTest, homeIfDefaultScope)
 {
    auto topic = someTopic();
-   auto result = Names::forDisplay(topic, topic.getId());
+   auto result = Names::forDisplay(topic, topic);
    std::vector<std::string> expected { "---" };
    EXPECT_EQ(result, expected);
 }
@@ -43,7 +43,7 @@ TEST(NamesTest, listedNames)
    auto topic = someTopic();
    static_cast<void>(topic.newName(someScope(), someNameValue()));
    static_cast<void>(topic.newName(someScope(), someNameValue()));
-   auto result = Names::forDisplay(topic, Identifier::random());
+   auto result = Names::forDisplay(topic, someTopic());
    EXPECT_EQ(result.size(), 2);
 }
 
@@ -75,15 +75,15 @@ TEST(Namestest, scopedNames)
    static_cast<void>(topic.newName(scopeAB, named("nameAB")));
    static_cast<void>(topic.newName(scopeBC, named("nameBC")));
 
-   auto resultB = Names::forScopedDisplay(topic, scopeB, Identifier::random());
+   auto resultB = Names::forScopedDisplay(topic, scopeB, someTopic());
    std::vector<std::string> expectedB { "nameB" };
    EXPECT_EQ(resultB, expectedB) << "wrong for scopeB";
 
-   auto resultABC = Names::forScopedDisplay(topic, scopeABC, Identifier::random());
+   auto resultABC = Names::forScopedDisplay(topic, scopeABC, someTopic());
    std::vector<std::string> expectedABC { "nameAB", "nameBC" };
    EXPECT_EQ(std::set<std::string>(resultABC.begin(), resultABC.end()), std::set<std::string>(expectedABC.begin(), expectedABC.end())) << "wrong for scopeABC";
 
-   auto resultD = Names::forScopedDisplay(topic, scopeD, Identifier::random());
+   auto resultD = Names::forScopedDisplay(topic, scopeD, someTopic());
    std::vector<std::string> expectedD { "???" };
    EXPECT_EQ(resultD, expectedD) << "scopeD should default to question marks";
 }

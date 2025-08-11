@@ -258,7 +258,7 @@ void MainWindow::jumpToFirstOccurrenceOf(Identifier topicId)
 
 void MainWindow::panCameraToSelectedOccurrence()
 {
-   auto occurrence = Selections::firstOccurrenceFrom(view.ofSelection(), view.ofMap());
+   auto occurrence = Selections::firstOccurrenceFrom(view.ofSelection());
    if (occurrence.has_value())
    {
       auto newLocation = occurrence.value().get().getLocation().getSpacial().getAbsoluteReference();
@@ -331,7 +331,7 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
                                         .with(Style::ColorType::Fill, Style::Color { .red = 0xE0, .green = 0xE0, .blue = 0xE0, .alpha = 0xFF })
                                         .with(Style::ColorType::Line, Style::Color { .red = 0x00, .green = 0x00, .blue = 0x00, .alpha = 0xFF });
 
-   auto const &viewScope = view.ofViewScope();
+   auto const &viewScope = view.ofViewScope().identifiers();
    auto const &map = view.ofMap();
 
    Font font = GetFontDefault();
@@ -344,13 +344,12 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
    auto visibleAssociations = map.find(Associations::thatAreIn(viewScope));
    for (Association const &visibleAssociation : visibleAssociations)
    {
-      bool associationIsSelected = selection.contains(SelectedType::Association, visibleAssociation.getId());
-      auto optionalTypeId = visibleAssociation.getType();
+      bool associationIsSelected = selection.contains(visibleAssociation);
+      auto optionalType = visibleAssociation.getType();
       std::string nameText;
-      if (optionalTypeId.isAssigned())
+      if (optionalType.has_value())
       {
-         auto typeTopic = view.ofMap().findTopic(optionalTypeId.value());
-         nameText = bestTitleFor(typeTopic.value());
+         nameText = bestTitleFor(optionalType.value());
       }
 
       auto spacialLocation = visibleAssociation.getLocation().getSpacial().getAbsoluteReference().plus(drawOffsetIf(associationIsSelected));
@@ -387,8 +386,7 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
       associationIds.add(visibleAssociation.getId());
       associationAreasById[visibleAssociation.getId()] = area;
 
-      auto associationStyle
-         = Styles::resolve(visibleAssociation.getAppearance(), visibleAssociation.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
+      auto associationStyle = Styles::resolve(visibleAssociation.getAppearance(), optionalType, viewScope).withDefaultsFrom(defaultStyle);
       if (associationIsSelected)
       {
          associationStyle = selectedStyle(associationStyle);
@@ -414,7 +412,7 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
 
       for (Occurrence const &occurrence : visibleTopic.occurrencesIn(viewScope))
       {
-         bool occurrenceIsSelected = selection.contains(SelectedType::Occurrence, occurrence.getId());
+         bool occurrenceIsSelected = selection.contains(occurrence);
          auto spacialLocation = occurrence.getLocation().getSpacial().getAbsoluteReference().plus(drawOffsetIf(occurrenceIsSelected));
          Vector2 projectedLocation { .x = spacialLocation.X(), .y = spacialLocation.Y() };
 
@@ -447,16 +445,15 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
 
          for (Role const &role : roles)
          {
-            bool roleIsSelected = selection.contains(SelectedType::Role, role.getId());
+            bool roleIsSelected = selection.contains(role);
             std::string roleTitle;
-            auto optionalTypeId = role.getType();
-            if (optionalTypeId.isAssigned())
+            auto optionalType = role.getType();
+            if (optionalType.has_value())
             {
-               auto typeTopic = view.ofMap().findTopic(optionalTypeId.value());
-               roleTitle = bestTitleFor(typeTopic.value());
+               roleTitle = bestTitleFor(optionalType.value());
             }
 
-            auto roleStyle = Styles::resolve(role.getAppearance(), role.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
+            auto roleStyle = Styles::resolve(role.getAppearance(), optionalType, viewScope).withDefaultsFrom(defaultStyle);
 
             float roleLineThickness = 1.0f;
             if (roleIsSelected)
@@ -505,8 +502,7 @@ void MainWindow::renderMap(MapRenderer &renderer, contomap::editor::Selection co
             }
          }
 
-         auto occurrenceStyle
-            = Styles::resolve(occurrence.getAppearance(), occurrence.getType(), view.ofViewScope(), view.ofMap()).withDefaultsFrom(defaultStyle);
+         auto occurrenceStyle = Styles::resolve(occurrence.getAppearance(), occurrence.getType(), viewScope).withDefaultsFrom(defaultStyle);
          if (occurrenceIsSelected)
          {
             occurrenceStyle = selectedStyle(occurrenceStyle);
@@ -688,13 +684,13 @@ void MainWindow::drawUserInterface(RenderContext const &context)
 
       leftIconButtonsBounds.x += (iconSize + padding);
       GuiSetTooltip("Go to reifier");
-      if (!view.ofSelection().hasSoleEntry() || !Selections::firstReifiableFrom(view.ofSelection(), view.ofMap()).value().get().getReifier().has_value())
+      if (!view.ofSelection().hasSoleEntry() || !Selections::firstReifiableFrom(view.ofSelection()).value().get().getReifier().has_value())
       {
          GuiDisable();
       }
       if (GuiButton(leftIconButtonsBounds, "[R]"))
       {
-         auto optionalReifiable = Selections::firstReifiableFrom(view.ofSelection(), view.ofMap());
+         auto optionalReifiable = Selections::firstReifiableFrom(view.ofSelection());
          if (optionalReifiable.has_value())
          {
             contomap::model::Reifiable<Topic> const &reifiable = optionalReifiable.value();
@@ -722,7 +718,7 @@ void MainWindow::drawUserInterface(RenderContext const &context)
       GuiPanel(viewScopeBounds, nullptr);
       float buttonStartX = viewScopePosition.x + padding;
 
-      auto viewScope = view.ofViewScope();
+      auto viewScope = view.ofViewScope().identifiers();
       if (lastViewScope != viewScope)
       {
          viewScopeListStartIndex = 0;
@@ -810,7 +806,7 @@ void MainWindow::requestNewFile()
 
 void MainWindow::requestLoad()
 {
-   pendingDialog = std::make_unique<contomap::frontend::LoadDialog>(environment, layout, [this](std::string const &filePath) { load(filePath); });
+   pendingDialog = std::make_unique<contomap::frontend::LoadDialog>(environment, [this](std::string const &filePath) { load(filePath); });
 }
 
 void MainWindow::requestSave()
@@ -872,7 +868,7 @@ void MainWindow::openNewLocateTopicAndActDialog()
 
 void MainWindow::openSetTopicNameDefaultDialog()
 {
-   auto topic = Selections::topicOfFirstOccurrenceFrom(view.ofSelection(), view.ofMap());
+   auto topic = Selections::topicOfFirstOccurrenceFrom(view.ofSelection());
    if (!topic.has_value())
    {
       return;
@@ -883,7 +879,7 @@ void MainWindow::openSetTopicNameDefaultDialog()
 
 void MainWindow::openSetTopicNameInScopeDialog()
 {
-   auto topic = Selections::topicOfFirstOccurrenceFrom(view.ofSelection(), view.ofMap());
+   auto topic = Selections::topicOfFirstOccurrenceFrom(view.ofSelection());
    if (!topic.has_value())
    {
       return;
@@ -894,7 +890,7 @@ void MainWindow::openSetTopicNameInScopeDialog()
 
 void MainWindow::openEditStyleDialog()
 {
-   auto style = Selections::firstAppearanceFrom(view.ofSelection(), view.ofMap());
+   auto style = Selections::firstAppearanceFrom(view.ofSelection());
    if (!style.has_value())
    {
       return;
@@ -1028,7 +1024,7 @@ MapCamera::ZoomOperation MainWindow::doubledRelative(bool nearer)
 
 std::string MainWindow::bestTitleFor(Topic const &topic)
 {
-   return Names::forScopedDisplay(topic, view.ofViewScope(), view.ofMap().getDefaultScope())[0];
+   return Names::forScopedDisplay(topic, view.ofViewScope().identifiers(), view.ofMap().getDefaultScopeTopic())[0];
 }
 
 Style MainWindow::selectedStyle(Style style)

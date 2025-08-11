@@ -4,13 +4,16 @@
 #include <memory>
 
 #include "contomap/infrastructure/Link.h"
+#include "contomap/infrastructure/Referable.h"
 #include "contomap/infrastructure/serial/Decoder.h"
 #include "contomap/infrastructure/serial/Encoder.h"
+#include "contomap/model/Identifiable.h"
 #include "contomap/model/Identifier.h"
 #include "contomap/model/Identifiers.h"
-#include "contomap/model/OptionalIdentifier.h"
 #include "contomap/model/Reifiable.h"
 #include "contomap/model/Style.h"
+#include "contomap/model/Styleable.h"
+#include "contomap/model/Typeable.h"
 
 namespace contomap::model
 {
@@ -21,7 +24,11 @@ class Topic;
 /**
  * A Role represents the nature a topic plays in an association.
  */
-class Role : public contomap::model::Reifiable<contomap::model::Topic>
+class Role : public contomap::infrastructure::Referable<Role>,
+             public contomap::model::Identifiable,
+             public contomap::model::Reifiable<contomap::model::Topic>,
+             public contomap::model::Typeable,
+             public contomap::model::Styleable
 {
 public:
    /**
@@ -32,6 +39,8 @@ public:
     * @param association the association the role is part of.
     */
    Role(contomap::model::Identifier id, contomap::model::Topic &topic, contomap::model::Association &association);
+
+   Role &refine() override;
 
    /**
     * Deserializes the role.
@@ -54,48 +63,21 @@ public:
     */
    void encode(contomap::infrastructure::serial::Encoder &coder) const;
 
-   /**
-    * @return the primary identifier of this role.
-    */
-   [[nodiscard]] Identifier getId() const;
+   [[nodiscard]] Identifier getId() const override;
 
    /**
     * @return the primary identifier of the association this role is part of.
     */
    [[nodiscard]] Identifier getParent() const;
 
-   /**
-    * Set the style of the appearance.
-    *
-    * @param style the new style to set.
-    */
-   void setAppearance(contomap::model::Style style);
-   /**
-    * @return the current style of the appearance.
-    */
-   [[nodiscard]] contomap::model::Style getAppearance() const;
-
-   /**
-    * Assign the type of this occurrence.
-    *
-    * @param typeTopicId the identifier of the topic that describes this occurrence.
-    */
-   void setType(contomap::model::Identifier typeTopicId);
-   /**
-    * Clears the type of this occurrence.
-    */
-   void clearType();
-   /**
-    * @return the identifier of the topic that describes this occurrence, if set.
-    */
-   [[nodiscard]] contomap::model::OptionalIdentifier getType() const;
+   void setAppearance(contomap::model::Style style) override;
+   [[nodiscard]] contomap::model::Style getAppearance() const override;
 
 private:
    void unlink();
 
    contomap::model::Identifier id;
 
-   contomap::model::OptionalIdentifier type;
    contomap::model::Style appearance;
 
    std::unique_ptr<contomap::infrastructure::Link<contomap::model::Topic>> topic;

@@ -24,14 +24,14 @@ uint8_t const Editor::CURRENT_SERIAL_VERSION = 0x00;
 
 Editor::Editor()
    : map(Contomap::newMap())
+   , viewScope(map.getDefaultScopeTopic())
 {
-   viewScope.add(map.getDefaultScope());
 }
 
 void Editor::newMap()
 {
    map = Contomap::newMap();
-   viewScope = Identifiers::ofSingle(map.getDefaultScope());
+   viewScope = contomap::editor::ViewScope(map.getDefaultScopeTopic());
    selection.clear();
 }
 
@@ -50,10 +50,10 @@ void Editor::setTopicNameDefault(Identifier topicId, TopicNameValue value)
 
 void Editor::setTopicNameInScope(Identifier topicId, TopicNameValue value)
 {
-   setTopicNameInScope(topicId, viewScope, std::move(value));
+   setTopicNameInScope(topicId, viewScope.identifiers(), std::move(value));
 }
 
-Identifier Editor::newSelfContainedTopic(TopicNameValue value)
+Identifier Editor::newSelfContainedTopic(TopicNameValue const &value)
 {
    auto &topic = map.newTopic();
    static_cast<void>(topic.newName(scopeForTopicDefaultName(), value));
@@ -78,7 +78,7 @@ void Editor::removeTopicNameInScope(Identifier topicId)
    {
       return;
    }
-   topic.value().get().removeNameInScope(viewScope);
+   topic.value().get().removeNameInScope(viewScope.identifiers());
 }
 
 void Editor::newOccurrenceRequested(Identifier topicId, SpacialCoordinate location)
@@ -93,8 +93,8 @@ void Editor::newOccurrenceRequested(Identifier topicId, SpacialCoordinate locati
 
 Identifier Editor::newAssociationRequested(SpacialCoordinate location)
 {
-   auto &association = map.newAssociation(viewScope, location);
-   selection.setSole(SelectedType::Association, association.getId());
+   auto &association = map.newAssociation(viewScope.identifiers(), location);
+   selection.setSole<Association>(association);
    return association.getId();
 }
 
@@ -105,20 +105,46 @@ void Editor::clearSelection()
 
 void Editor::modifySelection(SelectedType type, Identifier id, SelectionAction action)
 {
-   if (action == SelectionAction::Set)
+   auto modify = [this, action]<class T>(std::reference_wrapper<T> entry) {
+      if (action == SelectionAction::Set)
+      {
+         selection.setSole<T>(entry.get());
+      }
+      else if (action == SelectionAction::Toggle)
+      {
+         selection.toggle<T>(entry.get());
+      }
+   };
+   if (type == SelectedType::Occurrence)
    {
-      selection.setSole(type, id);
+      auto ids = Identifiers::ofSingle(id);
+      for (auto &occurrence : map.findOccurrences(ids))
+      {
+         modify(occurrence);
+      }
    }
-   else if (action == SelectionAction::Toggle)
+   else if (type == SelectedType::Association)
    {
-      selection.toggle(type, id);
+      auto optionalAssociation = map.findAssociation(id);
+      if (optionalAssociation.has_value())
+      {
+         modify(optionalAssociation.value());
+      }
+   }
+   else if (type == SelectedType::Role)
+   {
+      auto ids = Identifiers::ofSingle(id);
+      for (auto &role : map.findRoles(ids))
+      {
+         modify(role);
+      }
    }
 }
 
 void Editor::linkSelection()
 {
-   auto &associationIds = selection.of(SelectedType::Association);
-   auto &occurrenceIds = selection.of(SelectedType::Occurrence);
+   auto associationIds = selection.of(SelectedType::Association);
+   auto occurrenceIds = selection.of(SelectedType::Occurrence);
    if (!associationIds.empty())
    {
       for (auto associationId : associationIds)
@@ -133,7 +159,7 @@ void Editor::linkSelection()
    }
    else if (!occurrenceIds.empty())
    {
-      auto &association = map.newAssociation(viewScope, SpacialCoordinate::absoluteAt(0.0f, 0.0f));
+      auto &association = map.newAssociation(viewScope.identifiers(), SpacialCoordinate::absoluteAt(0.0f, 0.0f));
       auto topics = map.find(Topics::thatOccurAs(occurrenceIds));
       float x = 0.0f;
       float y = 0.0f;
@@ -151,7 +177,7 @@ void Editor::linkSelection()
          }
       }
       association.moveTo(SpacialCoordinate::absoluteAt(x / static_cast<float>(count), y / static_cast<float>(count)));
-      selection.setSole(SelectedType::Association, association.getId());
+      selection.setSole<Association>(association);
    }
 }
 
@@ -166,61 +192,26 @@ void Editor::deleteSelection()
 
 void Editor::setAppearanceOfSelection(Style style)
 {
-   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   for (contomap::model::Styleable &styleable : Selections::allStyleableFrom(selection))
    {
-      for (auto &occurrence : map.findOccurrences(ids))
-      {
-         occurrence.get().setAppearance(style);
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
-   {
-      for (auto id : ids)
-      {
-         Association &association = map.findAssociation(id).value();
-         association.setAppearance(style);
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
-   {
-      for (Role &role : map.findRoles(ids))
-      {
-         role.setAppearance(style);
-      }
+      styleable.setAppearance(style);
    }
 }
 
 void Editor::setTypeOfSelection(contomap::model::Identifier topicId)
 {
-   if (!map.findTopic(topicId).has_value())
+   auto optionalTopic = map.findTopic(topicId);
+   if (!optionalTopic.has_value())
    {
       return;
    }
-   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   for (contomap::model::Typeable &typeable : Selections::allTypeableFrom(selection))
    {
-      for (auto &occurrence : map.findOccurrences(ids))
-      {
-         occurrence.get().setType(topicId);
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
-   {
-      for (auto id : ids)
-      {
-         Association &association = map.findAssociation(id).value();
-         association.setType(topicId);
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
-   {
-      for (Role &role : map.findRoles(ids))
-      {
-         role.setType(topicId);
-      }
+      typeable.setType(optionalTopic.value());
    }
 }
 
-void Editor::setTypeOfSelection(contomap::model::TopicNameValue name)
+void Editor::setTypeOfSelection(TopicNameValue name)
 {
    auto topicId = newSelfContainedTopic(name);
    setTypeOfSelection(topicId);
@@ -228,27 +219,9 @@ void Editor::setTypeOfSelection(contomap::model::TopicNameValue name)
 
 void Editor::clearTypeOfSelection()
 {
-   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   for (contomap::model::Typeable &typeable : Selections::allTypeableFrom(selection))
    {
-      for (auto &occurrence : map.findOccurrences(ids))
-      {
-         occurrence.get().clearType();
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
-   {
-      for (auto id : ids)
-      {
-         Association &association = map.findAssociation(id).value();
-         association.clearType();
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
-   {
-      for (Role &role : map.findRoles(ids))
-      {
-         role.clearType();
-      }
+      typeable.clearType();
    }
 }
 
@@ -259,27 +232,9 @@ void Editor::setReifierOfSelection(contomap::model::Identifier topicId)
    {
       return;
    }
-   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   for (contomap::model::Reifiable<Topic> &reifiable : Selections::allReifiableFrom(selection))
    {
-      for (auto &occurrence : map.findOccurrences(ids))
-      {
-         occurrence.get().setReifier(topic.value());
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
-   {
-      for (auto id : ids)
-      {
-         Association &association = map.findAssociation(id).value();
-         association.setReifier(topic.value());
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
-   {
-      for (Role &role : map.findRoles(ids))
-      {
-         role.setReifier(topic.value());
-      }
+      reifiable.setReifier(topic.value());
    }
 }
 
@@ -291,107 +246,75 @@ void Editor::setReifierOfSelection(TopicNameValue name)
 
 void Editor::clearReifierOfSelection()
 {
-   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   for (contomap::model::Reifiable<Topic> &reifiable : Selections::allReifiableFrom(selection))
    {
-      for (auto &occurrence : map.findOccurrences(ids))
-      {
-         occurrence.get().clearReifier();
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
-   {
-      for (auto id : ids)
-      {
-         Association &association = map.findAssociation(id).value();
-         association.clearReifier();
-      }
-   }
-   if (auto const &ids = selection.of(SelectedType::Role); !ids.empty())
-   {
-      for (Role &role : map.findRoles(ids))
-      {
-         role.clearReifier();
-      }
+      reifiable.clearReifier();
    }
 }
 
 void Editor::moveSelectionBy(contomap::model::SpacialCoordinate::Offset offset)
 {
-   if (auto const &ids = selection.of(SelectedType::Occurrence); !ids.empty())
+   for (Occurrence &occurrence : selection.of<Occurrence>())
    {
-      for (auto &occurrence : map.findOccurrences(ids))
-      {
-         occurrence.get().moveBy(offset);
-      }
+      occurrence.moveBy(offset);
    }
-   if (auto const &ids = selection.of(SelectedType::Association); !ids.empty())
+   for (Association &association : selection.of<Association>())
    {
-      for (auto id : ids)
-      {
-         Association &association = map.findAssociation(id).value();
-         association.moveBy(offset);
-      }
+      association.moveBy(offset);
    }
 }
 
 void Editor::setViewScopeFromSelection()
 {
-   auto &occurrenceIds = selection.of(SelectedType::Occurrence);
-   Identifiers newViewScope;
-   for (Topic &topic : map.find(Topics::thatOccurAs(occurrenceIds)))
-   {
-      newViewScope.add(topic.getId());
-   }
-   if (!newViewScope.empty())
-   {
-      setViewScopeTo(newViewScope);
-   }
+   setViewScopeTo(selection.of<Occurrence>() | std::views::transform([](Occurrence &occurrence) -> Topic & { return occurrence.getTopic(); }));
 }
 
 void Editor::addToViewScopeFromSelection()
 {
-   auto &occurrenceIds = selection.of(SelectedType::Occurrence);
-   Identifiers newViewScope;
-   for (Topic &topic : map.find(Topics::thatOccurAs(occurrenceIds)))
+   for (Occurrence &occurrence : selection.of<Occurrence>())
    {
-      addToViewScope(topic.getId());
+      viewScope.add(occurrence.getTopic());
    }
 }
 
 void Editor::setViewScopeToDefault()
 {
-   setViewScopeTo(Identifiers::ofSingle(map.getDefaultScope()));
+   setViewScopeTo(std::views::single(std::ref(map.getDefaultScopeTopic())));
 }
 
 void Editor::setViewScopeTo(Identifier id)
 {
-   if (!map.findTopic(id).has_value())
+   auto optionalTopic = map.findTopic(id);
+   if (!optionalTopic.has_value())
    {
       return;
    }
-   setViewScopeTo(Identifiers::ofSingle(id));
+   setViewScopeTo(std::views::single(std::ref(optionalTopic.value())));
 }
 
 void Editor::addToViewScope(Identifier id)
 {
-   if (!map.findTopic(id).has_value())
+   auto optionalTopic = map.findTopic(id);
+   if (!optionalTopic.has_value())
    {
       return;
    }
-   viewScope.add(id);
+   viewScope.add(optionalTopic.value());
 }
 
 void Editor::removeFromViewScope(Identifier id)
 {
-   if (!viewScope.remove(id))
+   auto optionalTopic = map.findTopic(id);
+   if (!optionalTopic.has_value())
    {
       return;
    }
-   if (viewScope.empty())
+   if (!viewScope.remove(optionalTopic.value()))
    {
-      viewScope.add(map.getDefaultScope());
+      return;
    }
    selection.clear();
+   verifyViewScopeIsStable();
 }
 
 void Editor::cycleSelectedOccurrenceForward()
@@ -410,13 +333,16 @@ void Editor::cycleSelectedOccurrence(bool forward)
    {
       return;
    }
-   Identifier originalOccurrenceId = *selection.of(SelectedType::Occurrence).begin();
-   for (Topic &topic : map.find(Topics::thatOccurAs(Identifiers::ofSingle(originalOccurrenceId))))
+   auto optionalOccurrence = Selections::firstOccurrenceFrom(selection);
+   if (!optionalOccurrence.has_value())
    {
-      auto const &nextOccurrence = forward ? topic.nextOccurrenceAfter(originalOccurrenceId) : topic.previousOccurrenceBefore(originalOccurrenceId);
-      viewScope = nextOccurrence.getScope();
-      selection.setSole(SelectedType::Occurrence, nextOccurrence.getId());
+      return;
    }
+   Occurrence &currentOccurrence = optionalOccurrence.value();
+   Topic &topic = currentOccurrence.getTopic();
+   auto &nextOccurrence = forward ? topic.nextOccurrenceAfter(currentOccurrence.getId()) : topic.previousOccurrenceBefore(currentOccurrence.getId());
+   setViewScopeTo(nextOccurrence.getScope());
+   selection.setSole<Occurrence>(nextOccurrence);
 }
 
 void Editor::selectClosestOccurrenceOf(Identifier topicId)
@@ -427,21 +353,21 @@ void Editor::selectClosestOccurrenceOf(Identifier topicId)
       return;
    }
    Topic &topic = optionalTopic.value();
-   auto optionalOccurrence = topic.closestOccurrenceTo(viewScope);
+   auto optionalOccurrence = topic.closestOccurrenceTo(viewScope.identifiers());
    if (!optionalOccurrence.has_value())
    {
       return;
    }
-   Occurrence const &occurrence = optionalOccurrence.value();
-   viewScope = occurrence.getScope();
-   selection.setSole(SelectedType::Occurrence, occurrence.getId());
+   Occurrence &occurrence = optionalOccurrence.value();
+   setViewScopeTo(occurrence.getScope());
+   selection.setSole<Occurrence>(occurrence);
 }
 
 void Editor::saveState(Encoder &encoder, bool withSelection)
 {
    encoder.code("version", CURRENT_SERIAL_VERSION);
    map.encode(encoder);
-   viewScope.encode(encoder, "viewScope");
+   viewScope.encode(encoder);
    {
       Coder::Scope selectionScope(encoder, "selection");
       uint8_t selectionFlag = withSelection ? 0x01 : 0x00;
@@ -456,7 +382,7 @@ void Editor::saveState(Encoder &encoder, bool withSelection)
 bool Editor::loadState(Decoder &decoder)
 {
    Contomap newMap = contomap::model::Contomap::newMap();
-   Identifiers newViewScope;
+   ViewScope newViewScope;
    Selection newSelection;
    uint8_t serialVersion = 0x00;
 
@@ -464,7 +390,8 @@ bool Editor::loadState(Decoder &decoder)
    {
       decoder.code("version", serialVersion);
       newMap.decode(decoder, serialVersion);
-      newViewScope.decode(decoder, "viewScope");
+      auto topicResolver = [&newMap](Identifier id) { return newMap.findTopic(id).value(); };
+      newViewScope = ViewScope::from(decoder, topicResolver);
       {
          Coder::Scope selectionScope(decoder, "selection");
          uint8_t selectionFlag = 0x00;
@@ -483,15 +410,13 @@ bool Editor::loadState(Decoder &decoder)
       return false;
    }
 
-   // TODO: verify new state is consistent -> proper references
-
    map = std::move(newMap);
    viewScope = newViewScope;
    selection = newSelection;
    return true;
 }
 
-Identifiers const &Editor::ofViewScope() const
+contomap::editor::ViewScope const &Editor::ofViewScope() const
 {
    return viewScope;
 }
@@ -508,30 +433,25 @@ contomap::editor::Selection const &Editor::ofSelection() const
 
 void Editor::createAndSelectOccurrence(contomap::model::Topic &topic, contomap::model::SpacialCoordinate location)
 {
-   auto &occurrence = topic.newOccurrence(viewScope, location);
-   selection.setSole(SelectedType::Occurrence, occurrence.getId());
+   auto &occurrence = topic.newOccurrence(viewScope.identifiers(), location);
+   selection.setSole<Occurrence>(occurrence);
 }
 
-void Editor::setViewScopeTo(contomap::model::Identifiers const &ids)
+void Editor::setViewScopeTo(Identifiers const &ids)
 {
-   viewScope = ids;
+   viewScope.clear();
+   for (auto const &id : ids)
+   {
+      viewScope.add(map.findTopic(id).value());
+   }
    selection.clear();
 }
 
 void Editor::verifyViewScopeIsStable()
 {
-   Identifiers unknownIds;
-
-   for (auto id : viewScope)
+   if (viewScope.empty())
    {
-      if (!map.findTopic(id).has_value())
-      {
-         unknownIds.add(id);
-      }
-   }
-   for (auto id : unknownIds)
-   {
-      removeFromViewScope(id);
+      viewScope.add(map.getDefaultScopeTopic());
    }
 }
 

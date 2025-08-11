@@ -23,7 +23,12 @@ public:
     */
    static Contomap newMap();
 
-   [[nodiscard]] contomap::model::Identifier getDefaultScope() const override;
+   /**
+    * @return the reference to the default topic scope.
+    */
+   [[nodiscard]] contomap::model::Topic &getDefaultScopeTopic();
+
+   [[nodiscard]] contomap::model::Topic const &getDefaultScopeTopic() const override;
 
    /**
     * Creates a new topic and adds it to the map.
@@ -102,7 +107,6 @@ public:
     * @return a Search instance that can be iterated once.
     */
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence> findOccurrences(contomap::model::Identifiers const &ids);
-   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Occurrence const> findOccurrences(contomap::model::Identifiers const &ids) const override;
    /**
     * Find roles by their identifier.
     *
@@ -110,7 +114,6 @@ public:
     * @return a Search instance that can be iterated once.
     */
    [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role> findRoles(contomap::model::Identifiers const &ids);
-   [[nodiscard]] contomap::infrastructure::Search<contomap::model::Role const> findRoles(contomap::model::Identifiers const &ids) const override;
 
    /**
     * Serializes the map with given coder.

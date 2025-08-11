@@ -51,15 +51,15 @@ void Topic::encodeRelated(Encoder &coder) const
    });
 }
 
-void Topic::decodeRelated(
-   Decoder &coder, uint8_t version, std::function<Topic &(Identifier)> topicResolver, std::function<Association &(Identifier)> associationResolver)
+void Topic::decodeRelated(Decoder &coder, uint8_t version, std::function<Topic &(Identifier)> const &topicResolver,
+   std::function<Association &(Identifier)> const &associationResolver)
 {
    Coder::Scope scope(coder, "related");
-   coder.codeArray("names", [this, version](Decoder &nested, size_t) {
+   coder.codeArray("names", [this, version, &topicResolver](Decoder &nested, size_t) {
       Coder::Scope nameScope(nested, "");
       auto nameId = Identifier::from(nested, "id");
-      auto name = TopicName::from(nested, version, nameId);
-      names.emplace(nameId, name);
+      auto name = TopicName::from(nested, version, nameId, topicResolver);
+      names.emplace(nameId, std::move(name));
    });
    coder.codeArray("occurrences", [this, version, &topicResolver](Decoder &nested, size_t) {
       Coder::Scope nestedScope(nested, "");
@@ -78,6 +78,20 @@ void Topic::decodeRelated(
 Identifier Topic::getId() const
 {
    return id;
+}
+
+std::unique_ptr<Link<Topic>> Topic::linkTyped(std::function<void()> topicUnlinked)
+{
+   static Typed sentinel;
+   auto localLinkEntry = typed.insert(typed.end(), std::unique_ptr<Link<Typed>> {});
+   auto links = Links::between(*this, std::move(topicUnlinked), sentinel, [this, localLinkEntry]() { typed.erase(localLinkEntry); });
+   *localLinkEntry = std::move(links.second);
+   return std::move(links.first);
+}
+
+size_t Topic::getTypedCount() const
+{
+   return typed.size();
 }
 
 TopicName &Topic::newName(Identifiers scope, contomap::model::TopicNameValue const &value)
@@ -147,22 +161,6 @@ std::unique_ptr<Link<Topic>> Topic::link(Role &role, std::function<void()> topic
    return std::move(links.first);
 }
 
-void Topic::removeRolesOf(Association &association)
-{
-   Identifiers toRemove;
-   for (auto const &[roleId, entry] : roles)
-   {
-      if (entry->role().getParent() == association.getId())
-      {
-         toRemove.add(roleId);
-      }
-   }
-   std::erase_if(roles, [&toRemove](auto const &kvp) {
-      auto const &entry = kvp.second;
-      return toRemove.contains(entry->role().getId());
-   });
-}
-
 void Topic::removeRole(Identifier roleId)
 {
    roles.erase(roleId);
@@ -195,10 +193,22 @@ Search<Occurrence const> Topic::occurrencesIn(contomap::model::Identifiers scope
    }
 }
 
-std::optional<std::reference_wrapper<Occurrence const>> Topic::closestOccurrenceTo(contomap::model::Identifiers const &scope) const
+Search<Occurrence> Topic::occurrencesIn(contomap::model::Identifiers scope) // NOLINT
+{
+   for (auto const &kvp : occurrences)
+   {
+      auto &occurrence = kvp.second;
+      if (occurrence->isIn(scope))
+      {
+         co_yield *occurrence;
+      }
+   }
+}
+
+std::optional<std::reference_wrapper<Occurrence>> Topic::closestOccurrenceTo(contomap::model::Identifiers const &scope)
 {
    auto scopedView = std::ranges::common_view(occurrencesIn(scope));
-   std::vector<std::reference_wrapper<Occurrence const>> candidates(scopedView.begin(), scopedView.end());
+   std::vector<std::reference_wrapper<Occurrence>> candidates(scopedView.begin(), scopedView.end());
    if (candidates.empty())
    {
       for (auto const &occurrence : occurrences)
@@ -215,7 +225,7 @@ std::optional<std::reference_wrapper<Occurrence const>> Topic::closestOccurrence
    return candidates[0];
 }
 
-Occurrence const &Topic::nextOccurrenceAfter(Identifier reference) const
+Occurrence &Topic::nextOccurrenceAfter(Identifier reference)
 {
    auto it = occurrences.find(reference);
    if (it == occurrences.end())
@@ -226,7 +236,7 @@ Occurrence const &Topic::nextOccurrenceAfter(Identifier reference) const
    return (it != occurrences.end()) ? *it->second : *occurrences.begin()->second;
 }
 
-Occurrence const &Topic::previousOccurrenceBefore(Identifier reference) const
+Occurrence &Topic::previousOccurrenceBefore(Identifier reference)
 {
    auto it = occurrences.find(reference);
    if (it == occurrences.end())
@@ -304,34 +314,16 @@ Search<Role> Topic::findRoles(contomap::model::Identifiers const &ids) // NOLINT
    }
 }
 
-void Topic::removeTopicReferences(Identifier topicId)
+void Topic::removeTopicReferences(Topic const &otherTopic)
 {
-   std::erase_if(occurrences, [&topicId](auto const &kvp) {
+   std::erase_if(occurrences, [&otherTopic](auto const &kvp) {
       auto const &occurrence = kvp.second;
-      return occurrence->scopeContains(topicId);
+      return occurrence->scopeContains(otherTopic);
    });
-   std::erase_if(names, [&topicId](auto const &kvp) {
+   std::erase_if(names, [&otherTopic](auto const &kvp) {
       auto const &name = kvp.second;
-      return name.scopeContains(topicId);
+      return name.scopeContains(otherTopic);
    });
-   for (auto &kvp : occurrences)
-   {
-      auto &occurrence = kvp.second;
-      auto typeId = occurrence->getType();
-      if (typeId.isAssigned() && (typeId.value() == topicId))
-      {
-         occurrence->clearType();
-      }
-   }
-   for (auto &kvp : roles)
-   {
-      auto &role = kvp.second->role();
-      auto typeId = role.getType();
-      if (typeId.isAssigned() && (typeId.value() == topicId))
-      {
-         role.clearType();
-      }
-   }
 }
 
 std::optional<std::reference_wrapper<TopicName>> Topic::findNameByScope(Identifiers const &scope)

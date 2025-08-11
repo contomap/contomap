@@ -23,9 +23,14 @@ Contomap Contomap::newMap()
    return {};
 }
 
-Identifier Contomap::getDefaultScope() const
+Topic &Contomap::getDefaultScopeTopic()
 {
-   return defaultScope;
+   return findTopic(defaultScope).value();
+}
+
+Topic const &Contomap::getDefaultScopeTopic() const
+{
+   return findTopic(defaultScope).value();
 }
 
 Topic &Contomap::newTopic()
@@ -118,18 +123,6 @@ std::optional<std::reference_wrapper<Association>> Contomap::findAssociation(Ide
    return (it != associations.end()) ? std::optional<std::reference_wrapper<Association>>(*it->second) : std::optional<std::reference_wrapper<Association>>();
 }
 
-contomap::infrastructure::Search<contomap::model::Occurrence const> Contomap::findOccurrences(Identifiers const &ids) const // NOLINT
-{
-   for (auto const &kvp : topics)
-   {
-      auto const &topic = kvp.second;
-      for (auto &occurrence : topic->findOccurrences(ids))
-      {
-         co_yield occurrence;
-      }
-   }
-}
-
 contomap::infrastructure::Search<contomap::model::Occurrence> Contomap::findOccurrences(Identifiers const &ids) // NOLINT
 {
    for (auto &kvp : topics)
@@ -138,18 +131,6 @@ contomap::infrastructure::Search<contomap::model::Occurrence> Contomap::findOccu
       for (auto &occurrence : topic->findOccurrences(ids))
       {
          co_yield occurrence;
-      }
-   }
-}
-
-contomap::infrastructure::Search<contomap::model::Role const> Contomap::findRoles(Identifiers const &ids) const // NOLINT
-{
-   for (auto const &kvp : topics)
-   {
-      auto const &topic = kvp.second;
-      for (auto const &role : topic->findRoles(ids))
-      {
-         co_yield role;
       }
    }
 }
@@ -218,23 +199,15 @@ void Contomap::deleteTopicsCascading(Identifiers toDelete)
 
 void Contomap::deleting(Identifiers &toDelete, Topic &topic)
 {
-   Identifiers associationsToDelete;
-   for (auto &kvp : associations)
-   {
-      auto &association = kvp.second;
-      topic.removeRolesOf(*association);
-      association->removeTopicReferences(topic.getId());
-      if (association->isWithoutScope())
-      {
-         associationsToDelete.add(association->getId());
-      }
-   }
-   deleteAssociations(associationsToDelete);
+   std::erase_if(associations, [&topic](auto const &kvp) {
+      auto const &association = kvp.second;
+      return association->scopeContains(topic);
+   });
 
    for (auto &kvp : topics)
    {
       auto &otherTopic = kvp.second;
-      otherTopic->removeTopicReferences(topic.getId());
+      otherTopic->removeTopicReferences(topic);
       if (topicShouldBeRemoved(*otherTopic))
       {
          toDelete.add(otherTopic->getId());
@@ -305,4 +278,5 @@ void Contomap::decode(Decoder &coder, uint8_t version)
    });
 
    defaultScope = Identifier::from(coder, "defaultScope");
+   topicResolver(defaultScope);
 }
