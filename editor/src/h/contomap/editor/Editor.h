@@ -71,8 +71,9 @@ private:
    void createAndSelectOccurrence(contomap::model::Topic &topic, contomap::model::SpacialCoordinate location);
    void cycleSelectedOccurrence(bool forward);
    void setViewScopeTo(contomap::model::Identifiers const &ids);
-   template <class Range>
-      requires std::ranges::range<Range>
+   // clang-format off
+   template <class Range> requires std::ranges::range<Range>
+   // clang-format on
    void setViewScopeTo(Range topics)
    {
       viewScope.clear();
